@@ -4,6 +4,7 @@ mod vec3;
 #[macro_use]
 extern crate derive_more;
 
+use std::io::BufWriter;
 use {
     indicatif::ProgressIterator,
     ray::Ray,
@@ -13,7 +14,6 @@ use {
     },
     vec3::{Color, Point3, Vec3},
 };
-use std::io::BufWriter;
 
 #[derive(From, Into)]
 struct Width(usize);
@@ -26,6 +26,12 @@ fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: Width = Width(400);
     const IMAGE_HEIGHT: Height = Height((IMAGE_WIDTH.0 as f64 / ASPECT_RATIO) as usize);
+
+    // World
+    let mut world: Vec<Box<dyn Hittable>> = vec![
+        Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)),
+        Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)),
+    ];
 
     // Camera
 
@@ -54,7 +60,7 @@ fn main() {
                 origin,
                 lower_left_corner + u * horizontal + v * vertical - origin,
             );
-            let pixel_color = ray_color(&r);
+            let pixel_color = ray_color(&r, &world);
 
             write_color(&mut file, pixel_color).unwrap();
         }
@@ -69,10 +75,9 @@ fn write_color<F: Write>(f: &mut F, pixel_color: Vec3) -> io::Result<()> {
     writeln!(f, "{} {} {}", ir, ig, ib)
 }
 
-fn ray_color(r: &Ray) -> Color {
-    if let Some(t) = hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, r) {
-        let normal = Vec3::unit_vector(&(r.at(t) - Vec3::new(0.0, 0.0, -1.0)));
-        return 0.5*Color::new(normal.x()+1.0, normal.y()+1.0, normal.z()+1.0);
+fn ray_color(r: &Ray, world: &impl HittableVec) -> Color {
+    if let Some(hit_record) = world.hit(r, 0.0, f64::INFINITY) {
+        return 0.5 * (hit_record.normal + Color::new(1.0, 1.0, 1.0));
     }
     let unit_direction = r.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
@@ -84,7 +89,7 @@ fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> Option<f64> {
     let a = r.direction().length_squared();
     let half_b = origin_to_center.dot(&r.direction());
     let c = origin_to_center.length_squared() - radius * radius;
-    let discriminant = half_b*half_b - a*c;
+    let discriminant = half_b * half_b - a * c;
     if discriminant < 0.0 {
         None
     } else {
@@ -131,9 +136,9 @@ impl Hittable for Sphere {
         let origin_to_center = r.origin() - center;
         let a = r.direction().length_squared();
         let half_b = origin_to_center.dot(&r.direction());
-        let c = origin_to_center.length_squared() - radius*radius;
+        let c = origin_to_center.length_squared() - radius * radius;
 
-        let discriminant = half_b*half_b - a*c;
+        let discriminant = half_b * half_b - a * c;
         if discriminant < 0.0 {
             return None;
         }
@@ -145,7 +150,7 @@ impl Hittable for Sphere {
         if root < t_min || t_max < root {
             root = (-half_b + sqrtd) / a;
             if root < t_min || t_max < root {
-            return None;
+                return None;
             }
         }
 
@@ -154,5 +159,27 @@ impl Hittable for Sphere {
         let outward_normal = (p - center) / radius;
 
         Some(HitRecord::new_with_face_normal(p, t, r, outward_normal))
+    }
+}
+
+trait HittableVec {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+}
+
+impl HittableVec for Vec<Box<dyn Hittable>> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let mut hit_anything = false;
+        let mut closest_so_far = t_max;
+        let mut rec = None;
+
+        for object in self.iter() {
+            if let Some(temp_rec) = object.hit(r, t_min, closest_so_far) {
+                hit_anything = true;
+                closest_so_far = temp_rec.t;
+                rec = Some(temp_rec);
+            }
+        }
+
+        rec
     }
 }
