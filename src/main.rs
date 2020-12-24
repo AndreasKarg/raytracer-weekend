@@ -13,6 +13,7 @@ use {
     },
     vec3::{Color, Point3, Vec3},
 };
+use std::io::BufWriter;
 
 #[derive(From, Into)]
 struct Width(usize);
@@ -40,9 +41,10 @@ fn main() {
 
     // Render
 
-    let mut file = File::create("image.ppm").unwrap();
+    let file = File::create("image.ppm").unwrap();
+    let mut file = BufWriter::new(file);
 
-    writeln!(&file, "P3\n{} {}\n255", IMAGE_WIDTH.0, IMAGE_HEIGHT.0).unwrap();
+    writeln!(&mut file, "P3\n{} {}\n255", IMAGE_WIDTH.0, IMAGE_HEIGHT.0).unwrap();
 
     for j in (0..IMAGE_HEIGHT.0).rev().progress() {
         for i in 0..IMAGE_WIDTH.0 {
@@ -87,5 +89,70 @@ fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> Option<f64> {
         None
     } else {
         Some((-half_b - discriminant.sqrt()) / a)
+    }
+}
+
+#[derive(Debug, Constructor)]
+struct HitRecord {
+    pub p: Point3,
+    pub normal: Vec3,
+    pub t: f64,
+    pub is_front_face: bool,
+}
+
+impl HitRecord {
+    pub fn new_with_face_normal(p: Point3, t: f64, ray: &Ray, outward_normal: Vec3) -> Self {
+        let is_front_face = ray.direction().dot(&outward_normal) < 0.0;
+
+        let normal = match is_front_face {
+            true => outward_normal,
+            false => -outward_normal,
+        };
+
+        Self::new(p, normal, t, is_front_face)
+    }
+}
+
+trait Hittable {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+}
+
+#[derive(Constructor)]
+struct Sphere {
+    center: Point3,
+    radius: f64,
+}
+
+impl Hittable for Sphere {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let center = self.center;
+        let radius = self.radius;
+
+        let origin_to_center = r.origin() - center;
+        let a = r.direction().length_squared();
+        let half_b = origin_to_center.dot(&r.direction());
+        let c = origin_to_center.length_squared() - radius*radius;
+
+        let discriminant = half_b*half_b - a*c;
+        if discriminant < 0.0 {
+            return None;
+        }
+
+        let sqrtd = discriminant.sqrt();
+
+        // Find the nearest root that lies in the acceptable range.
+        let mut root = (-half_b - sqrtd) / a;
+        if root < t_min || t_max < root {
+            root = (-half_b + sqrtd) / a;
+            if root < t_min || t_max < root {
+            return None;
+            }
+        }
+
+        let t = root;
+        let p = r.at(root);
+        let outward_normal = (p - center) / radius;
+
+        Some(HitRecord::new_with_face_normal(p, t, r, outward_normal))
     }
 }
