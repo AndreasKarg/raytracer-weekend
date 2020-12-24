@@ -11,7 +11,7 @@ use {
         fs::File,
         io::{self, Write},
     },
-    vec3::{Color, Vec3, Point3},
+    vec3::{Color, Point3, Vec3},
 };
 
 #[derive(From, Into)]
@@ -35,7 +35,8 @@ fn main() {
     let origin = Point3::new(0.0, 0.0, 0.0);
     let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
     let vertical = Vec3::new(0.0, viewport_height, 0.0);
-    let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0,0.0, focal_length);
+    let lower_left_corner =
+        origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
 
     // Render
 
@@ -53,7 +54,7 @@ fn main() {
             );
             let pixel_color = ray_color(&r);
 
-            write_color(&mut file, pixel_color);
+            write_color(&mut file, pixel_color).unwrap();
         }
     }
 }
@@ -67,7 +68,19 @@ fn write_color<F: Write>(f: &mut F, pixel_color: Vec3) -> io::Result<()> {
 }
 
 fn ray_color(r: &Ray) -> Color {
+    if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, r) {
+        return Color::new(1.0, 0.0, 0.0);
+    }
     let unit_direction = r.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
     return (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0);
+}
+
+fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> bool {
+    let origin_to_center = r.origin() - *center;
+    let a = r.direction().dot(&r.direction());
+    let b = 2.0 * origin_to_center.dot(&r.direction());
+    let c = origin_to_center.dot(&origin_to_center) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant > 0.0
 }
