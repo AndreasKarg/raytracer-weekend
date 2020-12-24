@@ -4,7 +4,7 @@ use std::{
 };
 
 #[derive(Copy, Clone, Debug)]
-struct Vec3 {
+pub(crate) struct Vec3 {
     e: [f64; 3],
 }
 
@@ -157,7 +157,7 @@ impl Index<usize> for Vec3 {
 }
 
 type Point3 = Vec3;
-type Color = Vec3;
+pub(crate) type Color = Vec3;
 
 impl Display for Vec3 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
