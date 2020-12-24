@@ -9,9 +9,6 @@ pub(crate) struct Vec3 {
 }
 
 impl Vec3 {
-    pub fn default() -> Self {
-        Self::new(0.0, 0.0, 0.0)
-    }
     pub fn new(e0: f64, e1: f64, e2: f64) -> Self {
         Self { e: [e0, e1, e2] }
     }
@@ -49,6 +46,12 @@ impl Vec3 {
 
     pub fn unit_vector(&self) -> Vec3 {
         return *self / self.length();
+    }
+}
+
+impl Default for Vec3 {
+    fn default() -> Self {
+        Self::new(0.0, 0.0, 0.0)
     }
 }
 
@@ -156,7 +159,7 @@ impl Index<usize> for Vec3 {
     }
 }
 
-type Point3 = Vec3;
+pub(crate) type Point3 = Vec3;
 pub(crate) type Color = Vec3;
 
 impl Display for Vec3 {
