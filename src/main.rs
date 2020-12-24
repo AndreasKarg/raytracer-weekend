@@ -79,13 +79,13 @@ fn ray_color(r: &Ray) -> Color {
 
 fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> Option<f64> {
     let origin_to_center = r.origin() - *center;
-    let a = r.direction().dot(&r.direction());
-    let b = 2.0 * origin_to_center.dot(&r.direction());
-    let c = origin_to_center.dot(&origin_to_center) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
+    let a = r.direction().length_squared();
+    let half_b = origin_to_center.dot(&r.direction());
+    let c = origin_to_center.length_squared() - radius * radius;
+    let discriminant = half_b*half_b - a*c;
     if discriminant < 0.0 {
         None
     } else {
-        Some((-b - discriminant.sqrt()) / (2.0 * a))
+        Some((-half_b - discriminant.sqrt()) / a)
     }
 }
