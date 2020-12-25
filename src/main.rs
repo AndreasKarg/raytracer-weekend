@@ -63,10 +63,15 @@ fn main() {
 }
 
 fn write_color<F: Write>(f: &mut F, pixel_color: Vec3, samples_per_pixel: usize) -> io::Result<()> {
+    let r = pixel_color.x();
+    let g = pixel_color.y();
+    let b = pixel_color.z();
+
+    // Divide the color by the number of samples and gamma-correct for gamma=2.0.
     let scale = 1.0 / samples_per_pixel as f64;
-    let r = pixel_color.x() * scale;
-    let g = pixel_color.y() * scale;
-    let b = pixel_color.z() * scale;
+    let r = (scale * r).sqrt();
+    let g = (scale * g).sqrt();
+    let b = (scale * b).sqrt();
 
     let ir = (255.999 * clamp(r, 0.0, 0.999)) as u8;
     let ig = (255.999 * clamp(g, 0.0, 0.999)) as u8;
@@ -80,10 +85,16 @@ fn ray_color(r: &Ray, world: &impl HittableVec, rng: &mut impl Rng, depth: usize
         return Color::new(0.0, 0.0, 0.0);
     }
 
-    if let Some(hit_record) = world.hit(r, 0.0, f64::INFINITY) {
-        let target = hit_record.p + hit_record.normal + Vec3::random_in_unit_sphere(rng);
+    if let Some(hit_record) = world.hit(r, 0.001, f64::INFINITY) {
+        let target = hit_record.p + hit_record.normal + Vec3::random_unit_vector(rng);
         // return 0.5 * (hit_record.normal + Color::new(1.0, 1.0, 1.0));
-        return 0.5 * ray_color(&Ray::new(hit_record.p, target - hit_record.p), world, rng, depth-1);
+        return 0.5
+            * ray_color(
+                &Ray::new(hit_record.p, target - hit_record.p),
+                world,
+                rng,
+                depth - 1,
+            );
     }
     let unit_direction = r.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);

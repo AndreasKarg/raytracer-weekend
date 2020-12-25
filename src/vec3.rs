@@ -1,10 +1,13 @@
-use {std::{
-    fmt::{Display, Formatter},
-    ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub},
-}, rand::Rng,};
-use rand::random;
 use rand::distributions::uniform::SampleRange;
+use rand::random;
 use std::ops::Range;
+use {
+    rand::Rng,
+    std::{
+        fmt::{Display, Formatter},
+        ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub},
+    },
+};
 
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct Vec3 {
@@ -56,7 +59,11 @@ impl Vec3 {
     }
 
     pub fn random_min_max(rng: &mut impl Rng, range: Range<f64>) -> Self {
-        Self::new(rng.gen_range(range.clone()), rng.gen_range(range.clone()), rng.gen_range(range))
+        Self::new(
+            rng.gen_range(range.clone()),
+            rng.gen_range(range.clone()),
+            rng.gen_range(range),
+        )
     }
 
     pub fn random_in_unit_sphere(rng: &mut impl Rng) -> Self {
@@ -66,6 +73,10 @@ impl Vec3 {
                 return p;
             }
         }
+    }
+
+    pub fn random_unit_vector(rng: &mut impl Rng) -> Self {
+        Self::random_in_unit_sphere(rng).unit_vector()
     }
 }
 
