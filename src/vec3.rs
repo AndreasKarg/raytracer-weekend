@@ -1,6 +1,6 @@
 use std::{
     fmt::{Display, Formatter},
-    ops::{Add, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub},
+    ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub},
 };
 
 #[derive(Copy, Clone, Debug)]
@@ -76,6 +76,14 @@ impl Add for Vec3 {
             self.e[1] + rhs.e[1],
             self.e[2] + rhs.e[2],
         )
+    }
+}
+
+impl AddAssign for Vec3 {
+    fn add_assign(&mut self, rhs: Self) {
+        self.e[0] += rhs.e[0];
+        self.e[1] += rhs.e[1];
+        self.e[2] += rhs.e[2];
     }
 }
 

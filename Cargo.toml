@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 indicatif = "0.15.0"
 derive_more = "0.99.11"
+rand = "0.8.0"

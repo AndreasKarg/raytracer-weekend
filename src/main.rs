@@ -7,6 +7,7 @@ extern crate derive_more;
 use std::io::BufWriter;
 use {
     indicatif::ProgressIterator,
+    rand::prelude::*,
     ray::Ray,
     std::{
         fs::File,
@@ -26,6 +27,7 @@ fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: Width = Width(400);
     const IMAGE_HEIGHT: Height = Height((IMAGE_WIDTH.0 as f64 / ASPECT_RATIO) as usize);
+    const SAMPLES_PER_PIXEL: usize = 100;
 
     // World
     let mut world: Vec<Box<dyn Hittable>> = vec![
@@ -34,43 +36,40 @@ fn main() {
     ];
 
     // Camera
-
-    let viewport_height = 2.0;
-    let viewport_width = ASPECT_RATIO * viewport_height;
-    let focal_length = 1.0;
-
-    let origin = Point3::new(0.0, 0.0, 0.0);
-    let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-    let vertical = Vec3::new(0.0, viewport_height, 0.0);
-    let lower_left_corner =
-        origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
+    let cam = Camera::new();
 
     // Render
-
     let file = File::create("image.ppm").unwrap();
     let mut file = BufWriter::new(file);
+
+    let mut rng = rand::thread_rng();
 
     writeln!(&mut file, "P3\n{} {}\n255", IMAGE_WIDTH.0, IMAGE_HEIGHT.0).unwrap();
 
     for j in (0..IMAGE_HEIGHT.0).rev().progress() {
         for i in 0..IMAGE_WIDTH.0 {
-            let u = (i as f64) / ((IMAGE_WIDTH.0 - 1) as f64);
-            let v = (j as f64) / ((IMAGE_HEIGHT.0 - 1) as f64);
-            let r = Ray::new(
-                origin,
-                lower_left_corner + u * horizontal + v * vertical - origin,
-            );
-            let pixel_color = ray_color(&r, &world);
+            let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+            for s in 0..SAMPLES_PER_PIXEL {
+                let u = (i as f64 + rng.gen::<f64>()) / ((IMAGE_WIDTH.0 - 1) as f64);
+                let v = (j as f64 + rng.gen::<f64>()) / ((IMAGE_HEIGHT.0 - 1) as f64);
+                let r = cam.get_ray(u, v);
+                pixel_color += ray_color(&r, &world);
+            }
 
-            write_color(&mut file, pixel_color).unwrap();
+            write_color(&mut file, pixel_color, SAMPLES_PER_PIXEL).unwrap();
         }
     }
 }
 
-fn write_color<F: Write>(f: &mut F, pixel_color: Vec3) -> io::Result<()> {
-    let ir = (255.999 * pixel_color.x()) as u8;
-    let ig = (255.999 * pixel_color.y()) as u8;
-    let ib = (255.999 * pixel_color.z()) as u8;
+fn write_color<F: Write>(f: &mut F, pixel_color: Vec3, samples_per_pixel: usize) -> io::Result<()> {
+    let scale = 1.0 / samples_per_pixel as f64;
+    let r = pixel_color.x() * scale;
+    let g = pixel_color.y() * scale;
+    let b = pixel_color.z() * scale;
+
+    let ir = (255.999 * clamp(r, 0.0, 0.999)) as u8;
+    let ig = (255.999 * clamp(g, 0.0, 0.999)) as u8;
+    let ib = (255.999 * clamp(b, 0.0, 0.999)) as u8;
 
     writeln!(f, "{} {} {}", ir, ig, ib)
 }
@@ -181,5 +180,51 @@ impl HittableVec for Vec<Box<dyn Hittable>> {
         }
 
         rec
+    }
+}
+
+struct Camera {
+    origin: Point3,
+    lower_left_corner: Point3,
+    horizontal: Vec3,
+    vertical: Vec3,
+}
+
+impl Camera {
+    pub fn new() -> Self {
+        let aspect_ratio = 16.0 / 9.0;
+        let viewport_height = 2.0;
+        let viewport_width = aspect_ratio * viewport_height;
+        let focal_length = 1.0;
+
+        let origin = Point3::new(0.0, 0.0, 0.0);
+        let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
+        let vertical = Vec3::new(0.0, viewport_height, 0.0);
+        let lower_left_corner =
+            origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
+
+        Self {
+            origin,
+            lower_left_corner,
+            horizontal,
+            vertical,
+        }
+    }
+
+    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
+        Ray::new(
+            self.origin,
+            self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin,
+        )
+    }
+}
+
+fn clamp(x: f64, min: f64, max: f64) -> f64 {
+    if x < min {
+        min
+    } else if x > max {
+        max
+    } else {
+        x
     }
 }
