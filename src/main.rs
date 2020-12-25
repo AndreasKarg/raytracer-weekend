@@ -10,7 +10,7 @@ use std::io::BufWriter;
 use {
     hittable::{Hittable, HittableVec, Sphere},
     indicatif::ProgressIterator,
-    material::{Lambertian, Metal},
+    material::{Dielectric, Lambertian, Metal},
     rand::prelude::*,
     ray::Ray,
     std::{
@@ -37,8 +37,8 @@ fn main() {
 
     // World
     let material_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
-    let material_center = Rc::new(Lambertian::new(Color::new(0.7, 0.3, 0.3)));
-    let material_left = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8), 0.3));
+    let material_center = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    let material_left = Rc::new(Dielectric::new(1.5));
     let material_right = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
 
     let world: Vec<Box<dyn Hittable>> = vec![
@@ -55,6 +55,11 @@ fn main() {
         Box::new(Sphere::new(
             Point3::new(-1.0, 0.0, -1.0),
             0.5,
+            material_left.clone(),
+        )),
+        Box::new(Sphere::new(
+            Point3::new(-1.0, 0.0, -1.0),
+            -0.4,
             material_left,
         )),
         Box::new(Sphere::new(
