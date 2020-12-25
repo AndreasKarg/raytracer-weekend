@@ -1,7 +1,7 @@
 use super::vec3::{Point3, Vec3};
 
 #[derive(Constructor, Default)]
-pub(crate) struct Ray {
+pub struct Ray {
     pub origin: Point3,
     pub direction: Vec3,
 }
