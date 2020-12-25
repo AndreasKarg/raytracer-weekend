@@ -1,16 +1,17 @@
+mod hittable;
+mod material;
 mod ray;
 mod vec3;
-mod hittable;
 
 #[macro_use]
 extern crate derive_more;
 
 use std::io::BufWriter;
 use {
+    hittable::{Hittable, HittableVec, Sphere},
     indicatif::ProgressIterator,
     rand::prelude::*,
     ray::Ray,
-    hittable::{Hittable, Sphere, HittableVec},
     std::{
         fs::File,
         io::{self, Write},

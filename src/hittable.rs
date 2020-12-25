@@ -1,5 +1,6 @@
-use {
-    super::{ ray::Ray, vec3::{Vec3, Point3}},
+use super::{
+    ray::Ray,
+    vec3::{Point3, Vec3},
 };
 
 #[derive(Debug, Constructor)]

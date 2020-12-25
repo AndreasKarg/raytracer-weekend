@@ -2,7 +2,7 @@ use {
     rand::Rng,
     std::{
         fmt::{Display, Formatter},
-        ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, Range},
+        ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Range, Sub},
     },
 };
 
