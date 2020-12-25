@@ -1,11 +1,8 @@
-use rand::distributions::uniform::SampleRange;
-use rand::random;
-use std::ops::Range;
 use {
     rand::Rng,
     std::{
         fmt::{Display, Formatter},
-        ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub},
+        ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, Range},
     },
 };
 
@@ -42,7 +39,7 @@ impl Vec3 {
         self.e[0] * rhs.e[0] + self.e[1] * rhs.e[1] + self.e[2] * rhs.e[2]
     }
 
-    pub fn cross(&self, rhs: &Self) -> Self {
+    pub fn _cross(&self, rhs: &Self) -> Self {
         Self::new(
             self.e[1] * rhs.e[2] - self.e[2] * rhs.e[1],
             self.e[2] * rhs.e[0] - self.e[0] * rhs.e[2],
@@ -54,7 +51,7 @@ impl Vec3 {
         return *self / self.length();
     }
 
-    pub fn random(rng: &mut impl Rng) -> Self {
+    pub fn _random(rng: &mut impl Rng) -> Self {
         Self::random_min_max(rng, 0.0..1.0)
     }
 
@@ -75,7 +72,7 @@ impl Vec3 {
         }
     }
 
-    pub fn random_unit_vector(rng: &mut impl Rng) -> Self {
+    pub fn _random_unit_vector(rng: &mut impl Rng) -> Self {
         Self::random_in_unit_sphere(rng).unit_vector()
     }
 

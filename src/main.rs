@@ -31,7 +31,7 @@ fn main() {
     const MAX_DEPTH: usize = 50;
 
     // World
-    let mut world: Vec<Box<dyn Hittable>> = vec![
+    let world: Vec<Box<dyn Hittable>> = vec![
         Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)),
         Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)),
     ];
@@ -50,7 +50,7 @@ fn main() {
     for j in (0..IMAGE_HEIGHT.0).rev().progress() {
         for i in 0..IMAGE_WIDTH.0 {
             let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-            for s in 0..SAMPLES_PER_PIXEL {
+            for _ in 0..SAMPLES_PER_PIXEL {
                 let u = (i as f64 + rng.gen::<f64>()) / ((IMAGE_WIDTH.0 - 1) as f64);
                 let v = (j as f64 + rng.gen::<f64>()) / ((IMAGE_HEIGHT.0 - 1) as f64);
                 let r = cam.get_ray(u, v);
@@ -98,19 +98,6 @@ fn ray_color(r: &Ray, world: &impl HittableVec, rng: &mut impl Rng, depth: usize
     let unit_direction = r.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
     return (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0);
-}
-
-fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> Option<f64> {
-    let origin_to_center = r.origin() - *center;
-    let a = r.direction().length_squared();
-    let half_b = origin_to_center.dot(&r.direction());
-    let c = origin_to_center.length_squared() - radius * radius;
-    let discriminant = half_b * half_b - a * c;
-    if discriminant < 0.0 {
-        None
-    } else {
-        Some((-half_b - discriminant.sqrt()) / a)
-    }
 }
 
 #[derive(Debug, Constructor)]
@@ -184,13 +171,11 @@ trait HittableVec {
 
 impl HittableVec for Vec<Box<dyn Hittable>> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let mut hit_anything = false;
         let mut closest_so_far = t_max;
         let mut rec = None;
 
         for object in self.iter() {
             if let Some(temp_rec) = object.hit(r, t_min, closest_so_far) {
-                hit_anything = true;
                 closest_so_far = temp_rec.t;
                 rec = Some(temp_rec);
             }
