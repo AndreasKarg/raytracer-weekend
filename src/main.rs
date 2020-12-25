@@ -28,6 +28,7 @@ fn main() {
     const IMAGE_WIDTH: Width = Width(400);
     const IMAGE_HEIGHT: Height = Height((IMAGE_WIDTH.0 as f64 / ASPECT_RATIO) as usize);
     const SAMPLES_PER_PIXEL: usize = 100;
+    const MAX_DEPTH: usize = 50;
 
     // World
     let mut world: Vec<Box<dyn Hittable>> = vec![
@@ -53,7 +54,7 @@ fn main() {
                 let u = (i as f64 + rng.gen::<f64>()) / ((IMAGE_WIDTH.0 - 1) as f64);
                 let v = (j as f64 + rng.gen::<f64>()) / ((IMAGE_HEIGHT.0 - 1) as f64);
                 let r = cam.get_ray(u, v);
-                pixel_color += ray_color(&r, &world);
+                pixel_color += ray_color(&r, &world, &mut rng, MAX_DEPTH);
             }
 
             write_color(&mut file, pixel_color, SAMPLES_PER_PIXEL).unwrap();
@@ -74,9 +75,15 @@ fn write_color<F: Write>(f: &mut F, pixel_color: Vec3, samples_per_pixel: usize)
     writeln!(f, "{} {} {}", ir, ig, ib)
 }
 
-fn ray_color(r: &Ray, world: &impl HittableVec) -> Color {
+fn ray_color(r: &Ray, world: &impl HittableVec, rng: &mut impl Rng, depth: usize) -> Color {
+    if depth == 0 {
+        return Color::new(0.0, 0.0, 0.0);
+    }
+
     if let Some(hit_record) = world.hit(r, 0.0, f64::INFINITY) {
-        return 0.5 * (hit_record.normal + Color::new(1.0, 1.0, 1.0));
+        let target = hit_record.p + hit_record.normal + Vec3::random_in_unit_sphere(rng);
+        // return 0.5 * (hit_record.normal + Color::new(1.0, 1.0, 1.0));
+        return 0.5 * ray_color(&Ray::new(hit_record.p, target - hit_record.p), world, rng, depth-1);
     }
     let unit_direction = r.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
