@@ -48,7 +48,7 @@ impl Vec3 {
     }
 
     pub fn unit_vector(&self) -> Self {
-        return *self / self.length();
+        *self / self.length()
     }
 
     pub fn _random(rng: &mut impl Rng) -> Self {
@@ -72,7 +72,7 @@ impl Vec3 {
         }
     }
 
-    pub fn _random_unit_vector(rng: &mut impl Rng) -> Self {
+    pub fn random_unit_vector(rng: &mut impl Rng) -> Self {
         Self::random_in_unit_sphere(rng).unit_vector()
     }
 
@@ -84,6 +84,17 @@ impl Vec3 {
         } else {
             -in_unit_sphere
         }
+    }
+
+    pub fn is_near_zero(&self) -> bool {
+        // Return true if the vector is close to zero in all dimensions.
+        const S: f64 = 1e-8;
+
+        (self.e[0].abs() < S) && (self.e[1].abs() < S) && (self.e[2].abs() < S)
+    }
+
+    pub fn reflect(&self, normal: &Vec3) -> Vec3 {
+        *self - 2.0 * self.dot(normal) * *normal
     }
 }
 

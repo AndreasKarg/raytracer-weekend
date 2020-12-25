@@ -10,11 +10,13 @@ use std::io::BufWriter;
 use {
     hittable::{Hittable, HittableVec, Sphere},
     indicatif::ProgressIterator,
+    material::{Lambertian, Metal},
     rand::prelude::*,
     ray::Ray,
     std::{
         fs::File,
         io::{self, Write},
+        rc::Rc,
     },
     vec3::{Color, Point3, Vec3},
 };
@@ -34,9 +36,32 @@ fn main() {
     const MAX_DEPTH: usize = 50;
 
     // World
+    let material_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
+    let material_center = Rc::new(Lambertian::new(Color::new(0.7, 0.3, 0.3)));
+    let material_left = Rc::new(Metal::new(Color::new(0.8, 0.8, 0.8)));
+    let material_right = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2)));
+
     let world: Vec<Box<dyn Hittable>> = vec![
-        Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)),
-        Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)),
+        Box::new(Sphere::new(
+            Point3::new(0.0, -100.5, -1.0),
+            100.0,
+            material_ground,
+        )),
+        Box::new(Sphere::new(
+            Point3::new(0.0, 0.0, -1.0),
+            0.5,
+            material_center,
+        )),
+        Box::new(Sphere::new(
+            Point3::new(-1.0, 0.0, -1.0),
+            0.5,
+            material_left,
+        )),
+        Box::new(Sphere::new(
+            Point3::new(1.0, 0.0, -1.0),
+            0.5,
+            material_right,
+        )),
     ];
 
     // Camera
@@ -83,24 +108,21 @@ fn write_color<F: Write>(f: &mut F, pixel_color: Vec3, samples_per_pixel: usize)
     writeln!(f, "{} {} {}", ir, ig, ib)
 }
 
-fn ray_color(r: &Ray, world: &impl HittableVec, rng: &mut impl Rng, depth: usize) -> Color {
+fn ray_color(r: &Ray, world: &impl HittableVec, rng: &mut ThreadRng, depth: usize) -> Color {
     if depth == 0 {
         return Color::new(0.0, 0.0, 0.0);
     }
 
     if let Some(hit_record) = world.hit(r, 0.001, f64::INFINITY) {
-        let target = hit_record.p + Vec3::random_in_hemisphere(&hit_record.normal, rng); //+ Vec3::random_unit_vector(rng);
-        return 0.5
-            * ray_color(
-                &Ray::new(hit_record.p, target - hit_record.p),
-                world,
-                rng,
-                depth - 1,
-            );
+        if let Some(scatter) = hit_record.material.scatter(r, &hit_record, rng) {
+            return scatter.attenuation * ray_color(&scatter.scattered_ray, world, rng, depth - 1);
+        }
+        return Color::new(0.0, 0.0, 0.0);
     }
     let unit_direction = r.direction().unit_vector();
     let t = 0.5 * (unit_direction.y() + 1.0);
-    return (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0);
+
+    (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }
 
 struct Camera {
