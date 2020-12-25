@@ -86,8 +86,7 @@ fn ray_color(r: &Ray, world: &impl HittableVec, rng: &mut impl Rng, depth: usize
     }
 
     if let Some(hit_record) = world.hit(r, 0.001, f64::INFINITY) {
-        let target = hit_record.p + hit_record.normal + Vec3::random_unit_vector(rng);
-        // return 0.5 * (hit_record.normal + Color::new(1.0, 1.0, 1.0));
+        let target = hit_record.p + Vec3::random_in_hemisphere(&hit_record.normal, rng); //+ Vec3::random_unit_vector(rng);
         return 0.5
             * ray_color(
                 &Ray::new(hit_record.p, target - hit_record.p),
