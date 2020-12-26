@@ -5,8 +5,9 @@ use {
 
 #[derive(Constructor, Default)]
 pub struct Ray {
-    pub origin: Point3,
-    pub direction: Vec3,
+    origin: Point3,
+    direction: Vec3,
+    time: f64,
 }
 
 impl Ray {
@@ -15,6 +16,10 @@ impl Ray {
     }
     pub fn direction(&self) -> Vec3 {
         self.direction
+    }
+
+    pub fn time(&self) -> f64 {
+        self.time
     }
 
     pub fn at(&self, t: f64) -> Point3 {

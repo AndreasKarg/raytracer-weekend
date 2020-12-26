@@ -7,7 +7,7 @@ mod vec3;
 use {
     camera::Camera,
     derive_more::{From, Into},
-    hittable::{Hittable, HittableVec, Sphere},
+    hittable::{Hittable, HittableVec, MovingSphere, Sphere},
     indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle},
     itertools::iproduct,
     material::{Dielectric, Lambertian, Material, Metal},
@@ -80,7 +80,16 @@ fn main() {
                 sphere_material = Arc::new(Dielectric::new(1.5));
             }
 
-            let sphere = Box::new(Sphere::new(center, 0.2, sphere_material));
+            let center2 = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
+
+            let sphere = Box::new(MovingSphere::new(
+                center,
+                0.0,
+                center2,
+                1.0,
+                0.2,
+                sphere_material,
+            ));
             world.push(sphere);
         }
     }
@@ -100,6 +109,8 @@ fn main() {
         ASPECT_RATIO,
         aperture,
         distance_to_focus,
+        0.0,
+        1.0,
     );
 
     // Render

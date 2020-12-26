@@ -47,43 +47,88 @@ pub struct Sphere {
     material: Arc<dyn Material>,
 }
 
-impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let center = self.center;
-        let radius = self.radius;
+fn hit_sphere(
+    ray: &Ray,
+    t_min: f64,
+    t_max: f64,
+    center: Vec3,
+    radius: f64,
+    material: Arc<dyn Material>,
+) -> Option<HitRecord> {
+    let origin_to_center = ray.origin() - center;
+    let a = ray.direction().length_squared();
+    let half_b = origin_to_center.dot(&ray.direction());
+    let c = origin_to_center.length_squared() - radius * radius;
 
-        let origin_to_center = ray.origin() - center;
-        let a = ray.direction().length_squared();
-        let half_b = origin_to_center.dot(&ray.direction());
-        let c = origin_to_center.length_squared() - radius * radius;
+    let discriminant = half_b * half_b - a * c;
+    if discriminant < 0.0 {
+        return None;
+    }
 
-        let discriminant = half_b * half_b - a * c;
-        if discriminant < 0.0 {
+    let sqrtd = discriminant.sqrt();
+
+    // Find the nearest root that lies in the acceptable range.
+    let mut root = (-half_b - sqrtd) / a;
+    if root < t_min || t_max < root {
+        root = (-half_b + sqrtd) / a;
+        if root < t_min || t_max < root {
             return None;
         }
+    }
 
-        let sqrtd = discriminant.sqrt();
+    let t = root;
+    let hit_point = ray.at(root);
+    let outward_normal = (hit_point - center) / radius;
 
-        // Find the nearest root that lies in the acceptable range.
-        let mut root = (-half_b - sqrtd) / a;
-        if root < t_min || t_max < root {
-            root = (-half_b + sqrtd) / a;
-            if root < t_min || t_max < root {
-                return None;
-            }
-        }
+    Some(HitRecord::new_with_face_normal(
+        hit_point,
+        t,
+        material,
+        ray,
+        outward_normal,
+    ))
+}
 
-        let t = root;
-        let hit_point = ray.at(root);
-        let outward_normal = (hit_point - center) / radius;
-
-        Some(HitRecord::new_with_face_normal(
-            hit_point,
-            t,
-            self.material.clone(),
+impl Hittable for Sphere {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        hit_sphere(
             ray,
-            outward_normal,
-        ))
+            t_min,
+            t_max,
+            self.center,
+            self.radius,
+            self.material.clone(),
+        )
+    }
+}
+
+#[derive(Constructor)]
+pub struct MovingSphere {
+    center0: Point3,
+    time0: f64,
+    center1: Point3,
+    time1: f64,
+    radius: f64,
+    material: Arc<dyn Material>,
+}
+
+impl Hittable for MovingSphere {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let center0 = self.center0;
+        let time0 = self.time0;
+        let center1 = self.center1;
+        let time1 = self.time1;
+        let center_at_time =
+            center0 + ((ray.time() - time0) / (time1 / time0)) * (center1 - center0);
+
+        hit_sphere(
+            ray,
+            t_min,
+            t_max,
+            center_at_time,
+            self.radius,
+            self.material.clone(),
+        )
     }
 }
 
