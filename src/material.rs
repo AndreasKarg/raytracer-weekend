@@ -9,7 +9,7 @@ pub struct Scatter {
     pub scattered_ray: Ray,
 }
 
-pub trait Material: std::fmt::Debug {
+pub trait Material: std::fmt::Debug + Sync + Send {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<Scatter>;
 }
 

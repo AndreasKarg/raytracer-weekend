@@ -8,7 +8,7 @@ extern crate derive_more;
 
 use {
     hittable::{Hittable, HittableVec, Sphere},
-    indicatif::{ProgressBar, ProgressIterator, ProgressStyle},
+    indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle},
     material::{Dielectric, Lambertian, Material, Metal},
     rand::prelude::*,
     ray::Ray,
@@ -16,7 +16,7 @@ use {
     std::{
         fs::File,
         io::{self, BufWriter, Write},
-        rc::Rc,
+        sync::Arc,
     },
     vec3::{Color, Point3, Vec3},
 };
@@ -38,10 +38,10 @@ fn main() {
     let mut rng = rand::thread_rng();
 
     // World
-    let material_ground = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
-    let lambertian = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
-    let glass = Rc::new(Dielectric::new(1.5));
-    let metal = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
+    let material_ground = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let lambertian = Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    let glass = Arc::new(Dielectric::new(1.5));
+    let metal = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
 
     let mut world: Vec<Box<dyn Hittable>> = vec![
         Box::new(Sphere::new(
@@ -66,18 +66,18 @@ fn main() {
                 continue;
             }
 
-            let sphere_material: Rc<dyn Material>;
+            let sphere_material: Arc<dyn Material>;
 
             let choose_mat: f64 = rng.gen();
             if choose_mat < 0.8 {
                 let albedo = Color::random(&mut rng) * Color::random(&mut rng);
-                sphere_material = Rc::new(Lambertian::new(albedo));
+                sphere_material = Arc::new(Lambertian::new(albedo));
             } else if choose_mat < 0.95 {
                 let albedo = Color::random_min_max(&mut rng, 0.5..1.0);
                 let fuzz = rng.gen_range(0.0..0.5);
-                sphere_material = Rc::new(Metal::new(albedo, fuzz));
+                sphere_material = Arc::new(Metal::new(albedo, fuzz));
             } else {
-                sphere_material = Rc::new(Dielectric::new(1.5));
+                sphere_material = Arc::new(Dielectric::new(1.5));
             }
 
             let sphere = Box::new(Sphere::new(center, 0.2, sphere_material));
@@ -119,7 +119,8 @@ fn main() {
         .rev()
         .progress_with(progress_bar)
         .map(|j| {
-            let cols = (0..IMAGE_WIDTH.0).map(|i| {
+            let cols = (0..IMAGE_WIDTH.0).into_par_iter().map(|i| {
+                let mut rng = thread_rng();
                 let mut pixel_color = Color::new(0.0, 0.0, 0.0);
                 for _ in 0..SAMPLES_PER_PIXEL {
                     let u = (i as f64 + rng.gen::<f64>()) / ((IMAGE_WIDTH.0 - 1) as f64);
@@ -134,8 +135,10 @@ fn main() {
             cols.collect::<Vec<_>>()
         });
 
-    let all_pixels = rows.flatten();
-    all_pixels.for_each(|pixel| write_color(&mut file, pixel, SAMPLES_PER_PIXEL).unwrap());
+    let all_pixels: Vec<_> = rows.flatten().collect();
+    all_pixels
+        .into_iter()
+        .for_each(|pixel| write_color(&mut file, pixel, SAMPLES_PER_PIXEL).unwrap());
 }
 
 fn write_color<F: Write>(f: &mut F, pixel_color: Vec3, samples_per_pixel: usize) -> io::Result<()> {

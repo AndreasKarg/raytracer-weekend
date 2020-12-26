@@ -4,14 +4,14 @@ use {
         ray::Ray,
         vec3::{Point3, Vec3},
     },
-    std::rc::Rc,
+    std::sync::Arc,
 };
 
 #[derive(Debug, Constructor)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
-    pub material: Rc<dyn Material>,
+    pub material: Arc<dyn Material>,
     pub t: f64,
     pub is_front_face: bool,
 }
@@ -20,7 +20,7 @@ impl HitRecord {
     pub fn new_with_face_normal(
         p: Point3,
         t: f64,
-        material: Rc<dyn Material>,
+        material: Arc<dyn Material>,
         ray: &Ray,
         outward_normal: Vec3,
     ) -> Self {
@@ -35,7 +35,7 @@ impl HitRecord {
     }
 }
 
-pub trait Hittable {
+pub trait Hittable: Sync + Send {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
@@ -43,7 +43,7 @@ pub trait Hittable {
 pub struct Sphere {
     center: Point3,
     radius: f64,
-    material: Rc<dyn Material>,
+    material: Arc<dyn Material>,
 }
 
 impl Hittable for Sphere {
