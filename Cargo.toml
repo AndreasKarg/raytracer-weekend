@@ -11,3 +11,4 @@ indicatif = { version = "0.15.0", features = ["rayon"] }
 derive_more = "0.99.11"
 rand = "0.8.0"
 rayon = "1.5.0"
+itertools = "0.9.0"

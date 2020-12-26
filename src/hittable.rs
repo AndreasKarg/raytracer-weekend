@@ -4,6 +4,7 @@ use {
         ray::Ray,
         vec3::{Point3, Vec3},
     },
+    derive_more::Constructor,
     std::sync::Arc,
 };
 

@@ -1,6 +1,7 @@
 use rand::Rng;
 use {
     super::{hittable::HitRecord, ray::Ray, vec3::Color, vec3::Vec3},
+    derive_more::Constructor,
     rand::rngs::ThreadRng,
 };
 

@@ -3,12 +3,12 @@ mod material;
 mod ray;
 mod vec3;
 
-#[macro_use]
-extern crate derive_more;
-
+use itertools::all;
 use {
+    derive_more::{From, Into},
     hittable::{Hittable, HittableVec, Sphere},
-    indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle},
+    indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle},
+    itertools::iproduct,
     material::{Dielectric, Lambertian, Material, Metal},
     rand::prelude::*,
     ray::Ray,
@@ -107,33 +107,33 @@ fn main() {
 
     writeln!(&mut file, "P3\n{} {}\n255", IMAGE_WIDTH.0, IMAGE_HEIGHT.0).unwrap();
 
-    let progress_bar = ProgressBar::new(IMAGE_HEIGHT.0 as u64);
+    let progress_bar = ProgressBar::new((IMAGE_HEIGHT.0 * IMAGE_WIDTH.0) as u64);
     progress_bar.set_style(
         ProgressStyle::default_bar().template(
             "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec})",
         ),
     );
 
-    let rows = (0..IMAGE_HEIGHT.0)
+    progress_bar.set_draw_delta(IMAGE_WIDTH.0 as u64);
+
+    let pixel_range: Vec<_> = iproduct!((0..IMAGE_HEIGHT.0).rev(), 0..IMAGE_WIDTH.0).collect();
+    let all_pixels = pixel_range
         .into_par_iter()
         .progress_with(progress_bar)
-        .map(|j| {
-            let cols = (0..IMAGE_WIDTH.0)
-                .into_par_iter()
-                .map(|i| evaluate_pixel(&world, &cam, j, i));
+        .map(|(j, i)| evaluate_pixel(&world, &cam, j, i));
 
-            cols.collect::<Vec<_>>()
-        });
-
-    let all_pixels: Vec<_> = rows.collect();
+    let all_pixels: Vec<_> = all_pixels.collect();
     all_pixels
         .into_iter()
-        .rev()
-        .flatten()
         .for_each(|pixel| write_color(&mut file, pixel, SAMPLES_PER_PIXEL).unwrap());
 }
 
-fn evaluate_pixel(world: &Vec<Box<dyn Hittable>>, cam: &Camera, pixel_row: usize, pixel_column: usize) -> Vec3 {
+fn evaluate_pixel(
+    world: &Vec<Box<dyn Hittable>>,
+    cam: &Camera,
+    pixel_row: usize,
+    pixel_column: usize,
+) -> Vec3 {
     let mut rng = thread_rng();
     let mut pixel_color = Color::new(0.0, 0.0, 0.0);
     for _ in 0..SAMPLES_PER_PIXEL {
