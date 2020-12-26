@@ -36,51 +36,47 @@ fn main() {
     const MAX_DEPTH: usize = 50;
 
     // World
-    let R = (std::f64::consts::PI / 4.0).cos();
-
-    let material_left = Rc::new(Lambertian::new(Color::new(0.0, 0.0, 1.0)));
-    let material_right = Rc::new(Lambertian::new(Color::new(1.0, 0.0, 0.0)));
+    let material_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
+    let material_center = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    let material_left = Rc::new(Dielectric::new(1.5));
+    let material_right = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
 
     let world: Vec<Box<dyn Hittable>> = vec![
-        Box::new(Sphere::new(Point3::new(-R, 0.0, -1.0), R, material_left)),
-        Box::new(Sphere::new(Point3::new(R, 0.0, -1.0), R, material_right)),
+        Box::new(Sphere::new(
+            Point3::new(0.0, -100.5, -1.0),
+            100.0,
+            material_ground,
+        )),
+        Box::new(Sphere::new(
+            Point3::new(0.0, 0.0, -1.0),
+            0.5,
+            material_center,
+        )),
+        Box::new(Sphere::new(
+            Point3::new(-1.0, 0.0, -1.0),
+            0.5,
+            material_left.clone(),
+        )),
+        Box::new(Sphere::new(
+            Point3::new(-1.0, 0.0, -1.0),
+            -0.45,
+            material_left,
+        )),
+        Box::new(Sphere::new(
+            Point3::new(1.0, 0.0, -1.0),
+            0.5,
+            material_right,
+        )),
     ];
 
-    // let material_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
-    // let material_center = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
-    // let material_left = Rc::new(Dielectric::new(1.5));
-    // let material_right = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
-    //
-    // let world: Vec<Box<dyn Hittable>> = vec![
-    //     Box::new(Sphere::new(
-    //         Point3::new(0.0, -100.5, -1.0),
-    //         100.0,
-    //         material_ground,
-    //     )),
-    //     Box::new(Sphere::new(
-    //         Point3::new(0.0, 0.0, -1.0),
-    //         0.5,
-    //         material_center,
-    //     )),
-    //     Box::new(Sphere::new(
-    //         Point3::new(-1.0, 0.0, -1.0),
-    //         0.5,
-    //         material_left.clone(),
-    //     )),
-    //     Box::new(Sphere::new(
-    //         Point3::new(-1.0, 0.0, -1.0),
-    //         -0.4,
-    //         material_left,
-    //     )),
-    //     Box::new(Sphere::new(
-    //         Point3::new(1.0, 0.0, -1.0),
-    //         0.5,
-    //         material_right,
-    //     )),
-    // ];
-
     // Camera
-    let cam = Camera::new(90.0, ASPECT_RATIO);
+    let cam = Camera::new(
+        Point3::new(-2.0, 2.0, 1.0),
+        Point3::new(0.0, 0.0, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        20.0,
+        ASPECT_RATIO,
+    );
 
     // Render
     let file = File::create("image.ppm").unwrap();
@@ -148,18 +144,20 @@ struct Camera {
 }
 
 impl Camera {
-    pub fn new(vfow: f64, aspect_ratio: f64) -> Self {
+    pub fn new(lookfrom: Point3, lookat: Point3, vup: Vec3, vfow: f64, aspect_ratio: f64) -> Self {
         let theta = vfow.to_radians();
         let h = (theta / 2.0).tan();
         let viewport_height = 2.0 * h;
         let viewport_width = aspect_ratio * viewport_height;
-        let focal_length = 1.0;
 
-        let origin = Point3::new(0.0, 0.0, 0.0);
-        let horizontal = Vec3::new(viewport_width, 0.0, 0.0);
-        let vertical = Vec3::new(0.0, viewport_height, 0.0);
-        let lower_left_corner =
-            origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
+        let w = (lookfrom - lookat).unit_vector();
+        let u = vup._cross(&w).unit_vector();
+        let v = w._cross(&u);
+
+        let origin = lookfrom;
+        let horizontal = viewport_width * u;
+        let vertical = viewport_height * v;
+        let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - w;
 
         Self {
             origin,
@@ -169,10 +167,10 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
+    pub fn get_ray(&self, s: f64, t: f64) -> Ray {
         Ray::new(
             self.origin,
-            self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin,
+            self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin,
         )
     }
 }
