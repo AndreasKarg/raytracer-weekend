@@ -14,7 +14,7 @@ pub trait Material: std::fmt::Debug + Sync + Send {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<Scatter>;
 }
 
-#[derive(Debug, Constructor)]
+#[derive(Debug, Constructor, Clone)]
 pub struct Lambertian {
     albedo: Color,
 }
@@ -37,7 +37,7 @@ impl Material for Lambertian {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Metal {
     albedo: Color,
     fuzz: f64,
@@ -72,7 +72,7 @@ impl Material for Metal {
     }
 }
 
-#[derive(Debug, Constructor)]
+#[derive(Debug, Constructor, Clone)]
 pub struct Dielectric {
     ir: f64,
 }

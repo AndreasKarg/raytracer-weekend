@@ -9,19 +9,19 @@ use {
 };
 
 #[derive(Debug, Constructor)]
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub p: Point3,
     pub normal: Vec3,
-    pub material: Arc<dyn Material>,
+    pub material: &'a (dyn Material + 'a),
     pub t: f64,
     pub is_front_face: bool,
 }
 
-impl HitRecord {
+impl<'a> HitRecord<'a> {
     pub fn new_with_face_normal(
         p: Point3,
         t: f64,
-        material: Arc<dyn Material>,
+        material: &'a (dyn Material + 'a),
         ray: &Ray,
         outward_normal: Vec3,
     ) -> Self {
@@ -40,21 +40,14 @@ pub trait Hittable: Sync + Send {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
 }
 
-#[derive(Constructor)]
-pub struct Sphere {
-    center: Point3,
-    radius: f64,
-    material: Arc<dyn Material>,
-}
-
-fn hit_sphere(
+fn hit_sphere<'a>(
     ray: &Ray,
     t_min: f64,
     t_max: f64,
     center: Vec3,
     radius: f64,
-    material: Arc<dyn Material>,
-) -> Option<HitRecord> {
+    material: &'a (dyn Material + 'a),
+) -> Option<HitRecord<'a>> {
     let origin_to_center = ray.origin() - center;
     let a = ray.direction().length_squared();
     let half_b = origin_to_center.dot(&ray.direction());
@@ -89,6 +82,13 @@ fn hit_sphere(
     ))
 }
 
+#[derive(Constructor)]
+pub struct Sphere {
+    center: Point3,
+    radius: f64,
+    material: Box<dyn Material>,
+}
+
 impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         hit_sphere(
@@ -97,7 +97,7 @@ impl Hittable for Sphere {
             t_max,
             self.center,
             self.radius,
-            self.material.clone(),
+            self.material.as_ref(),
         )
     }
 }
@@ -109,7 +109,7 @@ pub struct MovingSphere {
     center1: Point3,
     time1: f64,
     radius: f64,
-    material: Arc<dyn Material>,
+    material: Box<dyn Material>,
 }
 
 impl Hittable for MovingSphere {
@@ -118,8 +118,9 @@ impl Hittable for MovingSphere {
         let time0 = self.time0;
         let center1 = self.center1;
         let time1 = self.time1;
+
         let center_at_time =
-            center0 + ((ray.time() - time0) / (time1 / time0)) * (center1 - center0);
+            center0 + ((ray.time() - time0) / (time1 - time0)) * (center1 - center0);
 
         hit_sphere(
             ray,
@@ -127,7 +128,7 @@ impl Hittable for MovingSphere {
             t_max,
             center_at_time,
             self.radius,
-            self.material.clone(),
+            self.material.as_ref(),
         )
     }
 }

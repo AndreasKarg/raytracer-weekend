@@ -3,7 +3,7 @@ use {
     derive_more::Constructor,
 };
 
-#[derive(Constructor, Default)]
+#[derive(Constructor, Default, Debug)]
 pub struct Ray {
     origin: Point3,
     direction: Vec3,
