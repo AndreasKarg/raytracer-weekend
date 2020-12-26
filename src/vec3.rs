@@ -39,7 +39,7 @@ impl Vec3 {
         self.e[0] * rhs.e[0] + self.e[1] * rhs.e[1] + self.e[2] * rhs.e[2]
     }
 
-    pub fn _cross(&self, rhs: &Self) -> Self {
+    pub fn cross(&self, rhs: &Self) -> Self {
         Self::new(
             self.e[1] * rhs.e[2] - self.e[2] * rhs.e[1],
             self.e[2] * rhs.e[0] - self.e[0] * rhs.e[2],
@@ -83,6 +83,15 @@ impl Vec3 {
             in_unit_sphere
         } else {
             -in_unit_sphere
+        }
+    }
+
+    pub fn random_in_unit_disk(rng: &mut impl Rng) -> Self {
+        loop {
+            let p = Self::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0.0);
+            if p.length_squared() < 1.0 {
+                return p;
+            }
         }
     }
 
