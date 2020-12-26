@@ -36,41 +36,51 @@ fn main() {
     const MAX_DEPTH: usize = 50;
 
     // World
-    let material_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
-    let material_center = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
-    let material_left = Rc::new(Dielectric::new(1.5));
-    let material_right = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
+    let R = (std::f64::consts::PI / 4.0).cos();
+
+    let material_left = Rc::new(Lambertian::new(Color::new(0.0, 0.0, 1.0)));
+    let material_right = Rc::new(Lambertian::new(Color::new(1.0, 0.0, 0.0)));
 
     let world: Vec<Box<dyn Hittable>> = vec![
-        Box::new(Sphere::new(
-            Point3::new(0.0, -100.5, -1.0),
-            100.0,
-            material_ground,
-        )),
-        Box::new(Sphere::new(
-            Point3::new(0.0, 0.0, -1.0),
-            0.5,
-            material_center,
-        )),
-        Box::new(Sphere::new(
-            Point3::new(-1.0, 0.0, -1.0),
-            0.5,
-            material_left.clone(),
-        )),
-        Box::new(Sphere::new(
-            Point3::new(-1.0, 0.0, -1.0),
-            -0.4,
-            material_left,
-        )),
-        Box::new(Sphere::new(
-            Point3::new(1.0, 0.0, -1.0),
-            0.5,
-            material_right,
-        )),
+        Box::new(Sphere::new(Point3::new(-R, 0.0, -1.0), R, material_left)),
+        Box::new(Sphere::new(Point3::new(R, 0.0, -1.0), R, material_right)),
     ];
 
+    // let material_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
+    // let material_center = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    // let material_left = Rc::new(Dielectric::new(1.5));
+    // let material_right = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
+    //
+    // let world: Vec<Box<dyn Hittable>> = vec![
+    //     Box::new(Sphere::new(
+    //         Point3::new(0.0, -100.5, -1.0),
+    //         100.0,
+    //         material_ground,
+    //     )),
+    //     Box::new(Sphere::new(
+    //         Point3::new(0.0, 0.0, -1.0),
+    //         0.5,
+    //         material_center,
+    //     )),
+    //     Box::new(Sphere::new(
+    //         Point3::new(-1.0, 0.0, -1.0),
+    //         0.5,
+    //         material_left.clone(),
+    //     )),
+    //     Box::new(Sphere::new(
+    //         Point3::new(-1.0, 0.0, -1.0),
+    //         -0.4,
+    //         material_left,
+    //     )),
+    //     Box::new(Sphere::new(
+    //         Point3::new(1.0, 0.0, -1.0),
+    //         0.5,
+    //         material_right,
+    //     )),
+    // ];
+
     // Camera
-    let cam = Camera::new();
+    let cam = Camera::new(90.0, ASPECT_RATIO);
 
     // Render
     let file = File::create("image.ppm").unwrap();
@@ -138,9 +148,10 @@ struct Camera {
 }
 
 impl Camera {
-    pub fn new() -> Self {
-        let aspect_ratio = 16.0 / 9.0;
-        let viewport_height = 2.0;
+    pub fn new(vfow: f64, aspect_ratio: f64) -> Self {
+        let theta = vfow.to_radians();
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h;
         let viewport_width = aspect_ratio * viewport_height;
         let focal_length = 1.0;
 
