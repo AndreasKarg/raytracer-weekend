@@ -27,14 +27,13 @@ struct Width(usize);
 #[derive(From, Into)]
 struct Height(usize);
 
-fn main() {
-    // Image
-    const ASPECT_RATIO: f64 = 3.0 / 2.0;
-    const IMAGE_WIDTH: Width = Width(400);
-    const IMAGE_HEIGHT: Height = Height((IMAGE_WIDTH.0 as f64 / ASPECT_RATIO) as usize);
-    const SAMPLES_PER_PIXEL: usize = 100;
-    const MAX_DEPTH: usize = 50;
+const ASPECT_RATIO: f64 = 3.0 / 2.0;
+const IMAGE_WIDTH: Width = Width(400);
+const IMAGE_HEIGHT: Height = Height((IMAGE_WIDTH.0 as f64 / ASPECT_RATIO) as usize);
+const SAMPLES_PER_PIXEL: usize = 100;
+const MAX_DEPTH: usize = 50;
 
+fn main() {
     let mut rng = rand::thread_rng();
 
     // World
@@ -86,20 +85,20 @@ fn main() {
     }
 
     // Camera
-    let lookfrom = Point3::new(13.0, 2.0, 3.0);
-    let lookat = Point3::new(0.0, 0.0, 0.0);
-    let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = 10.0;
+    let look_from = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
     let aperture = 0.1;
 
     let cam = Camera::new(
-        lookfrom,
-        lookat,
-        vup,
+        look_from,
+        look_at,
+        v_up,
         20.0,
         ASPECT_RATIO,
         aperture,
-        dist_to_focus,
+        distance_to_focus,
     );
 
     // Render
@@ -116,29 +115,35 @@ fn main() {
     );
 
     let rows = (0..IMAGE_HEIGHT.0)
-        .rev()
+        .into_par_iter()
         .progress_with(progress_bar)
         .map(|j| {
-            let cols = (0..IMAGE_WIDTH.0).into_par_iter().map(|i| {
-                let mut rng = thread_rng();
-                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-                for _ in 0..SAMPLES_PER_PIXEL {
-                    let u = (i as f64 + rng.gen::<f64>()) / ((IMAGE_WIDTH.0 - 1) as f64);
-                    let v = (j as f64 + rng.gen::<f64>()) / ((IMAGE_HEIGHT.0 - 1) as f64);
-                    let r = cam.get_ray(u, v, &mut rng);
-                    pixel_color += ray_color(&r, &world, &mut rng, MAX_DEPTH);
-                }
-
-                pixel_color
-            });
+            let cols = (0..IMAGE_WIDTH.0)
+                .into_par_iter()
+                .map(|i| evaluate_pixel(&world, &cam, j, i));
 
             cols.collect::<Vec<_>>()
         });
 
-    let all_pixels: Vec<_> = rows.flatten().collect();
+    let all_pixels: Vec<_> = rows.collect();
     all_pixels
         .into_iter()
+        .rev()
+        .flatten()
         .for_each(|pixel| write_color(&mut file, pixel, SAMPLES_PER_PIXEL).unwrap());
+}
+
+fn evaluate_pixel(world: &Vec<Box<dyn Hittable>>, cam: &Camera, pixel_row: usize, pixel_column: usize) -> Vec3 {
+    let mut rng = thread_rng();
+    let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+    for _ in 0..SAMPLES_PER_PIXEL {
+        let u = (pixel_column as f64 + rng.gen::<f64>()) / ((IMAGE_WIDTH.0 - 1) as f64);
+        let v = (pixel_row as f64 + rng.gen::<f64>()) / ((IMAGE_HEIGHT.0 - 1) as f64);
+        let r = cam.get_ray(u, v, &mut rng);
+        pixel_color += ray_color(&r, world, &mut rng, MAX_DEPTH);
+    }
+
+    pixel_color
 }
 
 fn write_color<F: Write>(f: &mut F, pixel_color: Vec3, samples_per_pixel: usize) -> io::Result<()> {
