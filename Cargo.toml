@@ -7,8 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-#indicatif = { version = "0.15.0", features = ["rayon"] }
-indicatif = "0.15.0"
+indicatif = { version = "0.15.0", features = ["rayon"] }
 derive_more = "0.99.11"
 rand = "0.8.0"
-#rayon = "1.5.0"
+rayon = "1.5.0"

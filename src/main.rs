@@ -12,7 +12,7 @@ use {
     material::{Dielectric, Lambertian, Material, Metal},
     rand::prelude::*,
     ray::Ray,
-    // rayon::prelude::*,
+    rayon::prelude::*,
     std::{
         fs::File,
         io::{self, BufWriter, Write},
@@ -30,9 +30,9 @@ struct Height(usize);
 fn main() {
     // Image
     const ASPECT_RATIO: f64 = 3.0 / 2.0;
-    const IMAGE_WIDTH: Width = Width(1200);
+    const IMAGE_WIDTH: Width = Width(400);
     const IMAGE_HEIGHT: Height = Height((IMAGE_WIDTH.0 as f64 / ASPECT_RATIO) as usize);
-    const SAMPLES_PER_PIXEL: usize = 500;
+    const SAMPLES_PER_PIXEL: usize = 100;
     const MAX_DEPTH: usize = 50;
 
     let mut rng = rand::thread_rng();
@@ -115,19 +115,27 @@ fn main() {
         ),
     );
 
-    for j in (0..IMAGE_HEIGHT.0).rev().progress_with(progress_bar) {
-        for i in 0..IMAGE_WIDTH.0 {
-            let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-            for _ in 0..SAMPLES_PER_PIXEL {
-                let u = (i as f64 + rng.gen::<f64>()) / ((IMAGE_WIDTH.0 - 1) as f64);
-                let v = (j as f64 + rng.gen::<f64>()) / ((IMAGE_HEIGHT.0 - 1) as f64);
-                let r = cam.get_ray(u, v, &mut rng);
-                pixel_color += ray_color(&r, &world, &mut rng, MAX_DEPTH);
-            }
+    let rows = (0..IMAGE_HEIGHT.0)
+        .rev()
+        .progress_with(progress_bar)
+        .map(|j| {
+            let cols = (0..IMAGE_WIDTH.0).map(|i| {
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+                for _ in 0..SAMPLES_PER_PIXEL {
+                    let u = (i as f64 + rng.gen::<f64>()) / ((IMAGE_WIDTH.0 - 1) as f64);
+                    let v = (j as f64 + rng.gen::<f64>()) / ((IMAGE_HEIGHT.0 - 1) as f64);
+                    let r = cam.get_ray(u, v, &mut rng);
+                    pixel_color += ray_color(&r, &world, &mut rng, MAX_DEPTH);
+                }
 
-            write_color(&mut file, pixel_color, SAMPLES_PER_PIXEL).unwrap();
-        }
-    }
+                pixel_color
+            });
+
+            cols.collect::<Vec<_>>()
+        });
+
+    let all_pixels = rows.flatten();
+    all_pixels.for_each(|pixel| write_color(&mut file, pixel, SAMPLES_PER_PIXEL).unwrap());
 }
 
 fn write_color<F: Write>(f: &mut F, pixel_color: Vec3, samples_per_pixel: usize) -> io::Result<()> {
