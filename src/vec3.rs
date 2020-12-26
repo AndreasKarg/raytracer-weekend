@@ -51,7 +51,7 @@ impl Vec3 {
         *self / self.length()
     }
 
-    pub fn _random(rng: &mut impl Rng) -> Self {
+    pub fn random(rng: &mut impl Rng) -> Self {
         Self::random_min_max(rng, 0.0..1.0)
     }
 

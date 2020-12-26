@@ -6,16 +6,16 @@ mod vec3;
 #[macro_use]
 extern crate derive_more;
 
-use std::io::BufWriter;
 use {
     hittable::{Hittable, HittableVec, Sphere},
-    indicatif::ProgressIterator,
-    material::{Dielectric, Lambertian, Metal},
+    indicatif::{ProgressBar, ProgressIterator, ProgressStyle},
+    material::{Dielectric, Lambertian, Material, Metal},
     rand::prelude::*,
     ray::Ray,
+    // rayon::prelude::*,
     std::{
         fs::File,
-        io::{self, Write},
+        io::{self, BufWriter, Write},
         rc::Rc,
     },
     vec3::{Color, Point3, Vec3},
@@ -29,52 +29,68 @@ struct Height(usize);
 
 fn main() {
     // Image
-    const ASPECT_RATIO: f64 = 16.0 / 9.0;
-    const IMAGE_WIDTH: Width = Width(400);
+    const ASPECT_RATIO: f64 = 3.0 / 2.0;
+    const IMAGE_WIDTH: Width = Width(1200);
     const IMAGE_HEIGHT: Height = Height((IMAGE_WIDTH.0 as f64 / ASPECT_RATIO) as usize);
-    const SAMPLES_PER_PIXEL: usize = 100;
+    const SAMPLES_PER_PIXEL: usize = 500;
     const MAX_DEPTH: usize = 50;
 
-    // World
-    let material_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
-    let material_center = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
-    let material_left = Rc::new(Dielectric::new(1.5));
-    let material_right = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 1.0));
+    let mut rng = rand::thread_rng();
 
-    let world: Vec<Box<dyn Hittable>> = vec![
+    // World
+    let material_ground = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let lambertian = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    let glass = Rc::new(Dielectric::new(1.5));
+    let metal = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
+
+    let mut world: Vec<Box<dyn Hittable>> = vec![
         Box::new(Sphere::new(
-            Point3::new(0.0, -100.5, -1.0),
-            100.0,
+            Point3::new(0.0, -1000.0, 0.0),
+            1000.0,
             material_ground,
         )),
-        Box::new(Sphere::new(
-            Point3::new(0.0, 0.0, -1.0),
-            0.5,
-            material_center,
-        )),
-        Box::new(Sphere::new(
-            Point3::new(-1.0, 0.0, -1.0),
-            0.5,
-            material_left.clone(),
-        )),
-        Box::new(Sphere::new(
-            Point3::new(-1.0, 0.0, -1.0),
-            -0.45,
-            material_left,
-        )),
-        Box::new(Sphere::new(
-            Point3::new(1.0, 0.0, -1.0),
-            0.5,
-            material_right,
-        )),
+        Box::new(Sphere::new(Point3::new(-4.0, 0.2, 0.1), 1.0, lambertian)),
+        Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, glass.clone())),
+        Box::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), -0.95, glass)),
+        Box::new(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, metal)),
     ];
 
+    for a in -11..11 {
+        for b in -11..11 {
+            let a = a as f64;
+            let b = b as f64;
+
+            let center = Point3::new(a + 0.9 * rng.gen::<f64>(), 0.2, b + 0.9 * rng.gen::<f64>());
+
+            if (center - Point3::new(4.0, 0.2, 0.0)).length() <= 0.9 {
+                continue;
+            }
+
+            let sphere_material: Rc<dyn Material>;
+
+            let choose_mat: f64 = rng.gen();
+            if choose_mat < 0.8 {
+                let albedo = Color::random(&mut rng) * Color::random(&mut rng);
+                sphere_material = Rc::new(Lambertian::new(albedo));
+            } else if choose_mat < 0.95 {
+                let albedo = Color::random_min_max(&mut rng, 0.5..1.0);
+                let fuzz = rng.gen_range(0.0..0.5);
+                sphere_material = Rc::new(Metal::new(albedo, fuzz));
+            } else {
+                sphere_material = Rc::new(Dielectric::new(1.5));
+            }
+
+            let sphere = Box::new(Sphere::new(center, 0.2, sphere_material));
+            world.push(sphere);
+        }
+    }
+
     // Camera
-    let lookfrom = Point3::new(3.0, 3.0, 2.0);
-    let lookat = Point3::new(0.0, 0.0, -1.0);
+    let lookfrom = Point3::new(13.0, 2.0, 3.0);
+    let lookat = Point3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = (lookfrom - lookat).length();
-    let aperture = 2.0;
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
 
     let cam = Camera::new(
         lookfrom,
@@ -90,11 +106,16 @@ fn main() {
     let file = File::create("image.ppm").unwrap();
     let mut file = BufWriter::new(file);
 
-    let mut rng = rand::thread_rng();
-
     writeln!(&mut file, "P3\n{} {}\n255", IMAGE_WIDTH.0, IMAGE_HEIGHT.0).unwrap();
 
-    for j in (0..IMAGE_HEIGHT.0).rev().progress() {
+    let progress_bar = ProgressBar::new(IMAGE_HEIGHT.0 as u64);
+    progress_bar.set_style(
+        ProgressStyle::default_bar().template(
+            "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec})",
+        ),
+    );
+
+    for j in (0..IMAGE_HEIGHT.0).rev().progress_with(progress_bar) {
         for i in 0..IMAGE_WIDTH.0 {
             let mut pixel_color = Color::new(0.0, 0.0, 0.0);
             for _ in 0..SAMPLES_PER_PIXEL {
