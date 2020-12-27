@@ -271,7 +271,7 @@ pub fn simple_light(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
             Point3::new(0.0, 6.0, 0.0),
             2.0,
             Box::new(earth_surface),
-        ))
+        )),
     ];
 
     // Camera
@@ -296,7 +296,7 @@ pub fn simple_light(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, cam, Color::new(0.0,0.0,0.0))
+    (world, cam, Color::new(0.0, 0.0, 0.0))
 }
 
 type World = (Vec<Box<dyn Hittable>>, Camera, Color);

@@ -1,8 +1,9 @@
-use std::f64::consts::PI;
+use std::{f64::consts::PI, fmt::Debug};
 
 use derive_more::Constructor;
 
 use super::{
+    aabb::Aabb,
     material::Material,
     ray::Ray,
     texture::Point2d,
@@ -39,8 +40,9 @@ impl<'a> HitRecord<'a> {
     }
 }
 
-pub trait Hittable: Sync + Send {
+pub trait Hittable: Sync + Send + Debug {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb>;
 }
 
 fn hit_sphere<'a>(
@@ -104,7 +106,7 @@ fn get_sphere_uv(p: &Point3) -> Point2d {
     Point2d { u, v }
 }
 
-#[derive(Constructor)]
+#[derive(Constructor, Debug)]
 pub struct Sphere {
     center: Point3,
     radius: f64,
@@ -122,9 +124,16 @@ impl Hittable for Sphere {
             self.material.as_ref(),
         )
     }
+
+    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
+        let center = self.center;
+        let radius = self.radius;
+        let radius_vector = Vec3::new(radius, radius, radius);
+        Some(Aabb::new(center - radius_vector, center + radius_vector))
+    }
 }
 
-#[derive(Constructor)]
+#[derive(Constructor, Debug)]
 pub struct MovingSphere {
     center0: Point3,
     time0: f64,
@@ -134,15 +143,19 @@ pub struct MovingSphere {
     material: Box<dyn Material>,
 }
 
-impl Hittable for MovingSphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+impl MovingSphere {
+    fn center_at_time(&self, time: f64) -> Point3 {
         let center0 = self.center0;
         let time0 = self.time0;
         let center1 = self.center1;
         let time1 = self.time1;
+        center0 + ((time - time0) / (time1 - time0)) * (center1 - center0)
+    }
+}
 
-        let center_at_time =
-            center0 + ((ray.time() - time0) / (time1 - time0)) * (center1 - center0);
+impl Hittable for MovingSphere {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let center_at_time = self.center_at_time(ray.time());
 
         hit_sphere(
             ray,
@@ -153,10 +166,23 @@ impl Hittable for MovingSphere {
             self.material.as_ref(),
         )
     }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+        let start_center = self.center_at_time(time0);
+        let end_center = self.center_at_time(time1);
+        let radius = self.radius;
+        let radius_vector = Vec3::new(radius, radius, radius);
+
+        let start_box = Aabb::new(start_center - radius_vector, start_center + radius_vector);
+        let end_box = Aabb::new(end_center - radius_vector, end_center + radius_vector);
+
+        Some(Aabb::surrounding_box(&start_box, &end_box))
+    }
 }
 
 pub trait HittableVec {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn bounding_box(&self, t0: f64, t1: f64) -> Option<Aabb>;
 }
 
 impl HittableVec for [Box<dyn Hittable>] {
@@ -172,6 +198,24 @@ impl HittableVec for [Box<dyn Hittable>] {
         }
 
         rec
+    }
+
+    fn bounding_box(&self, t0: f64, t1: f64) -> Option<Aabb> {
+        if self.is_empty() {
+            return None;
+        }
+
+        let mut output_box = None;
+
+        for object in self.iter() {
+            let temp_box = object.bounding_box(t0, t1)?;
+            output_box = match output_box {
+                None => Some(temp_box),
+                Some(bounding_box) => Some(Aabb::surrounding_box(&bounding_box, &temp_box)),
+            };
+        }
+
+        output_box
     }
 }
 
