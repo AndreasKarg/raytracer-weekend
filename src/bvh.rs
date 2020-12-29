@@ -3,37 +3,26 @@ use rand::prelude::Rng;
 
 use super::{aabb::Aabb, hittable::Hittable};
 use crate::{hittable::HitRecord, ray::Ray};
+    std::cmp::Ordering,
 
 ///! An implementation of a Boundary Volume Hierarchy thingamajig.
 
 #[derive(Debug)]
 pub struct BvhNode {
     left: Box<dyn Hittable>,
-    right: Box<dyn Hittable>,
+    right: Option<Box<dyn Hittable>>,
     bounding_box: Aabb,
 }
 
 impl BvhNode {
-    fn box_x_compare(a: &dyn Hittable, b: &dyn Hittable) {
-        unimplemented!()
-    }
 
-    fn box_y_compare(a: &dyn Hittable, b: &dyn Hittable) {
-        unimplemented!()
-    }
-
-    fn box_z_compare(a: &dyn Hittable, b: &dyn Hittable) {
-        unimplemented!()
-    }
 
     pub fn new(
-        src_objects: &[Box<dyn Hittable>],
+        mut src_objects: Vec<Box<dyn Hittable>>,
         time0: f64,
         time1: f64,
         rng: &mut impl Rng,
     ) -> Self {
-        let mut objects = Vec::from(src_objects);
-
         let axis = rng.gen_range(0..=2);
 
         let comparator = match axis {
@@ -43,31 +32,69 @@ impl BvhNode {
             _ => unreachable!(),
         };
 
-        let mut left;
-        let mut right;
+        let left;
+        let right;
 
-        if objects.len() == 1 {
-            left = objects[0].clone();
-            right = left.clone()
-        } else if objects.len() == 2 {
-            left = objects[0].clone();
-            right = objects[1].clone();
+        if src_objects.len() == 1 {
+            left = src_objects.pop().unwrap();
+            right = None
+        } else if src_objects.len() == 2 {
+            left = src_objects.pop().unwrap();
+            right = Some(src_objects.pop().unwrap());
         } else {
-            objects.sort_by(comparator);
-            let mid = objects.len() / 2;
-            left = Box::new(Self::new(&objects[..mid], time0, time1, rng));
-            right = Box::new(Self::new(&objects[mid..], time0, time1, rng));
+            src_objects.sort_by(comparator);
+            let mid = src_objects.len() / 2;
+            left = Box::new(Self::new(
+                src_objects.drain(..mid).collect(),
+                time0,
+                time1,
+                rng,
+            ));
+            right = Some(Box::new(Self::new(src_objects, time0, time1, rng)));
         }
 
-        let box_left = left.bounding_box(time0, time1).unwrap();
-        let box_right = right.bounding_box(time0, time1).unwrap();
-        let surrounding_box = Aabb::surrounding_box(&box_left, &box_right);
+        let box_left = left
+            .bounding_box(time0, time1)
+            .expect("No bounding box in bvh_node constructor.");
+
+        let surrounding_box = match &right {
+            None => box_left,
+            Some(right) => {
+                let box_right = right
+                    .bounding_box(time0, time1)
+                    .expect("No bounding box in bvh_node constructor.");
+                Aabb::surrounding_box(&box_left, &box_right)
+            }
+        };
 
         Self {
             left,
             right,
             bounding_box: surrounding_box,
         }
+    }
+
+    fn box_x_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>) -> Ordering {
+        Self::box_compare(a, b, 0)
+    }
+
+    fn box_y_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>) -> Ordering {
+        Self::box_compare(a, b, 1)
+    }
+
+    fn box_z_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>) -> Ordering {
+        Self::box_compare(a, b, 2)
+    }
+
+    fn box_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>, axis: usize) -> Ordering {
+        let box_a = a
+            .bounding_box(0.0, 0.0)
+            .expect("No bounding box in bvh_node constructor.");
+        let box_b = b
+            .bounding_box(0.0, 0.0)
+            .expect("No bounding box in bvh_node constructor.");
+
+        box_a.min()[axis].partial_cmp(&box_b.min()[axis]).unwrap()
     }
 }
 
@@ -82,7 +109,7 @@ impl Hittable for BvhNode {
             None => t_max,
             Some(hit) => hit.t,
         };
-        let hit_right = self.right.hit(r, t_min, t_max);
+        let hit_right = self.right.as_ref().and_then(|h| h.hit(r, t_min, t_max));
 
         match &hit_right {
             Some(hit) => hit_right,
@@ -90,7 +117,7 @@ impl Hittable for BvhNode {
         }
     }
 
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
         Some(self.bounding_box.clone())
     }
 }

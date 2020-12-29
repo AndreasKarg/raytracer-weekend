@@ -20,22 +20,48 @@ impl Aabb {
         self.maximum
     }
 
+    // pub fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> bool {
+    //     let minimum = self.minimum;
+    //     let maximum = self.maximum;
+    //     let mut t_min = t_min;
+    //     let mut t_max = t_max;
+    //     for a in 0..3 {
+    //         let inverted_denominator = 1.0 / ray.direction()[a];
+    //         let mut t0 = minimum[a] - ray.origin()[a] * inverted_denominator;
+    //         let mut t1 = maximum[a] - ray.origin()[a] * inverted_denominator;
+    //
+    //         if inverted_denominator < 0.0 {
+    //             swap(&mut t0, &mut t1);
+    //         }
+    //
+    //         t_min = t0.max(t_min);
+    //         t_max = t1.min(t_max);
+    //
+    //         println!("min: {}\nmax: {}", t_min, t_max);
+    //
+    //         if t_max <= t_min {
+    //             return false;
+    //         }
+    //     }
+    //
+    //     true
+    // }
+
     pub fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> bool {
         let minimum = self.minimum;
         let maximum = self.maximum;
         let mut t_min = t_min;
         let mut t_max = t_max;
         for a in 0..3 {
-            let inverted_denominator = 1.0 / ray.direction()[a];
-            let mut t0 = minimum[a] - ray.origin()[a] * inverted_denominator;
-            let mut t1 = maximum[a] - ray.origin()[a] * inverted_denominator;
-
-            if inverted_denominator < 0.0 {
-                swap(&mut t0, &mut t1);
-            }
+            let t0 = (minimum[a] - ray.origin()[a] / ray.direction()[a])
+                .min(maximum[a] - ray.origin()[a] / ray.direction()[a]);
+            let t1 = (minimum[a] - ray.origin()[a] / ray.direction()[a])
+                .max(maximum[a] - ray.origin()[a] / ray.direction()[a]);
 
             t_min = t0.max(t_min);
             t_max = t1.min(t_max);
+
+            // println!("min: {}\nmax: {}", t_min, t_max);
 
             if t_max <= t_min {
                 return false;
