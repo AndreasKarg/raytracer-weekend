@@ -13,16 +13,14 @@ use std::{
 
 use camera::Camera;
 use derive_more::{From, Into};
-use hittable::{Hittable, HittableVec, MovingSphere, Sphere};
+use hittable::{Hittable, HittableVec};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use itertools::iproduct;
-use material::{Dielectric, Lambertian, Material, Metal};
+use material::Lambertian;
 use rand::prelude::*;
 use ray::Ray;
 use rayon::prelude::*;
-use vec3::{Color, Point3, Vec3};
-
-use crate::texture::{Checker, SolidColor};
+use vec3::{Color, Vec3};
 
 #[derive(From, Into)]
 struct Width(usize);
@@ -40,26 +38,9 @@ fn main() {
     let mut rng = rand::thread_rng();
 
     // World
-    let world = scenes::jumpy_balls(&mut rng);
+    // let (world, cam) = scenes::jumpy_balls(ASPECT_RATIO, &mut rng);
 
-    // Camera
-    let look_from = Point3::new(13.0, 2.0, 3.0);
-    let look_at = Point3::new(0.0, 0.0, 0.0);
-    let v_up = Vec3::new(0.0, 1.0, 0.0);
-    let distance_to_focus = 10.0;
-    let aperture = 0.1;
-
-    let cam = Camera::new(
-        look_from,
-        look_at,
-        v_up,
-        20.0,
-        ASPECT_RATIO,
-        aperture,
-        distance_to_focus,
-        0.0,
-        1.0,
-    );
+    let (world, cam) = scenes::two_spheres(ASPECT_RATIO, &mut rng);
 
     // Render
     let file = File::create("image.ppm").unwrap();

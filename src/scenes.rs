@@ -1,6 +1,7 @@
 use rand::prelude::*;
 
 use crate::{
+    camera::Camera,
     hittable::{Hittable, MovingSphere, Sphere},
     material::{Dielectric, Material, Metal},
     texture::{Checker, SolidColor},
@@ -8,7 +9,7 @@ use crate::{
     Lambertian,
 };
 
-pub fn jumpy_balls(rng: &mut ThreadRng) -> Vec<Box<dyn Hittable>> {
+pub fn jumpy_balls(aspect_ratio: f64, rng: &mut ThreadRng) -> (Vec<Box<dyn Hittable>>, Camera) {
     let checker = Checker::new(
         SolidColor::new_rgb(0.2, 0.3, 0.1),
         SolidColor::new_rgb(0.9, 0.9, 0.9),
@@ -87,5 +88,71 @@ pub fn jumpy_balls(rng: &mut ThreadRng) -> Vec<Box<dyn Hittable>> {
         }
     }
 
-    world
+    // Camera
+    let look_from = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.1;
+
+    let cam = Camera::new(
+        look_from,
+        look_at,
+        v_up,
+        20.0,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        0.0,
+        1.0,
+    );
+
+    (world, cam)
+}
+
+pub fn two_spheres(aspect_ratio: f64, _rng: &mut ThreadRng) -> (Vec<Box<dyn Hittable>>, Camera) {
+    // World
+    let checker = Checker::new(
+        SolidColor::new_rgb(0.2, 0.3, 0.1),
+        SolidColor::new_rgb(0.9, 0.9, 0.9),
+        10.0,
+    );
+    let material_ground = Lambertian::new(checker);
+
+    let world: Vec<Box<dyn Hittable>> = vec![
+        Box::new(Sphere::new(
+            Point3::new(0.0, -10.0, 0.0),
+            10.0,
+            Box::new(material_ground.clone()),
+        )),
+        Box::new(Sphere::new(
+            Point3::new(0.0, 10.0, 0.0),
+            10.0,
+            Box::new(material_ground),
+        )),
+    ];
+
+    // Camera
+    let look_from = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = Camera::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    (world, cam)
 }

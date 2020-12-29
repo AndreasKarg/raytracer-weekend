@@ -14,7 +14,7 @@ pub trait Texture: Debug + Send + Sync {
     fn value(&self, uv: Point2d, p: &Vec3) -> Color;
 }
 
-#[derive(Debug, Constructor)]
+#[derive(Debug, Constructor, Clone)]
 pub struct SolidColor {
     color_value: Color,
 }
@@ -31,7 +31,7 @@ impl Texture for SolidColor {
     }
 }
 
-#[derive(Debug, Constructor)]
+#[derive(Debug, Constructor, Clone)]
 pub struct Checker<E: Texture, O: Texture> {
     odd: O,
     even: E,
