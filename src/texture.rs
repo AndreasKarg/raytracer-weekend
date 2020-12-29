@@ -30,3 +30,24 @@ impl Texture for SolidColor {
         self.color_value
     }
 }
+
+#[derive(Debug, Constructor)]
+pub struct Checker<E: Texture, O: Texture> {
+    odd: O,
+    even: E,
+    frequency: f64,
+}
+
+impl<E: Texture, O: Texture> Texture for Checker<E, O> {
+    fn value(&self, uv: Point2d, p: &Vec3) -> Color {
+        let sines = (self.frequency * p.x()).sin()
+            * (self.frequency * p.y()).sin()
+            * (self.frequency * p.z()).sin();
+
+        if sines < 0.0 {
+            self.odd.value(uv, p)
+        } else {
+            self.even.value(uv, p)
+        }
+    }
+}
