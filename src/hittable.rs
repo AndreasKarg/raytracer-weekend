@@ -96,7 +96,7 @@ fn get_sphere_uv(p: &Point3) -> Point2d {
     //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
 
     let theta = (-p.y()).acos();
-    let phi = (-p.z()).atan2(p.x());
+    let phi = (-p.z()).atan2(p.x()) + PI;
 
     let u = phi / (2.0 * PI);
     let v = theta / PI;

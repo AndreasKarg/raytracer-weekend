@@ -1,5 +1,6 @@
 mod camera;
 mod hittable;
+mod image_texture;
 mod material;
 mod perlin;
 mod ray;
@@ -41,7 +42,8 @@ fn main() {
     // World
     // let (world, cam) = scenes::jumpy_balls(ASPECT_RATIO, &mut rng);
     // let (world, cam) = scenes::two_spheres(ASPECT_RATIO, &mut rng);
-    let (world, cam) = scenes::two_perlin_spheres(ASPECT_RATIO, &mut rng);
+    // let (world, cam) = scenes::two_perlin_spheres(ASPECT_RATIO, &mut rng);
+    let (world, cam) = scenes::earth(ASPECT_RATIO, &mut rng);
 
     // Render
     let file = File::create("image.ppm").unwrap();
