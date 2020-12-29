@@ -4,7 +4,8 @@ use crate::{
     camera::Camera,
     hittable::{Hittable, MovingSphere, Sphere},
     material::{Dielectric, Material, Metal},
-    texture::{Checker, SolidColor},
+    perlin::Perlin,
+    texture::{Checker, Noise, SolidColor},
     vec3::{Color, Point3, Vec3},
     Lambertian,
 };
@@ -128,6 +129,52 @@ pub fn two_spheres(aspect_ratio: f64, _rng: &mut ThreadRng) -> (Vec<Box<dyn Hitt
         Box::new(Sphere::new(
             Point3::new(0.0, 10.0, 0.0),
             10.0,
+            Box::new(material_ground),
+        )),
+    ];
+
+    // Camera
+    let look_from = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = Camera::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    (world, cam)
+}
+
+pub fn two_perlin_spheres(
+    aspect_ratio: f64,
+    rng: &mut ThreadRng,
+) -> (Vec<Box<dyn Hittable>>, Camera) {
+    // World
+    let perlin_material = Noise::new(Perlin::new(rng));
+    let material_ground = Lambertian::new(perlin_material);
+
+    let world: Vec<Box<dyn Hittable>> = vec![
+        Box::new(Sphere::new(
+            Point3::new(0.0, -1000.0, 0.0),
+            1000.0,
+            Box::new(material_ground.clone()),
+        )),
+        Box::new(Sphere::new(
+            Point3::new(0.0, 2.0, 0.0),
+            2.0,
             Box::new(material_ground),
         )),
     ];

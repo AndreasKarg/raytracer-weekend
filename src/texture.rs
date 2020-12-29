@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use derive_more::Constructor;
 
 use super::vec3::{Color, Vec3};
+use crate::perlin::Perlin;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Point2d {
@@ -49,5 +50,16 @@ impl<E: Texture, O: Texture> Texture for Checker<E, O> {
         } else {
             self.even.value(uv, p)
         }
+    }
+}
+
+#[derive(Debug, Constructor, Clone)]
+pub struct Noise {
+    noise: Perlin,
+}
+
+impl Texture for Noise {
+    fn value(&self, _uv: Point2d, p: &Vec3) -> Color {
+        Color::new(1.0, 1.0, 1.0) * self.noise.noise(p)
     }
 }
