@@ -2,25 +2,24 @@ mod camera;
 mod hittable;
 mod material;
 mod ray;
+mod texture;
 mod vec3;
 
-use {
-    camera::Camera,
-    derive_more::{From, Into},
-    hittable::{Hittable, HittableVec, MovingSphere, Sphere},
-    indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle},
-    itertools::iproduct,
-    material::{Dielectric, Lambertian, Material, Metal},
-    rand::prelude::*,
-    ray::Ray,
-    rayon::prelude::*,
-    std::{
-        fs::File,
-        io::{self, BufWriter, Write},
-        sync::Arc,
-    },
-    vec3::{Color, Point3, Vec3},
+use std::{
+    fs::File,
+    io::{self, BufWriter, Write},
 };
+
+use camera::Camera;
+use derive_more::{From, Into};
+use hittable::{Hittable, HittableVec, MovingSphere, Sphere};
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
+use itertools::iproduct;
+use material::{Dielectric, Lambertian, Material, Metal};
+use rand::prelude::*;
+use ray::Ray;
+use rayon::prelude::*;
+use vec3::{Color, Point3, Vec3};
 
 #[derive(From, Into)]
 struct Width(usize);
@@ -38,8 +37,8 @@ fn main() {
     let mut rng = rand::thread_rng();
 
     // World
-    let material_ground = Lambertian::new(Color::new(0.5, 0.5, 0.5));
-    let lambertian = Lambertian::new(Color::new(0.4, 0.2, 0.1));
+    let material_ground = Lambertian::new_solid_color(Color::new(0.5, 0.5, 0.5));
+    let lambertian = Lambertian::new_solid_color(Color::new(0.4, 0.2, 0.1));
     let glass = Dielectric::new(1.5);
     let metal = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
 
@@ -47,12 +46,12 @@ fn main() {
         Box::new(Sphere::new(
             Point3::new(0.0, -1000.0, 0.0),
             1000.0,
-            Box::new(material_ground.clone()),
+            Box::new(material_ground),
         )),
         Box::new(Sphere::new(
             Point3::new(-4.0, 0.2, 0.1),
             1.0,
-            Box::new(lambertian.clone()),
+            Box::new(lambertian),
         )),
         Box::new(Sphere::new(
             Point3::new(0.0, 1.0, 0.0),
@@ -62,12 +61,12 @@ fn main() {
         Box::new(Sphere::new(
             Point3::new(0.0, 1.0, 0.0),
             -0.95,
-            Box::new(glass.clone()),
+            Box::new(glass),
         )),
         Box::new(Sphere::new(
             Point3::new(4.0, 1.0, 0.0),
             1.0,
-            Box::new(metal.clone()),
+            Box::new(metal),
         )),
     ];
 
@@ -87,7 +86,7 @@ fn main() {
             let choose_mat: f64 = rng.gen();
             if choose_mat < 0.8 {
                 let albedo = Color::random(&mut rng) * Color::random(&mut rng);
-                sphere_material = Box::new(Lambertian::new(albedo));
+                sphere_material = Box::new(Lambertian::new_solid_color(albedo));
             } else if choose_mat < 0.95 {
                 let albedo = Color::random_min_max(&mut rng, 0.5..1.0);
                 let fuzz = rng.gen_range(0.0..0.5);

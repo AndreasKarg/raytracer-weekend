@@ -1,10 +1,9 @@
-use {
-    rand::Rng,
-    std::{
-        fmt::{Display, Formatter},
-        ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Range, Sub},
-    },
+use std::{
+    fmt::{Display, Formatter},
+    ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Range, Sub},
 };
+
+use rand::Rng;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Vec3 {
@@ -19,9 +18,11 @@ impl Vec3 {
     pub fn x(&self) -> f64 {
         self.e[0]
     }
+
     pub fn y(&self) -> f64 {
         self.e[1]
     }
+
     pub fn z(&self) -> f64 {
         self.e[2]
     }

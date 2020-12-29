@@ -1,8 +1,8 @@
-use rand::Rng;
-use {
-    super::ray::Ray,
-    super::vec3::{Point3, Vec3},
-    rand::prelude::ThreadRng,
+use rand::{prelude::ThreadRng, Rng};
+
+use super::{
+    ray::Ray,
+    vec3::{Point3, Vec3},
 };
 
 pub struct Camera {

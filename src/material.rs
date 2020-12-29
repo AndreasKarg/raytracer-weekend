@@ -1,9 +1,12 @@
-use rand::Rng;
-use {
-    super::{hittable::HitRecord, ray::Ray, vec3::Color, vec3::Vec3},
-    derive_more::Constructor,
-    rand::rngs::ThreadRng,
+use derive_more::Constructor;
+use rand::{rngs::ThreadRng, Rng};
+
+use super::{
+    hittable::HitRecord,
+    ray::Ray,
+    vec3::{Color, Vec3},
 };
+use crate::texture::{SolidColor, Texture};
 
 pub struct Scatter {
     pub attenuation: Color,
@@ -15,11 +18,17 @@ pub trait Material: std::fmt::Debug + Sync + Send {
 }
 
 #[derive(Debug, Constructor, Clone)]
-pub struct Lambertian {
-    albedo: Color,
+pub struct Lambertian<T: Texture> {
+    albedo: T,
 }
 
-impl Material for Lambertian {
+impl Lambertian<SolidColor> {
+    pub fn new_solid_color(color: Color) -> Self {
+        Self::new(SolidColor::new(color))
+    }
+}
+
+impl<T: Texture> Material for Lambertian<T> {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<Scatter> {
         let mut scatter_direction = rec.normal + Vec3::random_unit_vector(rng);
 
@@ -28,7 +37,7 @@ impl Material for Lambertian {
         }
 
         let scattered_ray = Ray::new(rec.p, scatter_direction, r_in.time());
-        let attenuation = self.albedo;
+        let attenuation = self.albedo.value(rec.texture_uv, &rec.p);
 
         Some(Scatter {
             attenuation,

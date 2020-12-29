@@ -1,7 +1,6 @@
-use {
-    super::vec3::{Point3, Vec3},
-    derive_more::Constructor,
-};
+use derive_more::Constructor;
+
+use super::vec3::{Point3, Vec3};
 
 #[derive(Constructor, Default, Debug)]
 pub struct Ray {
@@ -14,6 +13,7 @@ impl Ray {
     pub fn origin(&self) -> Point3 {
         self.origin
     }
+
     pub fn direction(&self) -> Vec3 {
         self.direction
     }

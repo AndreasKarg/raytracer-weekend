@@ -1,11 +1,12 @@
-use {
-    super::{
-        material::Material,
-        ray::Ray,
-        vec3::{Point3, Vec3},
-    },
-    derive_more::Constructor,
-    std::sync::Arc,
+use std::f64::consts::PI;
+
+use derive_more::Constructor;
+
+use super::{
+    material::Material,
+    ray::Ray,
+    texture::Point2d,
+    vec3::{Point3, Vec3},
 };
 
 #[derive(Debug, Constructor)]
@@ -14,6 +15,7 @@ pub struct HitRecord<'a> {
     pub normal: Vec3,
     pub material: &'a (dyn Material + 'a),
     pub t: f64,
+    pub texture_uv: Point2d,
     pub is_front_face: bool,
 }
 
@@ -21,6 +23,7 @@ impl<'a> HitRecord<'a> {
     pub fn new_with_face_normal(
         p: Point3,
         t: f64,
+        texture_uv: Point2d,
         material: &'a (dyn Material + 'a),
         ray: &Ray,
         outward_normal: Vec3,
@@ -32,7 +35,7 @@ impl<'a> HitRecord<'a> {
             false => -outward_normal,
         };
 
-        Self::new(p, normal, material, t, is_front_face)
+        Self::new(p, normal, material, t, texture_uv, is_front_face)
     }
 }
 
@@ -53,7 +56,7 @@ fn hit_sphere<'a>(
     let half_b = origin_to_center.dot(&ray.direction());
     let c = origin_to_center.length_squared() - radius * radius;
 
-    let discriminant = half_b * half_b - a * c;
+    let discriminant = half_b.powi(2) - a * c;
     if discriminant < 0.0 {
         return None;
     }
@@ -72,14 +75,33 @@ fn hit_sphere<'a>(
     let t = root;
     let hit_point = ray.at(root);
     let outward_normal = (hit_point - center) / radius;
+    let texture_uv = get_sphere_uv(&outward_normal);
 
     Some(HitRecord::new_with_face_normal(
         hit_point,
         t,
+        texture_uv,
         material,
         ray,
         outward_normal,
     ))
+}
+
+fn get_sphere_uv(p: &Point3) -> Point2d {
+    // p: a given point on the sphere of radius one, centered at the origin.
+    // u: returned value [0,1] of angle around the Y axis from X=-1.
+    // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+    //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+    //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+    //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+
+    let theta = (-p.y()).acos();
+    let phi = (-p.z()).atan2(p.x());
+
+    let u = phi / (2.0 * PI);
+    let v = theta / PI;
+
+    Point2d { u, v }
 }
 
 #[derive(Constructor)]
