@@ -49,14 +49,15 @@ fn main() {
 
     writeln!(&mut file, "P3\n{} {}\n255", IMAGE_WIDTH.0, IMAGE_HEIGHT.0).unwrap();
 
-    let progress_bar = ProgressBar::new((IMAGE_HEIGHT.0 * IMAGE_WIDTH.0) as u64);
+    let pixel_count = (IMAGE_HEIGHT.0 * IMAGE_WIDTH.0) as u64;
+    let progress_bar = ProgressBar::new(pixel_count);
     progress_bar.set_style(
         ProgressStyle::default_bar().template(
             "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec})",
         ),
     );
 
-    progress_bar.set_draw_delta(IMAGE_WIDTH.0 as u64);
+    progress_bar.set_draw_delta(pixel_count / 100);
 
     let pixel_range: Vec<_> = iproduct!((0..IMAGE_HEIGHT.0).rev(), 0..IMAGE_WIDTH.0).collect();
     let all_pixels = pixel_range
