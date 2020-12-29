@@ -14,7 +14,7 @@ pub struct Perlin {
 
 impl Perlin {
     pub fn new(rng: &mut ThreadRng) -> Self {
-        let mut ranvec = [Vec3::new(0.0,0.0,0.0); POINT_COUNT];
+        let mut ranvec = [Vec3::new(0.0, 0.0, 0.0); POINT_COUNT];
         for item in &mut ranvec[..] {
             *item = Vec3::random_min_max(rng, -1.0..1.0).unit_vector();
         }
@@ -59,7 +59,7 @@ impl Perlin {
         let j = p.y().floor() as i64 as usize;
         let k = p.z().floor() as i64 as usize;
 
-        let mut c = [[[Vec3::new(0.0,0.0,0.0); 2]; 2]; 2];
+        let mut c = [[[Vec3::new(0.0, 0.0, 0.0); 2]; 2]; 2];
 
         for di in 0..2 {
             for dj in 0..2 {
@@ -74,10 +74,24 @@ impl Perlin {
         Self::perlin_interp(c, u, v, w)
     }
 
+    pub fn turbulence(&self, p: &Point3, depth: usize) -> f64 {
+        let mut accum = 0.0;
+        let mut temp_p = *p;
+        let mut weight = 1.0;
+
+        for _ in 0..depth {
+            accum += weight * self.noise(&temp_p);
+            weight *= 0.5;
+            temp_p *= 2.0;
+        }
+
+        accum.abs()
+    }
+
     fn perlin_interp(c: [[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
-        let uu = u*u*(3.0-2.0*u);
-        let vv = v*v*(3.0-2.0*v);
-        let ww = w*w*(3.0-2.0*w);
+        let uu = u * u * (3.0 - 2.0 * u);
+        let vv = v * v * (3.0 - 2.0 * v);
+        let ww = w * w * (3.0 - 2.0 * w);
         let mut accum = 0.0;
 
         for i in 0..2 {
@@ -86,7 +100,7 @@ impl Perlin {
                     let fi = i as f64;
                     let fj = j as f64;
                     let fk = k as f64;
-                    let weight_v = Vec3::new(u-fi, v-fj, w-fk);
+                    let weight_v = Vec3::new(u - fi, v - fj, w - fk);
                     accum += (fi * uu + (1.0 - fi) * (1.0 - uu))
                         * (fj * vv + (1.0 - fj) * (1.0 - vv))
                         * (fk * ww + (1.0 - fk) * (1.0 - ww))
