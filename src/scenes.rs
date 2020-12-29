@@ -163,7 +163,7 @@ pub fn two_perlin_spheres(
     rng: &mut ThreadRng,
 ) -> (Vec<Box<dyn Hittable>>, Camera) {
     // World
-    let perlin_material = Noise::new(Perlin::new(rng));
+    let perlin_material = Noise::new(Perlin::new(rng), 4.0);
     let material_ground = Lambertian::new(perlin_material);
 
     let world: Vec<Box<dyn Hittable>> = vec![

@@ -56,10 +56,11 @@ impl<E: Texture, O: Texture> Texture for Checker<E, O> {
 #[derive(Debug, Constructor, Clone)]
 pub struct Noise {
     noise: Perlin,
+    scale: f64,
 }
 
 impl Texture for Noise {
     fn value(&self, _uv: Point2d, p: &Vec3) -> Color {
-        Color::new(1.0, 1.0, 1.0) * self.noise.noise(p)
+        Color::new(1.0, 1.0, 1.0) * self.noise.noise(&(*p * self.scale))
     }
 }

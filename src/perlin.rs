@@ -55,9 +55,9 @@ impl Perlin {
         let v = p.y() - p.y().floor();
         let w = p.z() - p.z().floor();
 
-        let u = u.powi(2) * (3.0-2.0*u);
-        let v = v.powi(2) * (3.0-2.0*v);
-        let w = w.powi(2) * (3.0-2.0*w);
+        let u = u.powi(2) * (3.0 - 2.0 * u);
+        let v = v.powi(2) * (3.0 - 2.0 * v);
+        let w = w.powi(2) * (3.0 - 2.0 * w);
 
         let i = p.x().floor() as i64 as usize;
         let j = p.y().floor() as i64 as usize;
