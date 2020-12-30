@@ -7,4 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+indicatif = { version = "0.15.0", features = ["rayon"] }
 raytracer_weekend_lib = { path="raytracer_weekend_lib"}
+rayon = "1.5.0"

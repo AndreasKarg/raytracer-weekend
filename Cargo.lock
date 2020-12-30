@@ -447,6 +447,8 @@ dependencies = [
 name = "raytracer_weekend"
 version = "0.1.0"
 dependencies = [
+ "indicatif",
+ "rayon",
  "raytracer_weekend_lib",
 ]
 
@@ -456,7 +458,6 @@ version = "0.1.0"
 dependencies = [
  "derive_more",
  "image",
- "indicatif",
  "itertools",
  "rand",
  "rayon",

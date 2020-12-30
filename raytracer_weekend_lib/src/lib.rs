@@ -9,7 +9,7 @@ mod perlin;
 mod ray;
 mod scenes;
 mod texture;
-mod vec3;
+pub mod vec3;
 
 use std::{
     fs::File,
@@ -20,7 +20,6 @@ use bvh::BvhNode;
 use camera::Camera;
 use derive_more::{From, Into};
 use hittable::{Hittable, HittableVec};
-use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use itertools::iproduct;
 use material::Lambertian;
 use rand::prelude::*;
@@ -34,65 +33,57 @@ struct Width(usize);
 #[derive(From, Into)]
 struct Height(usize);
 
-const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const IMAGE_WIDTH: Width = Width(400);
-const IMAGE_HEIGHT: Height = Height((IMAGE_WIDTH.0 as f64 / ASPECT_RATIO) as usize);
-const SAMPLES_PER_PIXEL: usize = 100;
 const MAX_DEPTH: usize = 50;
-const BACKGROUND_COLOR: Color = Color::new(0.0, 0.0, 0.0);
 
-pub fn render() {
+pub fn render(
+    image_width: usize,
+    image_height: usize,
+    samples_per_pixel: usize,
+) -> impl ParallelIterator<Item = Color> {
     let mut rng = rand::thread_rng();
+    let aspect_ratio = image_width as f64 / image_height as f64;
 
     // World
-    // let (world, cam, background) = scenes::jumpy_balls(ASPECT_RATIO, &mut rng);
-    let (world, cam, background) = scenes::two_spheres(ASPECT_RATIO, &mut rng);
-    // let (world, cam) = scenes::two_perlin_spheres(ASPECT_RATIO, &mut rng);
-    // let (world, cam, background) = scenes::earth(ASPECT_RATIO, &mut rng);
-    // let (world, cam, background) = scenes::simple_light(ASPECT_RATIO, &mut rng);
+    // let (world, cam, background) = scenes::jumpy_balls(aspect_ratio, &mut rng);
+    // let (world, cam, background) = scenes::two_spheres(aspect_ratio, &mut rng);
+    // let (world, cam) = scenes::two_perlin_spheres(aspect_ratio, &mut rng);
+    // let (world, cam, background) = scenes::earth(aspect_ratio, &mut rng);
+    let (world, cam, background) = scenes::simple_light(aspect_ratio, &mut rng);
     let world = bvh::BvhNode::new(world, 0.0, 1.0, &mut rng);
 
     // Render
-    let file = File::create("image.ppm").unwrap();
-    let mut file = BufWriter::new(file);
+    let pixel_range: Vec<_> = iproduct!((0..image_height).rev(), 0..image_width).collect();
+    let all_pixels = pixel_range.into_par_iter().map(move |(j, i)| {
+        evaluate_pixel(
+            &world,
+            &cam,
+            background,
+            j,
+            i,
+            image_width,
+            image_height,
+            samples_per_pixel,
+        )
+    });
 
-    writeln!(&mut file, "P3\n{} {}\n255", IMAGE_WIDTH.0, IMAGE_HEIGHT.0).unwrap();
-
-    let pixel_count = (IMAGE_HEIGHT.0 * IMAGE_WIDTH.0) as u64;
-    let progress_bar = ProgressBar::new(pixel_count);
-    progress_bar.set_style(
-        ProgressStyle::default_bar().template(
-            "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec})",
-        ),
-    );
-
-    progress_bar.set_draw_delta(pixel_count / 100);
-
-    let pixel_range: Vec<_> = iproduct!((0..IMAGE_HEIGHT.0).rev(), 0..IMAGE_WIDTH.0).collect();
-    let all_pixels = pixel_range
-        .into_par_iter()
-        .progress_with(progress_bar)
-        .map(|(j, i)| evaluate_pixel(&world, &cam, background, j, i));
-
-    let all_pixels: Vec<_> = all_pixels.collect();
     all_pixels
-        .into_iter()
-        .for_each(|pixel| write_color(&mut file, pixel, SAMPLES_PER_PIXEL).unwrap());
 }
 
 fn evaluate_pixel(
     world: &BvhNode,
-    // world: &Vec<Box<dyn Hittable>>,
     cam: &Camera,
     background: Color,
     pixel_row: usize,
     pixel_column: usize,
+    image_width: usize,
+    image_height: usize,
+    samples_per_pixel: usize,
 ) -> Vec3 {
     let mut rng = thread_rng();
     let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-    for _ in 0..SAMPLES_PER_PIXEL {
-        let u = (pixel_column as f64 + rng.gen::<f64>()) / ((IMAGE_WIDTH.0 - 1) as f64);
-        let v = (pixel_row as f64 + rng.gen::<f64>()) / ((IMAGE_HEIGHT.0 - 1) as f64);
+    for _ in 0..samples_per_pixel {
+        let u = (pixel_column as f64 + rng.gen::<f64>()) / ((image_width - 1) as f64);
+        let v = (pixel_row as f64 + rng.gen::<f64>()) / ((image_height - 1) as f64);
         let r = cam.get_ray(u, v, &mut rng);
         pixel_color += ray_color(&r, world, &mut rng, MAX_DEPTH, background);
     }
@@ -100,28 +91,9 @@ fn evaluate_pixel(
     pixel_color
 }
 
-fn write_color<F: Write>(f: &mut F, pixel_color: Vec3, samples_per_pixel: usize) -> io::Result<()> {
-    let r = pixel_color.x();
-    let g = pixel_color.y();
-    let b = pixel_color.z();
-
-    // Divide the color by the number of samples and gamma-correct for gamma=2.0.
-    let scale = 1.0 / samples_per_pixel as f64;
-    let r = (scale * r).sqrt();
-    let g = (scale * g).sqrt();
-    let b = (scale * b).sqrt();
-
-    let ir = (255.999 * clamp(r, 0.0, 0.999)) as u8;
-    let ig = (255.999 * clamp(g, 0.0, 0.999)) as u8;
-    let ib = (255.999 * clamp(b, 0.0, 0.999)) as u8;
-
-    writeln!(f, "{} {} {}", ir, ig, ib)
-}
-
 fn ray_color(
     r: &Ray,
     world: &BvhNode,
-    // world: &Vec<Box<dyn Hittable>>,
     rng: &mut ThreadRng,
     depth: usize,
     background: Color,
