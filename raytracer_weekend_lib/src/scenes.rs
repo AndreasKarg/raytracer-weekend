@@ -1,4 +1,5 @@
 use rand::prelude::*;
+use strum::EnumString;
 
 use crate::{
     camera::Camera,
@@ -16,6 +17,31 @@ use crate::{
     vec3::{Color, Point3, Vec3},
     Lambertian,
 };
+
+#[derive(EnumString)]
+pub enum Scene {
+    JumpyBalls,
+    TwoSpheres,
+    TwoPerlinSpheres,
+    Earth,
+    SimpleLight,
+    CornellBox,
+}
+
+impl Scene {
+    pub fn generate(&self, aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+        let generator = match self {
+            Scene::JumpyBalls => jumpy_balls,
+            Scene::TwoSpheres => two_spheres,
+            Scene::TwoPerlinSpheres => two_perlin_spheres,
+            Scene::Earth => earth,
+            Scene::SimpleLight => simple_light,
+            Scene::CornellBox => cornell_box,
+        };
+
+        generator(aspect_ratio, rng)
+    }
+}
 
 pub fn jumpy_balls(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     let checker = Checker::new(

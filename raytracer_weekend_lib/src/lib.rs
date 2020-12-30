@@ -20,6 +20,7 @@ use material::Lambertian;
 use rand::prelude::*;
 use ray::Ray;
 use rayon::prelude::*;
+pub use scenes::Scene;
 use vec3::{Color, Vec3};
 
 #[derive(From, Into)]
@@ -31,6 +32,7 @@ struct Height(usize);
 const MAX_DEPTH: usize = 50;
 
 pub fn render(
+    scene: Scene,
     image_width: usize,
     image_height: usize,
     samples_per_pixel: usize,
@@ -39,13 +41,7 @@ pub fn render(
     let aspect_ratio = image_width as f64 / image_height as f64;
 
     // World
-    // let (world, cam, background) = scenes::jumpy_balls(aspect_ratio, &mut rng);
-    // let (world, cam, background) = scenes::two_spheres(aspect_ratio, &mut rng);
-    // let (world, cam) = scenes::two_perlin_spheres(aspect_ratio, &mut rng);
-    // let (world, cam, background) = scenes::earth(aspect_ratio, &mut rng);
-    // let (world, cam, background) = scenes::simple_light(aspect_ratio, &mut rng);
-    let (world, cam, background) = scenes::cornell_box(aspect_ratio, &mut rng);
-
+    let (world, cam, background) = scene.generate(aspect_ratio, &mut rng);
     let world = BvhNode::new(world, 0.0, 1.0, &mut rng);
 
     // Render

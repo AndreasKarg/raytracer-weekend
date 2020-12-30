@@ -4,16 +4,30 @@ use std::{
     io::{BufWriter, Write},
 };
 
+use clap::Clap;
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rayon::prelude::*;
-use raytracer_weekend_lib::{render, vec3::Vec3};
+use raytracer_weekend_lib::{render, vec3::Vec3, Scene};
 
 const ASPECT_RATIO: f64 = 1.0; // 16.0 / 9.0;
 const IMAGE_WIDTH: usize = 600;
 const IMAGE_HEIGHT: usize = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as usize;
 const SAMPLES_PER_PIXEL: usize = 200; //100;
 
+const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
+const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
+
+/// My raytracer, based on the book series on the interwebs.
+#[derive(Clap)]
+#[clap(version = CRATE_VERSION, author = CRATE_AUTHOR)]
+struct Opts {
+    #[clap(default_value = "CornellBox")]
+    scene: Scene,
+}
+
 fn main() {
+    let opts: Opts = Opts::parse();
+
     let pixel_count = (IMAGE_WIDTH * IMAGE_HEIGHT) as u64;
     let progress_bar = ProgressBar::new(pixel_count);
     progress_bar.set_style(
@@ -24,7 +38,7 @@ fn main() {
 
     progress_bar.set_draw_delta(pixel_count / 100);
 
-    let all_pixels: Vec<_> = render(IMAGE_WIDTH, IMAGE_HEIGHT, SAMPLES_PER_PIXEL)
+    let all_pixels: Vec<_> = render(opts.scene, IMAGE_WIDTH, IMAGE_HEIGHT, SAMPLES_PER_PIXEL)
         .progress_with(progress_bar)
         .collect();
 
