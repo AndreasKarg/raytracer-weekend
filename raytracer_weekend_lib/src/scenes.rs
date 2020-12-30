@@ -3,8 +3,10 @@ use rand::prelude::*;
 use crate::{
     camera::Camera,
     hittable::{
-        Cuboid, Hittable, MovingSphere, Sphere, Transformable, Translation, XYRectangle,
-        XZRectangle, YRotation, YZRectangle,
+        rectangular::{Cuboid, XYRectangle, XZRectangle, YZRectangle},
+        spherical::{MovingSphere, Sphere},
+        transformations::Transformable,
+        Hittable,
     },
     image_texture::ImageTexture,
     light_source::DiffuseLight,
@@ -245,7 +247,7 @@ pub fn earth(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
 pub fn simple_light(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     // World
     let earth_texture = ImageTexture::open("earthmap.jpg").unwrap();
-    let earth_surface = DiffuseLight::new(earth_texture.clone());
+    let earth_surface = DiffuseLight::new(earth_texture);
     // let earth_surface = DiffuseLight::new(SolidColor::new_rgb(4.0, 4.0, 4.0));
 
     let perlin_material = Noise::new(Perlin::new(rng), 4.0);
@@ -260,7 +262,7 @@ pub fn simple_light(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
         Box::new(Sphere::new(
             Point3::new(0.0, 2.0, 0.0),
             2.0,
-            Box::new(material_ground.clone()),
+            Box::new(material_ground),
         )),
         Box::new(XYRectangle::new(
             3.0,
@@ -302,7 +304,7 @@ pub fn simple_light(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     (world, cam, Color::new(0.0, 0.0, 0.0))
 }
 
-pub fn cornell_box(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+pub fn cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
     // World
     let red = Box::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
     let white = Box::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));

@@ -1,5 +1,4 @@
 use derive_more::Constructor;
-use itertools::Diff;
 use rand::prelude::ThreadRng;
 
 use crate::{

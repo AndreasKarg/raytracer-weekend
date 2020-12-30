@@ -1,10 +1,8 @@
 use std::{
     any::type_name,
-    fmt::{Debug, Formatter, Pointer},
-    ops::Rem,
+    fmt::{Debug, Formatter},
 };
 
-use derive_more::Constructor;
 use image::{io::Reader as ImageReader, DynamicImage, GenericImageView};
 
 use crate::{
@@ -30,7 +28,7 @@ impl ImageTexture {
 }
 
 impl Texture for ImageTexture {
-    fn value(&self, uv: Point2d, p: &Vec3) -> Color {
+    fn value(&self, uv: Point2d, _p: &Vec3) -> Color {
         let image = &self.image;
 
         let u = uv.u.clamp(0.0, 1.0);

@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
 
-use derive_more::Constructor;
 use rand::prelude::Rng;
 
 use super::{aabb::Aabb, hittable::Hittable};
@@ -111,7 +110,7 @@ impl Hittable for BvhNode {
         let hit_right = self.right.as_ref().and_then(|h| h.hit(r, t_min, t_max));
 
         match &hit_right {
-            Some(hit) => hit_right,
+            Some(_) => hit_right,
             None => hit_left,
         }
     }

@@ -11,11 +11,6 @@ mod scenes;
 mod texture;
 pub mod vec3;
 
-use std::{
-    fs::File,
-    io::{self, BufWriter, Write},
-};
-
 use bvh::BvhNode;
 use camera::Camera;
 use derive_more::{From, Into};
@@ -51,7 +46,7 @@ pub fn render(
     // let (world, cam, background) = scenes::simple_light(aspect_ratio, &mut rng);
     let (world, cam, background) = scenes::cornell_box(aspect_ratio, &mut rng);
 
-    let world = bvh::BvhNode::new(world, 0.0, 1.0, &mut rng);
+    let world = BvhNode::new(world, 0.0, 1.0, &mut rng);
 
     // Render
     let pixel_range: Vec<_> = iproduct!((0..image_height).rev(), 0..image_width).collect();
@@ -120,14 +115,4 @@ fn ray_color(
 
     emitted
         + scatter.attenuation * ray_color(&scatter.scattered_ray, world, rng, depth - 1, background)
-}
-
-fn clamp(x: f64, min: f64, max: f64) -> f64 {
-    if x < min {
-        min
-    } else if x > max {
-        max
-    } else {
-        x
-    }
 }

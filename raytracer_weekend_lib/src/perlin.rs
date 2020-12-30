@@ -34,8 +34,8 @@ impl Perlin {
     fn generate_perm(rng: &mut ThreadRng) -> [usize; POINT_COUNT] {
         let mut p = [0; POINT_COUNT];
 
-        for i in 0..POINT_COUNT {
-            p[i] = i;
+        for (i, element) in p.iter_mut().enumerate() {
+            *element = i;
         }
 
         Self::permute(&mut p, POINT_COUNT, rng);
