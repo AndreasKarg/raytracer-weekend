@@ -366,14 +366,7 @@ pub fn cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
             555.0,
             white.clone(),
         )),
-        Box::new(XYRectangle::new(
-            0.0,
-            555.0,
-            0.0,
-            555.0,
-            555.0,
-            white.clone(),
-        )),
+        Box::new(XYRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, white)),
         Box::new(box1),
         Box::new(box2),
     ];

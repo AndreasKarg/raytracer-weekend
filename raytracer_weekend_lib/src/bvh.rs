@@ -40,7 +40,7 @@ impl BvhNode {
             left = src_objects.pop().unwrap();
             right = Some(src_objects.pop().unwrap());
         } else {
-            src_objects.sort_by(comparator);
+            src_objects.sort_by(|l, r| comparator(l.as_ref(), r.as_ref()));
             let mid = src_objects.len() / 2;
             left = Box::new(Self::new(
                 src_objects.drain(..mid).collect(),
@@ -72,19 +72,19 @@ impl BvhNode {
         }
     }
 
-    fn box_x_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>) -> Ordering {
+    fn box_x_compare(a: &dyn Hittable, b: &dyn Hittable) -> Ordering {
         Self::box_compare(a, b, 0)
     }
 
-    fn box_y_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>) -> Ordering {
+    fn box_y_compare(a: &dyn Hittable, b: &dyn Hittable) -> Ordering {
         Self::box_compare(a, b, 1)
     }
 
-    fn box_z_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>) -> Ordering {
+    fn box_z_compare(a: &dyn Hittable, b: &dyn Hittable) -> Ordering {
         Self::box_compare(a, b, 2)
     }
 
-    fn box_compare(a: &Box<dyn Hittable>, b: &Box<dyn Hittable>, axis: usize) -> Ordering {
+    fn box_compare(a: &dyn Hittable, b: &dyn Hittable, axis: usize) -> Ordering {
         let box_a = a
             .bounding_box(0.0, 0.0)
             .expect("No bounding box in bvh_node constructor.");

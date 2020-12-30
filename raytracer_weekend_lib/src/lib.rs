@@ -46,7 +46,8 @@ pub fn render(
 
     // Render
     let pixel_range: Vec<_> = iproduct!((0..image_height).rev(), 0..image_width).collect();
-    let all_pixels = pixel_range.into_par_iter().map(move |(j, i)| {
+
+    pixel_range.into_par_iter().map(move |(j, i)| {
         evaluate_pixel(
             &world,
             &cam,
@@ -57,9 +58,7 @@ pub fn render(
             image_height,
             samples_per_pixel,
         )
-    });
-
-    all_pixels
+    })
 }
 
 fn evaluate_pixel(
