@@ -2,7 +2,7 @@ use rand::prelude::*;
 
 use crate::{
     camera::Camera,
-    hittable::{Hittable, MovingSphere, Sphere, XYRectangle},
+    hittable::{Hittable, MovingSphere, Sphere, XYRectangle, YZRectangle, XZRectangle},
     image_texture::ImageTexture,
     light_source::DiffuseLight,
     material::{Dielectric, Material, Metal},
@@ -281,6 +281,59 @@ pub fn simple_light(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     let distance_to_focus = 10.0;
     let aperture = 0.0;
     let vfow = 20.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = Camera::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    (world, cam, Color::new(0.0, 0.0, 0.0))
+}
+
+pub fn cornell_box(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+    // World
+    let red = Box::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
+    let white = Box::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));
+    let green = Box::new(Lambertian::new_solid_color(Color::new(0.12, 0.45, 0.15)));
+    let light = Box::new(DiffuseLight::new(SolidColor::new_rgb(15.0, 15.0, 15.0)));
+
+    let world: Vec<Box<dyn Hittable>> = vec![
+        Box::new(YZRectangle::new(
+            0.0, 555.0, 0.0, 555.0, 555.0, green),
+        ),
+        Box::new(YZRectangle::new(
+            0.0, 555.0, 0.0, 555.0, 0.0, red),
+        ),
+        Box::new(XZRectangle::new(
+            213.0, 343.0, 227.0, 332.0, 554.0, light),
+        ),
+        Box::new(XZRectangle::new(
+            0.0, 555.0, 0.0, 555.0, 0.0, white.clone()),
+        ),
+        Box::new(XZRectangle::new(
+            0.0, 555.0, 0.0, 555.0, 555.0, white.clone()),
+        ),
+        Box::new(XYRectangle::new(
+            0.0, 555.0, 0.0, 555.0, 555.0, white),
+        ),
+    ];
+
+    // Camera
+    let look_from = Point3::new(278.0, 278.0, -800.0);
+    let look_at = Point3::new(278.0, 278.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 40.0;
     let time0 = 0.0;
     let time1 = 1.0;
 

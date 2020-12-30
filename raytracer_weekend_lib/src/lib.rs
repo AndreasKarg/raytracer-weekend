@@ -48,7 +48,8 @@ pub fn render(
     // let (world, cam, background) = scenes::two_spheres(aspect_ratio, &mut rng);
     // let (world, cam) = scenes::two_perlin_spheres(aspect_ratio, &mut rng);
     // let (world, cam, background) = scenes::earth(aspect_ratio, &mut rng);
-    let (world, cam, background) = scenes::simple_light(aspect_ratio, &mut rng);
+    // let (world, cam, background) = scenes::simple_light(aspect_ratio, &mut rng);
+    let (world, cam, background) = scenes::cornell_box(aspect_ratio, &mut rng);
     let world = bvh::BvhNode::new(world, 0.0, 1.0, &mut rng);
 
     // Render
