@@ -1,0 +1,22 @@
+[package]
+name = "raytracer_weekend_lib"
+version = "0.1.0"
+authors = ["Andreas Karg <clonkman.alternative@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+indicatif = { version = "0.15.0", features = ["rayon"] }
+derive_more = "0.99.11"
+rand = "0.8.0"
+rayon = "1.5.0"
+itertools = "0.9.0"
+image = "0.23.12"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "basic_benchmark"
+harness = false
