@@ -219,7 +219,7 @@ impl HittableVec for [Box<dyn Hittable>] {
     }
 }
 
-#[derive(Constructor)]
+#[derive(Debug, Constructor)]
 pub struct XYRectangle {
     x0: f64,
     x1: f64,
@@ -260,5 +260,9 @@ impl Hittable for XYRectangle {
             r,
             outward_normal,
         ));
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+        unimplemented!()
     }
 }

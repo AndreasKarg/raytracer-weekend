@@ -1,9 +1,10 @@
+use std::cmp::Ordering;
+
 use derive_more::Constructor;
 use rand::prelude::Rng;
 
 use super::{aabb::Aabb, hittable::Hittable};
 use crate::{hittable::HitRecord, ray::Ray};
-    std::cmp::Ordering,
 
 ///! An implementation of a Boundary Volume Hierarchy thingamajig.
 
@@ -15,8 +16,6 @@ pub struct BvhNode {
 }
 
 impl BvhNode {
-
-
     pub fn new(
         mut src_objects: Vec<Box<dyn Hittable>>,
         time0: f64,

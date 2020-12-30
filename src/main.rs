@@ -12,11 +12,11 @@ mod texture;
 mod vec3;
 
 use std::{
-    bvh::BvhNode,
     fs::File,
     io::{self, BufWriter, Write},
 };
 
+use bvh::BvhNode;
 use camera::Camera;
 use derive_more::{From, Into};
 use hittable::{Hittable, HittableVec};
@@ -45,13 +45,12 @@ fn main() {
     let mut rng = rand::thread_rng();
 
     // World
-    // let (world, cam) = scenes::jumpy_balls(ASPECT_RATIO, &mut rng);
+    let (world, cam, background) = scenes::jumpy_balls(ASPECT_RATIO, &mut rng);
     // let (world, cam) = scenes::two_spheres(ASPECT_RATIO, &mut rng);
     // let (world, cam) = scenes::two_perlin_spheres(ASPECT_RATIO, &mut rng);
     // let (world, cam, background) = scenes::earth(ASPECT_RATIO, &mut rng);
-    let (world, cam, background) = scenes::simple_light(ASPECT_RATIO, &mut rng);
+    // let (world, cam, background) = scenes::simple_light(ASPECT_RATIO, &mut rng);
     let world = bvh::BvhNode::new(world, 0.0, 1.0, &mut rng);
-
 
     // Render
     let file = File::create("image.ppm").unwrap();
@@ -81,8 +80,13 @@ fn main() {
         .for_each(|pixel| write_color(&mut file, pixel, SAMPLES_PER_PIXEL).unwrap());
 }
 
-fn evaluate_pixel(world: &BvhNode, cam: &Camera, pixel_row: usize, pixel_column: usize) -> Vec3 {
+fn evaluate_pixel(
+    world: &BvhNode,
+    cam: &Camera,
     background: Color,
+    pixel_row: usize,
+    pixel_column: usize,
+) -> Vec3 {
     let mut rng = thread_rng();
     let mut pixel_color = Color::new(0.0, 0.0, 0.0);
     for _ in 0..SAMPLES_PER_PIXEL {
@@ -113,8 +117,13 @@ fn write_color<F: Write>(f: &mut F, pixel_color: Vec3, samples_per_pixel: usize)
     writeln!(f, "{} {} {}", ir, ig, ib)
 }
 
-fn ray_color(r: &Ray, world: &BvhNode, rng: &mut ThreadRng, depth: usize) -> Color {
+fn ray_color(
+    r: &Ray,
+    world: &BvhNode,
+    rng: &mut ThreadRng,
+    depth: usize,
     background: Color,
+) -> Color {
     if depth == 0 {
         return Color::new(0.0, 0.0, 0.0);
     }
@@ -133,9 +142,8 @@ fn ray_color(r: &Ray, world: &BvhNode, rng: &mut ThreadRng, depth: usize) -> Col
         _ => return emitted,
     };
 
-    return emitted
-        + scatter.attenuation
-            * ray_color(&scatter.scattered_ray, world, rng, depth - 1, background);
+    emitted
+        + scatter.attenuation * ray_color(&scatter.scattered_ray, world, rng, depth - 1, background)
 }
 
 fn clamp(x: f64, min: f64, max: f64) -> f64 {
