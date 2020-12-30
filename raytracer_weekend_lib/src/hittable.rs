@@ -316,7 +316,7 @@ impl Hittable for XZRectangle {
         let u = (x - x0) / (x1 - x0);
         let v = (z - z0) / (z1 - z0);
         let t = t;
-        let outward_normal = Vec3::new(0.0, 0.0, 1.0);
+        let outward_normal = Vec3::new(0.0, 1.0, 0.0);
         let p = r.at(t);
         return Some(HitRecord::new_with_face_normal(
             p,
@@ -367,7 +367,7 @@ impl Hittable for YZRectangle {
         let u = (y - y0) / (y1 - y0);
         let v = (z - z0) / (z1 - z0);
         let t = t;
-        let outward_normal = Vec3::new(0.0, 0.0, 1.0);
+        let outward_normal = Vec3::new(1.0, 0.0, 0.0);
         let p = r.at(t);
         return Some(HitRecord::new_with_face_normal(
             p,
