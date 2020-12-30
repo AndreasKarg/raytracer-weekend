@@ -174,3 +174,47 @@ impl HittableVec for [Box<dyn Hittable>] {
         rec
     }
 }
+
+#[derive(Constructor)]
+pub struct XYRectangle {
+    x0: f64,
+    x1: f64,
+    y0: f64,
+    y1: f64,
+    k: f64,
+    material: Box<dyn Material>,
+}
+
+impl Hittable for XYRectangle {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let x0 = self.x0;
+        let y0 = self.y0;
+        let x1 = self.x1;
+        let y1 = self.y1;
+        let k = self.k;
+
+        let t = (k - r.origin().z()) / r.direction().z();
+        if t < t_min || t > t_max {
+            return None;
+        }
+        let x = r.origin().x() + t * r.direction().x();
+        let y = r.origin().y() + t * r.direction().y();
+        if x < x0 || x > x1 || y < y0 || y > y1 {
+            return None;
+        }
+
+        let u = (x - x0) / (x1 - x0);
+        let v = (y - y0) / (y1 - y0);
+        let t = t;
+        let outward_normal = Vec3::new(0.0, 0.0, 1.0);
+        let p = r.at(t);
+        return Some(HitRecord::new_with_face_normal(
+            p,
+            t,
+            Point2d { u, v },
+            self.material.as_ref(),
+            r,
+            outward_normal,
+        ));
+    }
+}

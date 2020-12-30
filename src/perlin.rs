@@ -64,9 +64,9 @@ impl Perlin {
         for di in 0..2 {
             for dj in 0..2 {
                 for dk in 0..2 {
-                    c[di][dj][dk] = self.ranvec[self.perm_x[(i + di) & 255]
-                        ^ self.perm_y[(j + dj) & 255]
-                        ^ self.perm_z[(k + dk) & 255]];
+                    c[di][dj][dk] = self.ranvec[self.perm_x[i.overflowing_add(di).0 & 255]
+                        ^ self.perm_y[j.overflowing_add(dj).0 & 255]
+                        ^ self.perm_z[k.overflowing_add(dk).0 & 255]];
                 }
             }
         }

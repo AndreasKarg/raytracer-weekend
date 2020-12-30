@@ -45,7 +45,8 @@ fn main() {
     // let (world, cam) = scenes::jumpy_balls(ASPECT_RATIO, &mut rng);
     // let (world, cam) = scenes::two_spheres(ASPECT_RATIO, &mut rng);
     // let (world, cam) = scenes::two_perlin_spheres(ASPECT_RATIO, &mut rng);
-    let (world, cam, background) = scenes::earth(ASPECT_RATIO, &mut rng);
+    // let (world, cam, background) = scenes::earth(ASPECT_RATIO, &mut rng);
+    let (world, cam, background) = scenes::simple_light(ASPECT_RATIO, &mut rng);
 
     // Render
     let file = File::create("image.ppm").unwrap();

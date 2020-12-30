@@ -2,8 +2,9 @@ use rand::prelude::*;
 
 use crate::{
     camera::Camera,
-    hittable::{Hittable, MovingSphere, Sphere},
+    hittable::{Hittable, MovingSphere, Sphere, XYRectangle},
     image_texture::ImageTexture,
+    light_source::DiffuseLight,
     material::{Dielectric, Material, Metal},
     perlin::Perlin,
     texture::{Checker, Noise, SolidColor},
@@ -202,7 +203,7 @@ pub fn two_perlin_spheres(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     (world, cam, DEFAULT_BACKGROUND)
 }
 
-pub fn earth(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+pub fn earth(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
     // World
     let earth_texture = ImageTexture::open("earthmap.jpg").unwrap();
     let earth_surface = Lambertian::new(earth_texture);
@@ -236,6 +237,66 @@ pub fn earth(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     );
 
     (world, cam, DEFAULT_BACKGROUND)
+}
+
+pub fn simple_light(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+    // World
+    let earth_texture = ImageTexture::open("earthmap.jpg").unwrap();
+    let earth_surface = DiffuseLight::new(earth_texture.clone());
+    // let earth_surface = DiffuseLight::new(SolidColor::new_rgb(4.0, 4.0, 4.0));
+
+    let perlin_material = Noise::new(Perlin::new(rng), 4.0);
+    let material_ground = Lambertian::new(perlin_material);
+
+    let world: Vec<Box<dyn Hittable>> = vec![
+        Box::new(Sphere::new(
+            Point3::new(0.0, -1000.0, 0.0),
+            1000.0,
+            Box::new(material_ground.clone()),
+        )),
+        Box::new(Sphere::new(
+            Point3::new(0.0, 2.0, 0.0),
+            2.0,
+            Box::new(material_ground.clone()),
+        )),
+        Box::new(XYRectangle::new(
+            3.0,
+            5.0,
+            1.0,
+            3.0,
+            -2.0,
+            Box::new(earth_surface.clone()),
+        )),
+        Box::new(Sphere::new(
+            Point3::new(0.0, 6.0, 0.0),
+            2.0,
+            Box::new(earth_surface),
+        ))
+    ];
+
+    // Camera
+    let look_from = Point3::new(26.0, 3.0, 6.0);
+    let look_at = Point3::new(0.0, 2.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 20.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = Camera::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    (world, cam, Color::new(0.0,0.0,0.0))
 }
 
 type World = (Vec<Box<dyn Hittable>>, Camera, Color);

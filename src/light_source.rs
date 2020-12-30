@@ -1,3 +1,4 @@
+use derive_more::Constructor;
 use itertools::Diff;
 use rand::prelude::ThreadRng;
 
@@ -9,7 +10,7 @@ use crate::{
     vec3::{Color, Point3},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Constructor, Debug, Clone)]
 pub struct DiffuseLight<T: Texture> {
     emit: T,
 }
