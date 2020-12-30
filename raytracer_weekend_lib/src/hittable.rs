@@ -263,7 +263,10 @@ impl Hittable for XYRectangle {
     }
 
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
-        Some(Aabb::new(Point3::new(self.x0, self.y0, self.k-0.0001), Point3::new(self.x1, self.y1, self.k+0.0001)))
+        Some(Aabb::new(
+            Point3::new(self.x0, self.y0, self.k - 0.0001),
+            Point3::new(self.x1, self.y1, self.k + 0.0001),
+        ))
     }
 }
 
@@ -311,7 +314,10 @@ impl Hittable for XZRectangle {
     }
 
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
-        Some(Aabb::new(Point3::new(self.x0, self.k-0.0001, self.z0), Point3::new(self.x1, self.k+0.0001, self.z1)))
+        Some(Aabb::new(
+            Point3::new(self.x0, self.k - 0.0001, self.z0),
+            Point3::new(self.x1, self.k + 0.0001, self.z1),
+        ))
     }
 }
 
@@ -359,6 +365,87 @@ impl Hittable for YZRectangle {
     }
 
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
-        Some(Aabb::new(Point3::new(self.k-0.0001, self.y0, self.z0), Point3::new(self.k+0.0001, self.y1, self.z1)))
+        Some(Aabb::new(
+            Point3::new(self.k - 0.0001, self.y0, self.z0),
+            Point3::new(self.k + 0.0001, self.y1, self.z1),
+        ))
+    }
+}
+
+#[derive(Debug)]
+pub struct Cuboid {
+    box_min: Point3,
+    box_max: Point3,
+    sides: [Box<dyn Hittable>; 6],
+}
+
+impl Cuboid {
+    pub fn new(p0: Point3, p1: Point3, material: Box<dyn Material>) -> Self {
+        let sides: [Box<dyn Hittable>; 6] = [
+            Box::new(XYRectangle::new(
+                p0.x(),
+                p1.x(),
+                p0.y(),
+                p1.y(),
+                p1.z(),
+                material.clone(),
+            )),
+            Box::new(XYRectangle::new(
+                p0.x(),
+                p1.x(),
+                p0.y(),
+                p1.y(),
+                p0.z(),
+                material.clone(),
+            )),
+            Box::new(XZRectangle::new(
+                p0.x(),
+                p1.x(),
+                p0.z(),
+                p1.z(),
+                p1.y(),
+                material.clone(),
+            )),
+            Box::new(XZRectangle::new(
+                p0.x(),
+                p1.x(),
+                p0.z(),
+                p1.z(),
+                p0.y(),
+                material.clone(),
+            )),
+            Box::new(YZRectangle::new(
+                p0.y(),
+                p1.y(),
+                p0.z(),
+                p1.z(),
+                p1.x(),
+                material.clone(),
+            )),
+            Box::new(YZRectangle::new(
+                p0.y(),
+                p1.y(),
+                p0.z(),
+                p1.z(),
+                p0.x(),
+                material.clone(),
+            )),
+        ];
+
+        Self {
+            box_min: p0,
+            box_max: p1,
+            sides,
+        }
+    }
+}
+
+impl Hittable for Cuboid {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        self.sides.hit(r, t_min, t_max)
+    }
+
+    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
+        Some(Aabb::new(self.box_min, self.box_max))
     }
 }

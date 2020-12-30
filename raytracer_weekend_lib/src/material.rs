@@ -1,4 +1,5 @@
 use derive_more::Constructor;
+use dyn_clone::{clone_trait_object, DynClone};
 use rand::{rngs::ThreadRng, Rng};
 
 use super::{
@@ -16,10 +17,12 @@ pub struct Scatter {
     pub scattered_ray: Ray,
 }
 
-pub trait Material: std::fmt::Debug + Sync + Send {
+pub trait Material: std::fmt::Debug + Sync + Send + DynClone {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<Scatter>;
     fn emitted(&self, uv: Point2d, p: &Point3) -> Color;
 }
+
+clone_trait_object!(Material);
 
 #[derive(Debug, Constructor, Clone)]
 pub struct Lambertian<T: Texture> {

@@ -2,7 +2,7 @@ use rand::prelude::*;
 
 use crate::{
     camera::Camera,
-    hittable::{Hittable, MovingSphere, Sphere, XYRectangle, YZRectangle, XZRectangle},
+    hittable::{Cuboid, Hittable, MovingSphere, Sphere, XYRectangle, XZRectangle, YZRectangle},
     image_texture::ImageTexture,
     light_source::DiffuseLight,
     material::{Dielectric, Material, Metal},
@@ -307,24 +307,36 @@ pub fn cornell_box(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     let light = Box::new(DiffuseLight::new(SolidColor::new_rgb(15.0, 15.0, 15.0)));
 
     let world: Vec<Box<dyn Hittable>> = vec![
-        Box::new(YZRectangle::new(
-            0.0, 555.0, 0.0, 555.0, 555.0, green),
-        ),
-        Box::new(YZRectangle::new(
-            0.0, 555.0, 0.0, 555.0, 0.0, red),
-        ),
+        Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
+        Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
+        Box::new(XZRectangle::new(213.0, 343.0, 227.0, 332.0, 554.0, light)),
+        Box::new(XZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, white.clone())),
         Box::new(XZRectangle::new(
-            213.0, 343.0, 227.0, 332.0, 554.0, light),
-        ),
-        Box::new(XZRectangle::new(
-            0.0, 555.0, 0.0, 555.0, 0.0, white.clone()),
-        ),
-        Box::new(XZRectangle::new(
-            0.0, 555.0, 0.0, 555.0, 555.0, white.clone()),
-        ),
+            0.0,
+            555.0,
+            0.0,
+            555.0,
+            555.0,
+            white.clone(),
+        )),
         Box::new(XYRectangle::new(
-            0.0, 555.0, 0.0, 555.0, 555.0, white),
-        ),
+            0.0,
+            555.0,
+            0.0,
+            555.0,
+            555.0,
+            white.clone(),
+        )),
+        Box::new(Cuboid::new(
+            Point3::new(130.0, 0.0, 65.0),
+            Point3::new(295.0, 165.0, 230.0),
+            white.clone(),
+        )),
+        Box::new(Cuboid::new(
+            Point3::new(265.0, 0.0, 295.0),
+            Point3::new(430.0, 330.0, 460.0),
+            white,
+        )),
     ];
 
     // Camera

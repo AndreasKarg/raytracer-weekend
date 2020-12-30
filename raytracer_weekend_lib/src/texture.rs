@@ -11,7 +11,7 @@ pub struct Point2d {
     pub v: f64,
 }
 
-pub trait Texture: Debug + Send + Sync {
+pub trait Texture: Debug + Send + Sync + Clone {
     fn value(&self, uv: Point2d, p: &Vec3) -> Color;
 }
 
