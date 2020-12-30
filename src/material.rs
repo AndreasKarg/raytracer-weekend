@@ -6,7 +6,10 @@ use super::{
     ray::Ray,
     vec3::{Color, Vec3},
 };
-use crate::texture::{SolidColor, Texture};
+use crate::{
+    texture::{Point2d, SolidColor, Texture},
+    vec3::Point3,
+};
 
 pub struct Scatter {
     pub attenuation: Color,
@@ -15,6 +18,7 @@ pub struct Scatter {
 
 pub trait Material: std::fmt::Debug + Sync + Send {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<Scatter>;
+    fn emitted(&self, uv: Point2d, p: &Point3) -> Color;
 }
 
 #[derive(Debug, Constructor, Clone)]
@@ -43,6 +47,10 @@ impl<T: Texture> Material for Lambertian<T> {
             attenuation,
             scattered_ray,
         })
+    }
+
+    fn emitted(&self, _uv: Point2d, _p: &Point3) -> Color {
+        emit_black()
     }
 }
 
@@ -78,6 +86,10 @@ impl Material for Metal {
         } else {
             None
         }
+    }
+
+    fn emitted(&self, _uv: Point2d, _p: &Point3) -> Color {
+        emit_black()
     }
 }
 
@@ -121,4 +133,12 @@ impl Material for Dielectric {
             scattered_ray,
         })
     }
+
+    fn emitted(&self, _uv: Point2d, _p: &Point3) -> Color {
+        emit_black()
+    }
+}
+
+fn emit_black() -> Color {
+    Color::new(0.0, 0.0, 0.0)
 }

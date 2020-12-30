@@ -1,6 +1,7 @@
 use std::{
     any::type_name,
     fmt::{Debug, Formatter, Pointer},
+    ops::Rem,
 };
 
 use derive_more::Constructor;
@@ -10,7 +11,6 @@ use crate::{
     texture::{Point2d, Texture},
     vec3::{Color, Vec3},
 };
-use std::ops::Rem;
 
 #[derive(Clone)]
 pub struct ImageTexture {

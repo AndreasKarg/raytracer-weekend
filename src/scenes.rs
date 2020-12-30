@@ -3,15 +3,15 @@ use rand::prelude::*;
 use crate::{
     camera::Camera,
     hittable::{Hittable, MovingSphere, Sphere},
+    image_texture::ImageTexture,
     material::{Dielectric, Material, Metal},
     perlin::Perlin,
     texture::{Checker, Noise, SolidColor},
     vec3::{Color, Point3, Vec3},
     Lambertian,
 };
-use crate::image_texture::ImageTexture;
 
-pub fn jumpy_balls(aspect_ratio: f64, rng: &mut ThreadRng) -> (Vec<Box<dyn Hittable>>, Camera) {
+pub fn jumpy_balls(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     let checker = Checker::new(
         SolidColor::new_rgb(0.2, 0.3, 0.1),
         SolidColor::new_rgb(0.9, 0.9, 0.9),
@@ -109,10 +109,10 @@ pub fn jumpy_balls(aspect_ratio: f64, rng: &mut ThreadRng) -> (Vec<Box<dyn Hitta
         1.0,
     );
 
-    (world, cam)
+    (world, cam, DEFAULT_BACKGROUND)
 }
 
-pub fn two_spheres(aspect_ratio: f64, _rng: &mut ThreadRng) -> (Vec<Box<dyn Hittable>>, Camera) {
+pub fn two_spheres(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
     // World
     let checker = Checker::new(
         SolidColor::new_rgb(0.2, 0.3, 0.1),
@@ -156,13 +156,10 @@ pub fn two_spheres(aspect_ratio: f64, _rng: &mut ThreadRng) -> (Vec<Box<dyn Hitt
         time1,
     );
 
-    (world, cam)
+    (world, cam, DEFAULT_BACKGROUND)
 }
 
-pub fn two_perlin_spheres(
-    aspect_ratio: f64,
-    rng: &mut ThreadRng,
-) -> (Vec<Box<dyn Hittable>>, Camera) {
+pub fn two_perlin_spheres(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     // World
     let perlin_material = Noise::new(Perlin::new(rng), 4.0);
     let material_ground = Lambertian::new(perlin_material);
@@ -202,24 +199,19 @@ pub fn two_perlin_spheres(
         time1,
     );
 
-    (world, cam)
+    (world, cam, DEFAULT_BACKGROUND)
 }
 
-pub fn earth(
-    aspect_ratio: f64,
-    rng: &mut ThreadRng,
-) -> (Vec<Box<dyn Hittable>>, Camera) {
+pub fn earth(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     // World
     let earth_texture = ImageTexture::open("earthmap.jpg").unwrap();
     let earth_surface = Lambertian::new(earth_texture);
 
-    let world: Vec<Box<dyn Hittable>> = vec![
-        Box::new(Sphere::new(
-            Point3::new(0.0, 0.0, 0.0),
-            2.0,
-            Box::new(earth_surface),
-        )),
-    ];
+    let world: Vec<Box<dyn Hittable>> = vec![Box::new(Sphere::new(
+        Point3::new(0.0, 0.0, 0.0),
+        2.0,
+        Box::new(earth_surface),
+    ))];
 
     // Camera
     let look_from = Point3::new(13.0, 2.0, 3.0);
@@ -243,5 +235,9 @@ pub fn earth(
         time1,
     );
 
-    (world, cam)
+    (world, cam, DEFAULT_BACKGROUND)
 }
+
+type World = (Vec<Box<dyn Hittable>>, Camera, Color);
+
+const DEFAULT_BACKGROUND: Color = Color::new(0.7, 0.8, 1.00);

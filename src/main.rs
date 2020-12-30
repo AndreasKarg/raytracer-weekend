@@ -1,6 +1,7 @@
 mod camera;
 mod hittable;
 mod image_texture;
+mod light_source;
 mod material;
 mod perlin;
 mod ray;
@@ -35,6 +36,7 @@ const IMAGE_WIDTH: Width = Width(400);
 const IMAGE_HEIGHT: Height = Height((IMAGE_WIDTH.0 as f64 / ASPECT_RATIO) as usize);
 const SAMPLES_PER_PIXEL: usize = 100;
 const MAX_DEPTH: usize = 50;
+const BACKGROUND_COLOR: Color = Color::new(0.0, 0.0, 0.0);
 
 fn main() {
     let mut rng = rand::thread_rng();
@@ -43,7 +45,7 @@ fn main() {
     // let (world, cam) = scenes::jumpy_balls(ASPECT_RATIO, &mut rng);
     // let (world, cam) = scenes::two_spheres(ASPECT_RATIO, &mut rng);
     // let (world, cam) = scenes::two_perlin_spheres(ASPECT_RATIO, &mut rng);
-    let (world, cam) = scenes::earth(ASPECT_RATIO, &mut rng);
+    let (world, cam, background) = scenes::earth(ASPECT_RATIO, &mut rng);
 
     // Render
     let file = File::create("image.ppm").unwrap();
@@ -65,7 +67,7 @@ fn main() {
     let all_pixels = pixel_range
         .into_par_iter()
         .progress_with(progress_bar)
-        .map(|(j, i)| evaluate_pixel(&world, &cam, j, i));
+        .map(|(j, i)| evaluate_pixel(&world, &cam, background, j, i));
 
     let all_pixels: Vec<_> = all_pixels.collect();
     all_pixels
@@ -76,6 +78,7 @@ fn main() {
 fn evaluate_pixel(
     world: &[Box<dyn Hittable>],
     cam: &Camera,
+    background: Color,
     pixel_row: usize,
     pixel_column: usize,
 ) -> Vec3 {
@@ -85,7 +88,7 @@ fn evaluate_pixel(
         let u = (pixel_column as f64 + rng.gen::<f64>()) / ((IMAGE_WIDTH.0 - 1) as f64);
         let v = (pixel_row as f64 + rng.gen::<f64>()) / ((IMAGE_HEIGHT.0 - 1) as f64);
         let r = cam.get_ray(u, v, &mut rng);
-        pixel_color += ray_color(&r, world, &mut rng, MAX_DEPTH);
+        pixel_color += ray_color(&r, world, &mut rng, MAX_DEPTH, background);
     }
 
     pixel_color
@@ -114,21 +117,29 @@ fn ray_color(
     world: &(impl HittableVec + ?Sized),
     rng: &mut ThreadRng,
     depth: usize,
+    background: Color,
 ) -> Color {
     if depth == 0 {
         return Color::new(0.0, 0.0, 0.0);
     }
 
-    if let Some(hit_record) = world.hit(r, 0.001, f64::INFINITY) {
-        if let Some(scatter) = hit_record.material.scatter(r, &hit_record, rng) {
-            return scatter.attenuation * ray_color(&scatter.scattered_ray, world, rng, depth - 1);
-        }
-        return Color::new(0.0, 0.0, 0.0);
-    }
-    let unit_direction = r.direction().unit_vector();
-    let t = 0.5 * (unit_direction.y() + 1.0);
+    let hit_record = match world.hit(r, 0.001, f64::INFINITY) {
+        Some(hit) => hit,
+        _ => return background,
+    };
 
-    (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
+    let emitted = hit_record
+        .material
+        .emitted(hit_record.texture_uv, &hit_record.p);
+
+    let scatter = match hit_record.material.scatter(r, &hit_record, rng) {
+        Some(scatter) => scatter,
+        _ => return emitted,
+    };
+
+    return emitted
+        + scatter.attenuation
+            * ray_color(&scatter.scattered_ray, world, rng, depth - 1, background);
 }
 
 fn clamp(x: f64, min: f64, max: f64) -> f64 {
