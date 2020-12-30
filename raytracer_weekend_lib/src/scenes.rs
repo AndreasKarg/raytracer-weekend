@@ -2,7 +2,10 @@ use rand::prelude::*;
 
 use crate::{
     camera::Camera,
-    hittable::{Cuboid, Hittable, MovingSphere, Sphere, XYRectangle, XZRectangle, YZRectangle},
+    hittable::{
+        Cuboid, Hittable, MovingSphere, Sphere, Transformable, Translation, XYRectangle,
+        XZRectangle, YRotation, YZRectangle,
+    },
     image_texture::ImageTexture,
     light_source::DiffuseLight,
     material::{Dielectric, Material, Metal},
@@ -306,6 +309,22 @@ pub fn cornell_box(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     let green = Box::new(Lambertian::new_solid_color(Color::new(0.12, 0.45, 0.15)));
     let light = Box::new(DiffuseLight::new(SolidColor::new_rgb(15.0, 15.0, 15.0)));
 
+    let box1 = Cuboid::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 330.0, 165.0),
+        white.clone(),
+    )
+    .rotate_y(15.0)
+    .translate(Vec3::new(265.0, 0.0, 295.0));
+
+    let box2 = Cuboid::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 165.0, 165.0),
+        white.clone(),
+    )
+    .rotate_y(-18.0)
+    .translate(Vec3::new(130.0, 0.0, 65.0));
+
     let world: Vec<Box<dyn Hittable>> = vec![
         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
@@ -327,16 +346,8 @@ pub fn cornell_box(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
             555.0,
             white.clone(),
         )),
-        Box::new(Cuboid::new(
-            Point3::new(130.0, 0.0, 65.0),
-            Point3::new(295.0, 165.0, 230.0),
-            white.clone(),
-        )),
-        Box::new(Cuboid::new(
-            Point3::new(265.0, 0.0, 295.0),
-            Point3::new(430.0, 330.0, 460.0),
-            white,
-        )),
+        Box::new(box1),
+        Box::new(box2),
     ];
 
     // Camera

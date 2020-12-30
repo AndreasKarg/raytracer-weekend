@@ -19,7 +19,7 @@ use std::{
 use bvh::BvhNode;
 use camera::Camera;
 use derive_more::{From, Into};
-use hittable::{Hittable, HittableVec};
+use hittable::Hittable;
 use itertools::iproduct;
 use material::Lambertian;
 use rand::prelude::*;
@@ -50,6 +50,7 @@ pub fn render(
     // let (world, cam, background) = scenes::earth(aspect_ratio, &mut rng);
     // let (world, cam, background) = scenes::simple_light(aspect_ratio, &mut rng);
     let (world, cam, background) = scenes::cornell_box(aspect_ratio, &mut rng);
+
     let world = bvh::BvhNode::new(world, 0.0, 1.0, &mut rng);
 
     // Render
@@ -71,7 +72,7 @@ pub fn render(
 }
 
 fn evaluate_pixel(
-    world: &BvhNode,
+    world: &dyn Hittable,
     cam: &Camera,
     background: Color,
     pixel_row: usize,
@@ -94,7 +95,7 @@ fn evaluate_pixel(
 
 fn ray_color(
     r: &Ray,
-    world: &BvhNode,
+    world: &dyn Hittable,
     rng: &mut ThreadRng,
     depth: usize,
     background: Color,
