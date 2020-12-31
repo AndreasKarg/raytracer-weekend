@@ -1,6 +1,8 @@
 use std::{
     fmt::{Debug, Display, Formatter},
-    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Range, Sub},
+    ops::{
+        Add, AddAssign, BitAnd, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Range, Sub,
+    },
 };
 
 use num_traits::Num;
@@ -46,6 +48,12 @@ impl<T: Num + Copy> GenericVec3<T> {
             self.e[2] * rhs.e[0] - self.e[0] * rhs.e[2],
             self.e[0] * rhs.e[1] - self.e[1] * rhs.e[0],
         )
+    }
+
+    pub fn internal_product(&self) -> T {
+        let e = self.e;
+
+        e[0] * e[1] * e[2]
     }
 
     pub fn as_tuple(&self) -> (T, T, T) {
@@ -169,6 +177,18 @@ impl GenericVec3<usize> {
 
         GenericVec3 { e: [e0, e1, e2] }
     }
+
+    pub fn overflowing_add(&self, rhs: Self) -> (Self, bool) {
+        let (x, x_overflow) = self.e[0].overflowing_add(rhs.e[0]);
+        let (y, y_overflow) = self.e[1].overflowing_add(rhs.e[1]);
+        let (z, z_overflow) = self.e[2].overflowing_add(rhs.e[2]);
+
+        (Self::new(x, y, z), x_overflow || y_overflow || z_overflow)
+    }
+
+    pub fn internal_bit_xor(&self) -> usize {
+        self.e[0] ^ self.e[1] ^ self.e[2]
+    }
 }
 
 impl<T: Default + Num + Copy> Default for GenericVec3<T> {
@@ -286,6 +306,14 @@ impl<T: Neg<Output = T> + Num + Copy> Neg for GenericVec3<T> {
     }
 }
 
+impl<T: BitAnd<U, Output = T> + Num + Copy, U: Copy> BitAnd<U> for GenericVec3<T> {
+    type Output = Self;
+
+    fn bitand(self, rhs: U) -> Self::Output {
+        Self::new(self.e[0] & rhs, self.e[1] & rhs, self.e[2] & rhs)
+    }
+}
+
 impl<T: Num + Copy> Index<usize> for GenericVec3<T> {
     type Output = T;
 
@@ -297,6 +325,24 @@ impl<T: Num + Copy> Index<usize> for GenericVec3<T> {
 impl<T: Num + Copy> IndexMut<usize> for GenericVec3<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.e[index]
+    }
+}
+
+pub trait CopyIndex<T> {
+    type Output;
+
+    fn get(&self, index: &T) -> Self::Output;
+}
+
+impl<T: Num + Copy, const N: usize> CopyIndex<GenericVec3<usize>> for [[T; N]; 3] {
+    type Output = GenericVec3<T>;
+
+    fn get(&self, index: &GenericVec3<usize>) -> Self::Output {
+        Self::Output::new(
+            self[0][index.e[0]],
+            self[1][index.e[1]],
+            self[2][index.e[2]],
+        )
     }
 }
 

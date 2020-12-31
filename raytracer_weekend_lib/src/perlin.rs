@@ -1,22 +1,19 @@
-use num_traits::ToPrimitive;
 use rand::prelude::*;
 
-use crate::vec3::{GenericVec3, Point3, Vec3};
+use crate::vec3::{CopyIndex, GenericVec3, Point3, Vec3};
 
 const POINT_COUNT: usize = 256;
 
 #[derive(Debug, Clone)]
 pub struct Perlin {
-    random_vectors: [Vec3; POINT_COUNT],
-    x_permutations: [usize; POINT_COUNT],
-    y_permutations: [usize; POINT_COUNT],
-    z_permutations: [usize; POINT_COUNT],
+    gradients: [Vec3; POINT_COUNT],
+    permutations: [[usize; POINT_COUNT]; 3],
 }
 
 impl Perlin {
     pub fn new(rng: &mut ThreadRng) -> Self {
-        let mut random_vectors = [Vec3::new(0.0, 0.0, 0.0); POINT_COUNT];
-        for item in &mut random_vectors[..] {
+        let mut gradients = [Vec3::new(0.0, 0.0, 0.0); POINT_COUNT];
+        for item in &mut gradients[..] {
             *item = Vec3::random_min_max(rng, -1.0..1.0).unit_vector();
         }
 
@@ -25,10 +22,8 @@ impl Perlin {
         let z_permutations = Self::generate_perm(rng);
 
         Self {
-            random_vectors,
-            x_permutations,
-            y_permutations,
-            z_permutations,
+            gradients,
+            permutations: [x_permutations, y_permutations, z_permutations],
         }
     }
 
@@ -53,24 +48,29 @@ impl Perlin {
 
     pub fn noise(&self, p: &Point3) -> f64 {
         let p = *p;
-        let uvw = p - p.floor();
+        let base_point_on_lattice = p.floor().to_i64().to_usize();
+        let point_within_lattice_cell = p - p.floor();
 
-        let (i, j, k) = p.floor().to_i64().to_usize().as_tuple();
+        let mut gradient_cube = [[[Vec3::new(0.0, 0.0, 0.0); 2]; 2]; 2];
 
-        let mut c = [[[Vec3::new(0.0, 0.0, 0.0); 2]; 2]; 2];
+        for (x_offset, aisle) in gradient_cube.iter_mut().enumerate() {
+            for (y_offset, row) in aisle.iter_mut().enumerate() {
+                for (z_offset, cell) in row.iter_mut().enumerate() {
+                    let offset = GenericVec3::new(x_offset, y_offset, z_offset);
+                    let current_lattice_point =
+                        base_point_on_lattice.overflowing_add(offset).0 & 255;
 
-        for di in 0..2 {
-            for dj in 0..2 {
-                for dk in 0..2 {
-                    c[di][dj][dk] = self.random_vectors[self.x_permutations
-                        [i.overflowing_add(di).0 & 255]
-                        ^ self.y_permutations[j.overflowing_add(dj).0 & 255]
-                        ^ self.z_permutations[k.overflowing_add(dk).0 & 255]];
+                    let hash = self
+                        .permutations
+                        .get(&current_lattice_point)
+                        .internal_bit_xor();
+
+                    *cell = self.gradients[hash];
                 }
             }
         }
 
-        Self::perlin_interp(c, uvw)
+        Self::perlin_interp(gradient_cube, point_within_lattice_cell)
     }
 
     pub fn turbulence(&self, p: &Point3, depth: usize) -> f64 {
@@ -87,30 +87,36 @@ impl Perlin {
         accum.abs()
     }
 
-    fn perlin_interp(c: [[[Vec3; 2]; 2]; 2], uvw: Vec3) -> f64 {
-        let offset = Vec3::new(3.0, 3.0, 3.0);
-        let (uu, vv, ww) = (uvw * uvw * (offset - 2.0 * uvw)).as_tuple();
+    fn perlin_interp(gradient_cube: [[[Vec3; 2]; 2]; 2], point_within_lattice_cell: Vec3) -> f64 {
+        let point_within_lattice_cell = Perlin::filter_hermit(point_within_lattice_cell);
 
         let mut accum = 0.0;
 
-        for i in 0..2 {
-            for j in 0..2 {
-                for k in 0..2 {
-                    let ijk: GenericVec3<usize> = (i, j, k).into();
-                    let ijk = ijk.to_f64();
-                    let weight_v = uvw - ijk;
+        // This performs trilinear interpolation.
+        // TODO: Clarify code.
+        for aisle in 0..2 {
+            for row in 0..2 {
+                for column in 0..2 {
+                    let current_point_on_lattice: GenericVec3<usize> = (aisle, row, column).into();
+                    let current_point_on_lattice = current_point_on_lattice.to_f64();
+                    let weight_v = point_within_lattice_cell - current_point_on_lattice;
 
-                    let (fi, fj, fk) = ijk.as_tuple();
+                    let unit_vector: Vec3 = (1.0, 1.0, 1.0).into();
+                    let blend_factor = current_point_on_lattice * point_within_lattice_cell
+                        + (unit_vector - current_point_on_lattice)
+                            * (unit_vector - point_within_lattice_cell);
+                    let blend_factor = blend_factor.internal_product();
 
-                    // let weight_v = Vec3::new(u - fi, v - fj, w - fk);
-                    accum += (fi * uu + (1.0 - fi) * (1.0 - uu))
-                        * (fj * vv + (1.0 - fj) * (1.0 - vv))
-                        * (fk * ww + (1.0 - fk) * (1.0 - ww))
-                        * c[i][j][k].dot(&weight_v);
+                    accum += blend_factor * gradient_cube[aisle][row][column].dot(&weight_v);
                 }
             }
         }
 
         accum
+    }
+
+    fn filter_hermit(p: Point3) -> Point3 {
+        let offset = Vec3::new(3.0, 3.0, 3.0);
+        p * p * (offset - 2.0 * p)
     }
 }
