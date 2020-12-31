@@ -1,42 +1,42 @@
 use std::{
-    fmt::{Display, Formatter},
+    fmt::{Debug, Display, Formatter},
     ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Range, Sub},
 };
 
+use num_traits::Num;
 use rand::Rng;
 
 #[derive(Copy, Clone, Debug)]
-pub struct Vec3 {
-    e: [f64; 3],
+pub struct GenericVec3<T>
+where
+    T: Num + Copy,
+{
+    e: [T; 3],
 }
 
-impl Vec3 {
-    pub const fn new(e0: f64, e1: f64, e2: f64) -> Self {
+impl<T: Num + Copy> GenericVec3<T> {
+    pub fn new(e0: T, e1: T, e2: T) -> Self {
         Self { e: [e0, e1, e2] }
     }
 
-    pub fn x(&self) -> f64 {
+    pub fn x(&self) -> T {
         self.e[0]
     }
 
-    pub fn y(&self) -> f64 {
+    pub fn y(&self) -> T {
         self.e[1]
     }
 
-    pub fn z(&self) -> f64 {
+    pub fn z(&self) -> T {
         self.e[2]
     }
 
-    pub fn length(&self) -> f64 {
-        self.length_squared().sqrt()
-    }
-
-    pub fn length_squared(&self) -> f64 {
+    pub fn length_squared(&self) -> T {
         let e = self.e;
         e[0] * e[0] + e[1] * e[1] + e[2] * e[2]
     }
 
-    pub fn dot(&self, rhs: &Self) -> f64 {
+    pub fn dot(&self, rhs: &Self) -> T {
         self.e[0] * rhs.e[0] + self.e[1] * rhs.e[1] + self.e[2] * rhs.e[2]
     }
 
@@ -46,6 +46,27 @@ impl Vec3 {
             self.e[2] * rhs.e[0] - self.e[0] * rhs.e[2],
             self.e[0] * rhs.e[1] - self.e[1] * rhs.e[0],
         )
+    }
+
+    pub fn as_tuple(&self) -> (T, T, T) {
+        let e = self.e;
+        (e[0], e[1], e[2])
+    }
+}
+
+impl<T: Num + Copy> From<(T, T, T)> for GenericVec3<T> {
+    fn from(tuple: (T, T, T)) -> Self {
+        Self::new(tuple.0, tuple.1, tuple.2)
+    }
+}
+
+impl GenericVec3<f64> {
+    pub const fn new_const(e0: f64, e1: f64, e2: f64) -> Self {
+        Self { e: [e0, e1, e2] }
+    }
+
+    pub fn length(&self) -> f64 {
+        self.length_squared().sqrt()
     }
 
     pub fn unit_vector(&self) -> Self {
@@ -107,29 +128,57 @@ impl Vec3 {
         *self - 2.0 * self.dot(normal) * *normal
     }
 
-    pub fn refract(&self, n: &Vec3, etai_over_etat: f64) -> Self {
+    pub fn refract(&self, n: &Vec3, eta_i_over_eta_t: f64) -> Self {
         let uv = *self;
         let n = *n;
         let cos_theta = (-uv).dot(&n).min(1.0);
-        let r_out_perp = etai_over_etat * (uv + cos_theta * n);
-        let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * n;
-        r_out_perp + r_out_parallel
+        let r_out_perpendicular = eta_i_over_eta_t * (uv + cos_theta * n);
+        let r_out_parallel = -(1.0 - r_out_perpendicular.length_squared()).abs().sqrt() * n;
+        r_out_perpendicular + r_out_parallel
     }
 
     pub fn floor(self) -> Vec3 {
         let e = self.e;
         Vec3::new(e[0].floor(), e[1].floor(), e[2].floor())
     }
-}
 
-impl Default for Vec3 {
-    fn default() -> Self {
-        Self::new(0.0, 0.0, 0.0)
+    pub fn to_i64(&self) -> GenericVec3<i64> {
+        let e0 = self.e[0] as i64;
+        let e1 = self.e[1] as i64;
+        let e2 = self.e[2] as i64;
+
+        GenericVec3 { e: [e0, e1, e2] }
     }
 }
 
-impl Sub for Vec3 {
-    type Output = Vec3;
+impl GenericVec3<i64> {
+    pub fn to_usize(&self) -> GenericVec3<usize> {
+        let e0 = self.e[0] as usize;
+        let e1 = self.e[1] as usize;
+        let e2 = self.e[2] as usize;
+
+        GenericVec3 { e: [e0, e1, e2] }
+    }
+}
+
+impl GenericVec3<usize> {
+    pub fn to_f64(&self) -> GenericVec3<f64> {
+        let e0 = self.e[0] as f64;
+        let e1 = self.e[1] as f64;
+        let e2 = self.e[2] as f64;
+
+        GenericVec3 { e: [e0, e1, e2] }
+    }
+}
+
+impl<T: Default + Num + Copy> Default for GenericVec3<T> {
+    fn default() -> Self {
+        Self::new(T::default(), T::default(), T::default())
+    }
+}
+
+impl<T: Num + Copy> Sub for GenericVec3<T> {
+    type Output = GenericVec3<<T as Sub>::Output>;
 
     fn sub(self, rhs: Self) -> Self::Output {
         Self::new(
@@ -140,8 +189,8 @@ impl Sub for Vec3 {
     }
 }
 
-impl Add for Vec3 {
-    type Output = Vec3;
+impl<T: Num + Copy> Add for GenericVec3<T> {
+    type Output = GenericVec3<<T as Add>::Output>;
 
     fn add(self, rhs: Self) -> Self::Output {
         Self::new(
@@ -152,7 +201,7 @@ impl Add for Vec3 {
     }
 }
 
-impl AddAssign for Vec3 {
+impl<T: Num + Copy + AddAssign> AddAssign for GenericVec3<T> {
     fn add_assign(&mut self, rhs: Self) {
         self.e[0] += rhs.e[0];
         self.e[1] += rhs.e[1];
@@ -160,26 +209,31 @@ impl AddAssign for Vec3 {
     }
 }
 
-impl Mul<f64> for Vec3 {
-    type Output = Vec3;
+impl<T, U> Mul<U> for GenericVec3<T>
+where
+    T: Num + Copy + Mul<U, Output = T>,
+    U: Num + Copy,
+    <T as Mul<U>>::Output: Num + Copy,
+{
+    type Output = GenericVec3<<T as Mul<U>>::Output>;
 
-    fn mul(self, rhs: f64) -> Self::Output {
+    fn mul(self, rhs: U) -> Self::Output {
         Self::new(self.e[0] * rhs, self.e[1] * rhs, self.e[2] * rhs)
     }
 }
 
-impl Mul<Vec3> for f64 {
-    type Output = Vec3;
+impl Mul<GenericVec3<f64>> for f64 {
+    type Output = GenericVec3<Self>;
 
-    fn mul(self, rhs: Vec3) -> Self::Output {
+    fn mul(self, rhs: Self::Output) -> Self::Output {
         rhs * self
     }
 }
 
-impl Mul for Vec3 {
-    type Output = Vec3;
+impl<T: Num + Copy> Mul for GenericVec3<T> {
+    type Output = Self;
 
-    fn mul(self, rhs: Vec3) -> Self::Output {
+    fn mul(self, rhs: Self) -> Self::Output {
         Self::new(
             self.e[0] * rhs.e[0],
             self.e[1] * rhs.e[1],
@@ -188,26 +242,26 @@ impl Mul for Vec3 {
     }
 }
 
-impl MulAssign<f64> for Vec3 {
-    fn mul_assign(&mut self, rhs: f64) {
+impl<T: MulAssign + Num + Copy> MulAssign<T> for GenericVec3<T> {
+    fn mul_assign(&mut self, rhs: T) {
         self.e[0] *= rhs;
         self.e[1] *= rhs;
         self.e[2] *= rhs;
     }
 }
 
-impl Div<f64> for Vec3 {
-    type Output = Vec3;
+impl<T: Num + Copy> Div<T> for GenericVec3<T> {
+    type Output = Self;
 
-    fn div(self, rhs: f64) -> Self::Output {
+    fn div(self, rhs: T) -> Self::Output {
         Self::new(self.e[0] / rhs, self.e[1] / rhs, self.e[2] / rhs)
     }
 }
 
-impl Div for Vec3 {
-    type Output = Vec3;
+impl<T: Num + Copy> Div for GenericVec3<T> {
+    type Output = Self;
 
-    fn div(self, rhs: Vec3) -> Self::Output {
+    fn div(self, rhs: Self) -> Self::Output {
         Self::new(
             self.e[0] / rhs.e[0],
             self.e[1] / rhs.e[1],
@@ -216,36 +270,37 @@ impl Div for Vec3 {
     }
 }
 
-impl DivAssign<f64> for Vec3 {
-    fn div_assign(&mut self, rhs: f64) {
+impl<T: DivAssign + Num + Copy> DivAssign<T> for GenericVec3<T> {
+    fn div_assign(&mut self, rhs: T) {
         self.e[0] /= rhs;
         self.e[1] /= rhs;
         self.e[2] /= rhs;
     }
 }
 
-impl Neg for Vec3 {
-    type Output = Vec3;
+impl<T: Neg<Output = T> + Num + Copy> Neg for GenericVec3<T> {
+    type Output = Self;
 
     fn neg(self) -> Self::Output {
         Self::new(-self.e[0], -self.e[1], -self.e[2])
     }
 }
 
-impl Index<usize> for Vec3 {
-    type Output = f64;
+impl<T: Num + Copy> Index<usize> for GenericVec3<T> {
+    type Output = T;
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.e[index]
     }
 }
 
-impl IndexMut<usize> for Vec3 {
+impl<T: Num + Copy> IndexMut<usize> for GenericVec3<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.e[index]
     }
 }
 
+pub type Vec3 = GenericVec3<f64>;
 pub type Point3 = Vec3;
 pub type Color = Vec3;
 

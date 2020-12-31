@@ -109,5 +109,6 @@ fn sample_ray(
     };
 
     emitted
-        + scatter.attenuation * sample_ray(&scatter.scattered_ray, world, rng, depth - 1, background)
+        + scatter.attenuation
+            * sample_ray(&scatter.scattered_ray, world, rng, depth - 1, background)
 }

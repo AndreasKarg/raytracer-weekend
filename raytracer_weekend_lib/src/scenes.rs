@@ -398,4 +398,4 @@ pub fn cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
 
 type World = (Vec<Box<dyn Hittable>>, Camera, Color);
 
-const DEFAULT_BACKGROUND: Color = Color::new(0.7, 0.8, 1.00);
+static DEFAULT_BACKGROUND: Color = Color::new_const(0.7, 0.8, 1.00);
