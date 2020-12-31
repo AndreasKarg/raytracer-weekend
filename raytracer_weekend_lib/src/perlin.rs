@@ -51,13 +51,12 @@ impl Perlin {
     }
 
     pub fn noise(&self, p: &Point3) -> f64 {
-        let u = p.x() - p.x().floor();
-        let v = p.y() - p.y().floor();
-        let w = p.z() - p.z().floor();
+        let p = *p;
+        let uvw = p - p.floor();
 
-        let u = p.x().fract();
-        let v = p.y().fract();
-        let w = p.z().fract();
+        let u = uvw.x();
+        let v = uvw.y();
+        let w = uvw.z();
 
         let i = p.x().floor() as i64 as usize;
         let j = p.y().floor() as i64 as usize;

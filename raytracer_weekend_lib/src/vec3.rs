@@ -115,6 +115,11 @@ impl Vec3 {
         let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * n;
         r_out_perp + r_out_parallel
     }
+
+    pub fn floor(self) -> Vec3 {
+        let e = self.e;
+        Vec3::new(e[0].floor(), e[1].floor(), e[2].floor())
+    }
 }
 
 impl Default for Vec3 {
