@@ -48,7 +48,7 @@ pub fn render(
     let pixel_range: Vec<_> = iproduct!((0..image_height).rev(), 0..image_width).collect();
 
     pixel_range.into_par_iter().map(move |(j, i)| {
-        evaluate_pixel(
+        sample_pixel(
             &world,
             &cam,
             background,
@@ -61,7 +61,7 @@ pub fn render(
     })
 }
 
-fn evaluate_pixel(
+fn sample_pixel(
     world: &dyn Hittable,
     cam: &Camera,
     background: Color,
@@ -70,20 +70,20 @@ fn evaluate_pixel(
     image_width: usize,
     image_height: usize,
     samples_per_pixel: usize,
-) -> Vec3 {
+) -> Color {
     let mut rng = thread_rng();
     let mut pixel_color = Color::new(0.0, 0.0, 0.0);
     for _ in 0..samples_per_pixel {
         let u = (pixel_column as f64 + rng.gen::<f64>()) / ((image_width - 1) as f64);
         let v = (pixel_row as f64 + rng.gen::<f64>()) / ((image_height - 1) as f64);
         let r = cam.get_ray(u, v, &mut rng);
-        pixel_color += ray_color(&r, world, &mut rng, MAX_DEPTH, background);
+        pixel_color += sample_ray(&r, world, &mut rng, MAX_DEPTH, background);
     }
 
     pixel_color
 }
 
-fn ray_color(
+fn sample_ray(
     r: &Ray,
     world: &dyn Hittable,
     rng: &mut ThreadRng,
@@ -109,5 +109,5 @@ fn ray_color(
     };
 
     emitted
-        + scatter.attenuation * ray_color(&scatter.scattered_ray, world, rng, depth - 1, background)
+        + scatter.attenuation * sample_ray(&scatter.scattered_ray, world, rng, depth - 1, background)
 }

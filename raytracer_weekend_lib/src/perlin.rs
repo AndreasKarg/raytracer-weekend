@@ -6,28 +6,28 @@ const POINT_COUNT: usize = 256;
 
 #[derive(Debug, Clone)]
 pub struct Perlin {
-    ranvec: [Vec3; POINT_COUNT],
-    perm_x: [usize; POINT_COUNT],
-    perm_y: [usize; POINT_COUNT],
-    perm_z: [usize; POINT_COUNT],
+    random_vectors: [Vec3; POINT_COUNT],
+    x_permutations: [usize; POINT_COUNT],
+    y_permutations: [usize; POINT_COUNT],
+    z_permutations: [usize; POINT_COUNT],
 }
 
 impl Perlin {
     pub fn new(rng: &mut ThreadRng) -> Self {
-        let mut ranvec = [Vec3::new(0.0, 0.0, 0.0); POINT_COUNT];
-        for item in &mut ranvec[..] {
+        let mut random_vectors = [Vec3::new(0.0, 0.0, 0.0); POINT_COUNT];
+        for item in &mut random_vectors[..] {
             *item = Vec3::random_min_max(rng, -1.0..1.0).unit_vector();
         }
 
-        let perm_x = Self::generate_perm(rng);
-        let perm_y = Self::generate_perm(rng);
-        let perm_z = Self::generate_perm(rng);
+        let x_permutations = Self::generate_perm(rng);
+        let y_permutations = Self::generate_perm(rng);
+        let z_permutations = Self::generate_perm(rng);
 
         Self {
-            ranvec,
-            perm_x,
-            perm_y,
-            perm_z,
+            random_vectors,
+            x_permutations,
+            y_permutations,
+            z_permutations,
         }
     }
 
@@ -64,9 +64,9 @@ impl Perlin {
         for di in 0..2 {
             for dj in 0..2 {
                 for dk in 0..2 {
-                    c[di][dj][dk] = self.ranvec[self.perm_x[i.overflowing_add(di).0 & 255]
-                        ^ self.perm_y[j.overflowing_add(dj).0 & 255]
-                        ^ self.perm_z[k.overflowing_add(dk).0 & 255]];
+                    c[di][dj][dk] = self.random_vectors[self.x_permutations[i.overflowing_add(di).0 & 255]
+                        ^ self.y_permutations[j.overflowing_add(dj).0 & 255]
+                        ^ self.z_permutations[k.overflowing_add(dk).0 & 255]];
                 }
             }
         }
