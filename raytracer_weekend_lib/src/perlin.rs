@@ -55,6 +55,10 @@ impl Perlin {
         let v = p.y() - p.y().floor();
         let w = p.z() - p.z().floor();
 
+        let u = p.x().fract();
+        let v = p.y().fract();
+        let w = p.z().fract();
+
         let i = p.x().floor() as i64 as usize;
         let j = p.y().floor() as i64 as usize;
         let k = p.z().floor() as i64 as usize;
