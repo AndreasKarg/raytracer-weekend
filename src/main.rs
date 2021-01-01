@@ -10,9 +10,9 @@ use rayon::prelude::*;
 use raytracer_weekend_lib::{render, vec3::Vec3, Scene};
 
 const ASPECT_RATIO: f64 = 1.0; // 16.0 / 9.0;
-const IMAGE_WIDTH: usize = 600;
+const IMAGE_WIDTH: usize = 800;
 const IMAGE_HEIGHT: usize = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as usize;
-const SAMPLES_PER_PIXEL: usize = 500; //100;
+const SAMPLES_PER_PIXEL: usize = 10000; //100;
 
 const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");

@@ -73,7 +73,7 @@ fn get_sphere_uv(p: &Point3) -> Point2d {
     Point2d { u, v }
 }
 
-#[derive(Constructor, Debug)]
+#[derive(Constructor, Debug, Clone)]
 pub struct Sphere {
     center: Point3,
     radius: f64,
