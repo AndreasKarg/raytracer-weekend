@@ -7,6 +7,7 @@ use crate::{
         rectangular::{Cuboid, XYRectangle, XZRectangle, YZRectangle},
         spherical::{MovingSphere, Sphere},
         transformations::Transformable,
+        volumes::ConstantMedium,
         Hittable,
     },
     image_texture::ImageTexture,
@@ -26,6 +27,7 @@ pub enum Scene {
     Earth,
     SimpleLight,
     CornellBox,
+    SmokeyCornellBox,
 }
 
 impl Scene {
@@ -37,6 +39,7 @@ impl Scene {
             Scene::Earth => earth,
             Scene::SimpleLight => simple_light,
             Scene::CornellBox => cornell_box,
+            Scene::SmokeyCornellBox => smokey_cornell_box,
         };
 
         generator(aspect_ratio, rng)
@@ -357,6 +360,75 @@ pub fn cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
         Box::new(XZRectangle::new(213.0, 343.0, 227.0, 332.0, 554.0, light)),
+        Box::new(XZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, white.clone())),
+        Box::new(XZRectangle::new(
+            0.0,
+            555.0,
+            0.0,
+            555.0,
+            555.0,
+            white.clone(),
+        )),
+        Box::new(XYRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, white)),
+        Box::new(box1),
+        Box::new(box2),
+    ];
+
+    // Camera
+    let look_from = Point3::new(278.0, 278.0, -800.0);
+    let look_at = Point3::new(278.0, 278.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = Camera::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    (world, cam, Color::new(0.0, 0.0, 0.0))
+}
+
+pub fn smokey_cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
+    // World
+    let red = Box::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
+    let white = Box::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));
+    let green = Box::new(Lambertian::new_solid_color(Color::new(0.12, 0.45, 0.15)));
+    let light = Box::new(DiffuseLight::new(SolidColor::new_rgb(7.0, 7.0, 7.0)));
+
+    let box1 = Cuboid::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 330.0, 165.0),
+        white.clone(),
+    )
+    .rotate_y(15.0)
+    .translate(Vec3::new(265.0, 0.0, 295.0));
+
+    let box2 = Cuboid::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 165.0, 165.0),
+        white.clone(),
+    )
+    .rotate_y(-18.0)
+    .translate(Vec3::new(130.0, 0.0, 65.0));
+
+    let box1 = ConstantMedium::new(box1, 0.005, SolidColor::new_rgb(0.0, 0.0, 0.0));
+    let box2 = ConstantMedium::new(box2, 0.005, SolidColor::new_rgb(1.0, 1.0, 1.0));
+
+    let world: Vec<Box<dyn Hittable>> = vec![
+        Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
+        Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
+        Box::new(XZRectangle::new(113.0, 443.0, 127.0, 432.0, 554.0, light)),
         Box::new(XZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, white.clone())),
         Box::new(XZRectangle::new(
             0.0,

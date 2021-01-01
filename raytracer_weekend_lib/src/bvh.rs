@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use rand::prelude::Rng;
+use rand::prelude::{Rng, ThreadRng};
 
 use super::{aabb::Aabb, hittable::Hittable};
 use crate::{hittable::HitRecord, ray::Ray};
@@ -97,17 +97,20 @@ impl BvhNode {
 }
 
 impl Hittable for BvhNode {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord<'_>> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord<'_>> {
         if !self.bounding_box.hit(r, t_min, t_max) {
             return None;
         };
 
-        let hit_left = self.left.hit(r, t_min, t_max);
+        let hit_left = self.left.hit(r, t_min, t_max, rng);
         let t_max = match &hit_left {
             None => t_max,
             Some(hit) => hit.t,
         };
-        let hit_right = self.right.as_ref().and_then(|h| h.hit(r, t_min, t_max));
+        let hit_right = self
+            .right
+            .as_ref()
+            .and_then(|h| h.hit(r, t_min, t_max, rng));
 
         match &hit_right {
             Some(_) => hit_right,

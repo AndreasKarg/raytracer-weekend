@@ -1,4 +1,5 @@
 use derive_more::Constructor;
+use rand::prelude::ThreadRng;
 
 use crate::{
     aabb::Aabb,
@@ -14,10 +15,10 @@ pub struct Translation<T: Hittable> {
 }
 
 impl<T: Hittable> Hittable for Translation<T> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord> {
         let translated_ray = Ray::new(r.origin() - self.offset, r.direction(), r.time());
 
-        let hit = self.inner.hit(&translated_ray, t_min, t_max)?;
+        let hit = self.inner.hit(&translated_ray, t_min, t_max, rng)?;
 
         let translated_hitpoint = hit.p + self.offset;
 
@@ -101,7 +102,7 @@ impl<T: Hittable> YRotation<T> {
 }
 
 impl<T: Hittable> Hittable for YRotation<T> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord> {
         let sin_theta = self.sin_theta;
         let cos_theta = self.cos_theta;
 
@@ -115,7 +116,7 @@ impl<T: Hittable> Hittable for YRotation<T> {
         direction[2] = sin_theta * r.direction()[0] + cos_theta * r.direction()[2];
 
         let rotated_r = Ray::new(origin, direction, r.time());
-        let rec = self.inner.hit(&rotated_r, t_min, t_max)?;
+        let rec = self.inner.hit(&rotated_r, t_min, t_max, rng)?;
 
         let mut p = rec.p;
         let mut normal = rec.normal;

@@ -142,6 +142,27 @@ impl Material for Dielectric {
     }
 }
 
+#[derive(Debug, Clone, Constructor)]
+pub struct Isotropic<T: Texture> {
+    albedo: T,
+}
+
+impl<T: Texture> Material for Isotropic<T> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<Scatter> {
+        let attenuation = self.albedo.value(rec.texture_uv, &rec.p);
+        let scattered_ray = Ray::new(rec.p, Vec3::random_in_unit_sphere(rng), r_in.time());
+
+        Some(Scatter {
+            attenuation,
+            scattered_ray,
+        })
+    }
+
+    fn emitted(&self, _uv: Point2d, _p: &Point3) -> Color {
+        emit_black()
+    }
+}
+
 fn emit_black() -> Color {
     Color::new(0.0, 0.0, 0.0)
 }

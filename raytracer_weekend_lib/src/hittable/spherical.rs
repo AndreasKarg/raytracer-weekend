@@ -1,6 +1,7 @@
 use std::f64::consts::PI;
 
 use derive_more::Constructor;
+use rand::prelude::ThreadRng;
 
 use crate::{
     aabb::Aabb,
@@ -80,7 +81,7 @@ pub struct Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, _rng: &mut ThreadRng) -> Option<HitRecord> {
         hit_sphere(
             ray,
             t_min,
@@ -120,7 +121,7 @@ impl MovingSphere {
 }
 
 impl Hittable for MovingSphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, _rng: &mut ThreadRng) -> Option<HitRecord> {
         let center_at_time = self.center_at_time(ray.time());
 
         hit_sphere(

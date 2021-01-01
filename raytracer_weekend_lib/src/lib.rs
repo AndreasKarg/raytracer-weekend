@@ -21,7 +21,7 @@ use rand::prelude::*;
 use ray::Ray;
 use rayon::prelude::*;
 pub use scenes::Scene;
-use vec3::{Color, Vec3};
+use vec3::Color;
 
 #[derive(From, Into)]
 struct Width(usize);
@@ -94,7 +94,7 @@ fn sample_ray(
         return Color::new(0.0, 0.0, 0.0);
     }
 
-    let hit_record = match world.hit(r, 0.001, f64::INFINITY) {
+    let hit_record = match world.hit(r, 0.001, f64::INFINITY, rng) {
         Some(hit) => hit,
         _ => return background,
     };

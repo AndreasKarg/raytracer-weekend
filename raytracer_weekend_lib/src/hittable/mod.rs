@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use derive_more::Constructor;
+use rand::prelude::ThreadRng;
 
 use super::{
     aabb::Aabb,
@@ -13,6 +14,7 @@ use super::{
 pub mod rectangular;
 pub mod spherical;
 pub mod transformations;
+pub mod volumes;
 
 #[derive(Debug, Constructor)]
 pub struct HitRecord<'a> {
@@ -45,17 +47,17 @@ impl<'a> HitRecord<'a> {
 }
 
 pub trait Hittable: Sync + Send + Debug {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord>;
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb>;
 }
 
 impl Hittable for [Box<dyn Hittable>] {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord> {
         let mut closest_so_far = t_max;
         let mut rec = None;
 
         for object in self.iter() {
-            if let Some(temp_rec) = object.hit(r, t_min, closest_so_far) {
+            if let Some(temp_rec) = object.hit(r, t_min, closest_so_far, rng) {
                 closest_so_far = temp_rec.t;
                 rec = Some(temp_rec);
             }
@@ -84,8 +86,8 @@ impl Hittable for [Box<dyn Hittable>] {
 }
 
 impl Hittable for Vec<Box<dyn Hittable>> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        self.as_slice().hit(r, t_min, t_max)
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord> {
+        self.as_slice().hit(r, t_min, t_max, rng)
     }
 
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
@@ -94,8 +96,8 @@ impl Hittable for Vec<Box<dyn Hittable>> {
 }
 
 impl Hittable for &[Box<dyn Hittable>] {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        (*self).hit(r, t_min, t_max)
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord> {
+        (*self).hit(r, t_min, t_max, rng)
     }
 
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
