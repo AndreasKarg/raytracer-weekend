@@ -552,6 +552,7 @@ name = "raytracer_weekend"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "image",
  "indicatif",
  "rand",
  "rayon",

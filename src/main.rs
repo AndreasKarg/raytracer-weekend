@@ -5,10 +5,14 @@ use std::{
 };
 
 use clap::Clap;
+use image::{Pixel, Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand::thread_rng;
 use rayon::prelude::*;
-use raytracer_weekend_lib::{vec3::Vec3, Raytracer, Scene};
+use raytracer_weekend_lib::{
+    vec3::{Color, Vec3},
+    Raytracer, Scene,
+};
 
 const ASPECT_RATIO: f64 = 1.0; // 16.0 / 9.0;
 const IMAGE_WIDTH: usize = 800;
@@ -55,30 +59,30 @@ fn main() {
 
     let all_pixels: Vec<_> = raytracer.render().progress_with(progress_bar).collect();
 
-    let file = File::create("image.ppm").unwrap();
-    let mut file = BufWriter::new(file);
+    let mut image = RgbImage::new(IMAGE_WIDTH as u32, IMAGE_HEIGHT as u32);
 
-    writeln!(&mut file, "P3\n{} {}\n255", IMAGE_WIDTH, IMAGE_HEIGHT).unwrap();
+    image
+        .pixels_mut()
+        .zip(all_pixels.iter())
+        .for_each(|(img_pixel, render_pixel)| {
+            {
+                let r = render_pixel.x();
+                let g = render_pixel.y();
+                let b = render_pixel.z();
 
-    all_pixels
-        .into_iter()
-        .for_each(|pixel| write_color(&mut file, pixel, SAMPLES_PER_PIXEL).unwrap());
-}
+                // Divide the color by the number of samples and gamma-correct for gamma=2.0.
+                let scale = 1.0 / SAMPLES_PER_PIXEL as f64;
+                let r = (scale * r).sqrt();
+                let g = (scale * g).sqrt();
+                let b = (scale * b).sqrt();
 
-fn write_color<F: Write>(f: &mut F, pixel_color: Vec3, samples_per_pixel: usize) -> io::Result<()> {
-    let r = pixel_color.x();
-    let g = pixel_color.y();
-    let b = pixel_color.z();
+                let ir = (255.999 * r.clamp(0.0, 0.999)) as u8;
+                let ig = (255.999 * g.clamp(0.0, 0.999)) as u8;
+                let ib = (255.999 * b.clamp(0.0, 0.999)) as u8;
 
-    // Divide the color by the number of samples and gamma-correct for gamma=2.0.
-    let scale = 1.0 / samples_per_pixel as f64;
-    let r = (scale * r).sqrt();
-    let g = (scale * g).sqrt();
-    let b = (scale * b).sqrt();
+                *img_pixel = Rgb([ir, ig, ib]);
+            }
+        });
 
-    let ir = (255.999 * r.clamp(0.0, 0.999)) as u8;
-    let ig = (255.999 * g.clamp(0.0, 0.999)) as u8;
-    let ib = (255.999 * b.clamp(0.0, 0.999)) as u8;
-
-    writeln!(f, "{} {} {}", ir, ig, ib)
+    image.save("render/image.png").unwrap();
 }
