@@ -8,7 +8,7 @@ use clap::Clap;
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand::thread_rng;
 use rayon::prelude::*;
-use raytracer_weekend_lib::{render, vec3::Vec3, Scene};
+use raytracer_weekend_lib::{vec3::Vec3, Raytracer, Scene};
 
 const ASPECT_RATIO: f64 = 1.0; // 16.0 / 9.0;
 const IMAGE_WIDTH: usize = 800;
@@ -44,16 +44,16 @@ fn main() {
         &mut thread_rng(),
     );
 
-    let all_pixels: Vec<_> = render(
+    let raytracer = Raytracer::new(
         world,
         cam,
         background,
         IMAGE_WIDTH,
         IMAGE_HEIGHT,
         SAMPLES_PER_PIXEL,
-    )
-    .progress_with(progress_bar)
-    .collect();
+    );
+
+    let all_pixels: Vec<_> = raytracer.render().progress_with(progress_bar).collect();
 
     let file = File::create("image.ppm").unwrap();
     let mut file = BufWriter::new(file);
