@@ -32,16 +32,16 @@ struct Height(usize);
 const MAX_DEPTH: usize = 50;
 
 pub fn render(
-    scene: Scene,
+    world: Vec<Box<dyn Hittable>>,
+    cam: Camera,
+    background: Color,
     image_width: usize,
     image_height: usize,
     samples_per_pixel: usize,
 ) -> impl ParallelIterator<Item = Color> {
     let mut rng = rand::thread_rng();
-    let aspect_ratio = image_width as f64 / image_height as f64;
 
     // World
-    let (world, cam, background) = scene.generate(aspect_ratio, &mut rng);
     let world = BvhNode::new(world, 0.0, 1.0, &mut rng);
 
     // Render

@@ -586,7 +586,7 @@ pub fn book2_final_scene(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     let look_from = Point3::new(478.0, 278.0, -600.0);
     let look_at = Point3::new(278.0, 278.0, 0.0);
     let v_up = Vec3::new(0.0, 1.0, 0.0);
-    let distance_to_focus = (look_at-look_from).length();
+    let distance_to_focus = (look_at - look_from).length();
     let aperture = 0.0;
     let vfow = 40.0;
     let time0 = 0.0;

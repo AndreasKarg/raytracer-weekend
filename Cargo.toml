@@ -11,3 +11,4 @@ indicatif = { version = "0.15.0", features = ["rayon"] }
 raytracer_weekend_lib = { path="raytracer_weekend_lib"}
 rayon = "1.5.0"
 clap = "3.0.0-beta.2"
+rand = "0.8.0"

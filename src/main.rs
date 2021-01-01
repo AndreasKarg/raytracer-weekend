@@ -6,13 +6,14 @@ use std::{
 
 use clap::Clap;
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
+use rand::thread_rng;
 use rayon::prelude::*;
 use raytracer_weekend_lib::{render, vec3::Vec3, Scene};
 
 const ASPECT_RATIO: f64 = 1.0; // 16.0 / 9.0;
 const IMAGE_WIDTH: usize = 800;
 const IMAGE_HEIGHT: usize = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as usize;
-const SAMPLES_PER_PIXEL: usize = 10000; //100;
+const SAMPLES_PER_PIXEL: usize = 100; //100;
 
 const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -38,9 +39,21 @@ fn main() {
 
     progress_bar.set_draw_delta(pixel_count / 100);
 
-    let all_pixels: Vec<_> = render(opts.scene, IMAGE_WIDTH, IMAGE_HEIGHT, SAMPLES_PER_PIXEL)
-        .progress_with(progress_bar)
-        .collect();
+    let (world, cam, background) = opts.scene.generate(
+        (IMAGE_WIDTH as f64) / (IMAGE_HEIGHT as f64),
+        &mut thread_rng(),
+    );
+
+    let all_pixels: Vec<_> = render(
+        world,
+        cam,
+        background,
+        IMAGE_WIDTH,
+        IMAGE_HEIGHT,
+        SAMPLES_PER_PIXEL,
+    )
+    .progress_with(progress_bar)
+    .collect();
 
     let file = File::create("image.ppm").unwrap();
     let mut file = BufWriter::new(file);
