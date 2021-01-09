@@ -2,9 +2,7 @@ mod scenes;
 
 use clap::Clap;
 use image::{Rgb, RgbImage};
-use indicatif::{
-    ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle,
-};
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
 use rand::thread_rng;
 use rayon::prelude::*;
 use raytracer_weekend_lib::Raytracer;

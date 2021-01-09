@@ -1,5 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use rand::{prelude::*, rngs::OsRng};
+use rand::prelude::*;
+use rayon::prelude::*;
 use raytracer_weekend_lib::{
     bvh::BvhNode,
     camera::Camera,
