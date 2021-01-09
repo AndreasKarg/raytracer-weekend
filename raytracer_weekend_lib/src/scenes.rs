@@ -1,5 +1,3 @@
-use itertools::Diff;
-use num_traits::Pow;
 use rand::prelude::*;
 use strum::EnumString;
 
@@ -32,6 +30,7 @@ pub enum Scene {
     CornellBox,
     SmokeyCornellBox,
     Book2FinalScene,
+    AnimatedBook2FinalScene,
 }
 
 impl Scene {
@@ -45,6 +44,7 @@ impl Scene {
             Scene::CornellBox => cornell_box,
             Scene::SmokeyCornellBox => smokey_cornell_box,
             Scene::Book2FinalScene => book2_final_scene,
+            Scene::AnimatedBook2FinalScene => animated_book2_final,
         };
 
         generator(aspect_ratio, rng)
@@ -149,7 +149,7 @@ pub fn jumpy_balls(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
         1.0,
     );
 
-    (world, cam, DEFAULT_BACKGROUND)
+    (world, vec![cam], DEFAULT_BACKGROUND)
 }
 
 pub fn two_spheres(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
@@ -196,7 +196,7 @@ pub fn two_spheres(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, cam, DEFAULT_BACKGROUND)
+    (world, vec![cam], DEFAULT_BACKGROUND)
 }
 
 pub fn two_perlin_spheres(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
@@ -239,7 +239,7 @@ pub fn two_perlin_spheres(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, cam, DEFAULT_BACKGROUND)
+    (world, vec![cam], DEFAULT_BACKGROUND)
 }
 
 pub fn earth(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
@@ -275,7 +275,7 @@ pub fn earth(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, cam, DEFAULT_BACKGROUND)
+    (world, vec![cam], DEFAULT_BACKGROUND)
 }
 
 pub fn simple_light(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
@@ -335,7 +335,7 @@ pub fn simple_light(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, cam, Color::new(0.0, 0.0, 0.0))
+    (world, vec![cam], Color::new(0.0, 0.0, 0.0))
 }
 
 pub fn cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
@@ -401,7 +401,7 @@ pub fn cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, cam, Color::new(0.0, 0.0, 0.0))
+    (world, vec![cam], Color::new(0.0, 0.0, 0.0))
 }
 
 pub fn smokey_cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
@@ -470,7 +470,7 @@ pub fn smokey_cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, cam, Color::new(0.0, 0.0, 0.0))
+    (world, vec![cam], Color::new(0.0, 0.0, 0.0))
 }
 
 pub fn book2_final_scene(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
@@ -605,7 +605,7 @@ pub fn book2_final_scene(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (objects, cam, Color::new(0.0, 0.0, 0.0))
+    (objects, vec![cam], Color::new(0.0, 0.0, 0.0))
 }
 
 pub fn animated_book2_final(
@@ -655,6 +655,6 @@ pub fn animated_book2_final(
     (world, cameras, background)
 }
 
-type World = (Vec<Box<dyn Hittable>>, Camera, Color);
+type World = (Vec<Box<dyn Hittable>>, Vec<Camera>, Color);
 
 static DEFAULT_BACKGROUND: Color = Color::new_const(0.7, 0.8, 1.00);

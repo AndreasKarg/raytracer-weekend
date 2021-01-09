@@ -11,7 +11,6 @@ pub mod scenes;
 mod texture;
 pub mod vec3;
 
-use bvh::BvhNode;
 use camera::Camera;
 use derive_more::Constructor;
 use hittable::Hittable;

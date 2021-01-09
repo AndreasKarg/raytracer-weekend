@@ -1,18 +1,9 @@
-use std::{
-    fs::File,
-    io,
-    io::{BufWriter, Write},
-};
-
 use clap::Clap;
-use image::{Pixel, Rgb, RgbImage};
+use image::{Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand::thread_rng;
 use rayon::prelude::*;
-use raytracer_weekend_lib::{
-    vec3::{Color, Vec3},
-    Raytracer, Scene,
-};
+use raytracer_weekend_lib::{Raytracer, Scene};
 
 const ASPECT_RATIO: f64 = 4.0 / 3.0;
 const IMAGE_WIDTH: usize = 400;
@@ -35,12 +26,7 @@ fn main() {
 
     let pixel_count = (IMAGE_WIDTH * IMAGE_HEIGHT) as u64;
 
-    // let (world, cam, background) = opts.scene.generate(
-    //     (IMAGE_WIDTH as f64) / (IMAGE_HEIGHT as f64),
-    //     &mut thread_rng(),
-    // );
-
-    let (world, cams, background) = raytracer_weekend_lib::scenes::animated_book2_final(
+    let (world, cams, background) = opts.scene.generate(
         (IMAGE_WIDTH as f64) / (IMAGE_HEIGHT as f64),
         &mut thread_rng(),
     );
