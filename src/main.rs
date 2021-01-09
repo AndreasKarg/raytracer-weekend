@@ -2,7 +2,9 @@ mod scenes;
 
 use clap::Clap;
 use image::{Rgb, RgbImage};
-use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
+use indicatif::{
+    ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle,
+};
 use rand::thread_rng;
 use rayon::prelude::*;
 use raytracer_weekend_lib::Raytracer;
@@ -40,7 +42,12 @@ fn main() {
         &mut thread_rng(),
     );
 
-    for (frame_no, cam) in cams.iter().enumerate() {
+    let overall_progress = ProgressBar::new(cams.len() as u64)
+        .with_style(ProgressStyle::default_bar().template(
+            "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}",
+        ));
+
+    for (frame_no, cam) in cams.iter().progress_with(overall_progress).enumerate() {
         let raytracer = Raytracer::new(
             &world,
             &cam,
@@ -50,13 +57,13 @@ fn main() {
             samples_per_pixel,
         );
 
-        let progress_bar = ProgressBar::new(pixel_count);
-        progress_bar.set_style(ProgressStyle::default_bar().template(
-            "[[{msg}] {elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec})",
-        ));
-        progress_bar.set_draw_delta(pixel_count / 100);
-        progress_bar.set_message(&format!("[{} / {}]", frame_no, cams.len()));
-        let all_pixels: Vec<_> = raytracer.render().progress_with(progress_bar).collect();
+        let frame_progress =
+            ProgressBar::new(pixel_count).with_style(ProgressStyle::default_bar().template(
+                "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec})",
+            ));
+        frame_progress.set_draw_delta(pixel_count / 100);
+
+        let all_pixels: Vec<_> = raytracer.render().progress_with(frame_progress).collect();
 
         let mut image = RgbImage::new(image_width as u32, image_height as u32);
 

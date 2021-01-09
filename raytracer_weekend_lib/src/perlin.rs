@@ -11,7 +11,7 @@ pub struct Perlin {
 }
 
 impl Perlin {
-    pub fn new(rng: &mut ThreadRng) -> Self {
+    pub fn new(rng: &mut impl Rng) -> Self {
         let mut gradients = [Vec3::new(0.0, 0.0, 0.0); POINT_COUNT];
         for item in &mut gradients[..] {
             *item = Vec3::random_min_max(rng, -1.0..1.0).unit_vector();
@@ -27,7 +27,7 @@ impl Perlin {
         }
     }
 
-    fn generate_perm(rng: &mut ThreadRng) -> [usize; POINT_COUNT] {
+    fn generate_perm(rng: &mut impl Rng) -> [usize; POINT_COUNT] {
         let mut p = [0; POINT_COUNT];
 
         for (i, element) in p.iter_mut().enumerate() {
@@ -39,7 +39,7 @@ impl Perlin {
         p
     }
 
-    fn permute(p: &mut [usize; POINT_COUNT], n: usize, rng: &mut ThreadRng) {
+    fn permute(p: &mut [usize; POINT_COUNT], n: usize, rng: &mut impl Rng) {
         for i in (1..n).rev() {
             let target = rng.gen_range(0..i);
             p.swap(i, target);
