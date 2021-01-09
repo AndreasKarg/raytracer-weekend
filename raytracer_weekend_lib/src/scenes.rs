@@ -1,4 +1,5 @@
 use itertools::Diff;
+use num_traits::Pow;
 use rand::prelude::*;
 use strum::EnumString;
 
@@ -605,6 +606,53 @@ pub fn book2_final_scene(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     );
 
     (objects, cam, Color::new(0.0, 0.0, 0.0))
+}
+
+pub fn animated_book2_final(
+    aspect_ratio: f64,
+    rng: &mut ThreadRng,
+) -> (Vec<Box<dyn Hittable>>, Vec<Camera>, Color) {
+    let (world, _, background) = book2_final_scene(aspect_ratio, rng);
+
+    // Camera
+    let look_at = Point3::new(278.0, 278.0, 278.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let aperture = 1.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let len_s = 3.0;
+    let fps = 10.0;
+    let frames = fps * len_s;
+
+    let cameras: Vec<_> = (0..(frames as usize))
+        .into_iter()
+        .map(|frame| {
+            let from_x = 478.0 - frame as f64 * (2.0 * 478.0) / frames;
+            let from_y = 278.0;
+            let from_z = -600.0;
+
+            let look_from = (from_x, from_y, from_z).into();
+            let distance_to_focus = (look_at - look_from).length();
+
+            Camera::new(
+                look_from,
+                look_at,
+                v_up,
+                vfow,
+                aspect_ratio,
+                aperture,
+                distance_to_focus,
+                time0,
+                time1,
+            )
+        })
+        .collect();
+
+    let world: Vec<Box<dyn Hittable>> = vec![Box::new(BvhNode::new(world, 0.0, 1.0, rng))];
+
+    (world, cameras, background)
 }
 
 type World = (Vec<Box<dyn Hittable>>, Camera, Color);

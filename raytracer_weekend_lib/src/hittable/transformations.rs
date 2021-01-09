@@ -80,6 +80,11 @@ impl<T: Hittable> YRotation<T> {
                     let j = j as f64;
                     let k = k as f64;
 
+                    let ijk: Vec3 = (i, j, k).into();
+                    let one: Vec3 = (1.0, 1.0, 1.0).into();
+
+                    let xyz = ijk * bbox.max() + (one - ijk) * bbox.min();
+
                     let x = i * bbox.max().x() + (1.0 - i) * bbox.min().x();
                     let y = j * bbox.max().y() + (1.0 - j) * bbox.min().y();
                     let z = k * bbox.max().z() + (1.0 - k) * bbox.min().z();

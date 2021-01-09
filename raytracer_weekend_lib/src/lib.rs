@@ -7,7 +7,7 @@ mod light_source;
 mod material;
 mod perlin;
 mod ray;
-mod scenes;
+pub mod scenes;
 mod texture;
 pub mod vec3;
 
@@ -26,16 +26,16 @@ use vec3::Color;
 const MAX_DEPTH: usize = 50;
 
 #[derive(Constructor)]
-pub struct Raytracer {
-    world: Vec<Box<dyn Hittable>>,
-    cam: Camera,
+pub struct Raytracer<'a> {
+    world: &'a [Box<dyn Hittable>],
+    cam: &'a Camera,
     background: Color,
     image_width: usize,
     image_height: usize,
     samples_per_pixel: usize,
 }
 
-impl Raytracer {
+impl<'a> Raytracer<'a> {
     pub fn render(&self) -> impl ParallelIterator<Item = Color> + '_ {
         let pixel_range: Vec<_> =
             iproduct!((0..self.image_height).rev(), 0..self.image_width).collect();
