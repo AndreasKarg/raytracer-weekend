@@ -1,7 +1,6 @@
+use clap::Clap;
 use rand::prelude::*;
-use strum::EnumString;
-
-use crate::{
+use raytracer_weekend_lib::{
     bvh::BvhNode,
     camera::Camera,
     hittable::{
@@ -13,14 +12,13 @@ use crate::{
     },
     image_texture::ImageTexture,
     light_source::DiffuseLight,
-    material::{Dielectric, Material, Metal},
+    material::{Dielectric, Lambertian, Material, Metal},
     perlin::Perlin,
     texture::{Checker, Noise, SolidColor},
     vec3::{Color, Point3, Vec3},
-    Lambertian,
 };
 
-#[derive(EnumString)]
+#[derive(Clap)]
 pub enum Scene {
     JumpyBalls,
     TwoSpheres,

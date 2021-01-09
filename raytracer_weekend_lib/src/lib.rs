@@ -1,25 +1,22 @@
 mod aabb;
-mod bvh;
-mod camera;
-mod hittable;
-mod image_texture;
-mod light_source;
-mod material;
-mod perlin;
+pub mod bvh;
+pub mod camera;
+pub mod hittable;
+pub mod image_texture;
+pub mod light_source;
+pub mod material;
+pub mod perlin;
 mod ray;
-pub mod scenes;
-mod texture;
+pub mod texture;
 pub mod vec3;
 
 use camera::Camera;
 use derive_more::Constructor;
 use hittable::Hittable;
 use itertools::iproduct;
-use material::Lambertian;
 use rand::prelude::*;
 use ray::Ray;
 use rayon::prelude::*;
-pub use scenes::Scene;
 use vec3::Color;
 
 const MAX_DEPTH: usize = 50;

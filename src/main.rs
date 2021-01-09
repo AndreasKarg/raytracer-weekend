@@ -1,14 +1,12 @@
+mod scenes;
+
 use clap::Clap;
 use image::{Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand::thread_rng;
 use rayon::prelude::*;
-use raytracer_weekend_lib::{Raytracer, Scene};
-
-const ASPECT_RATIO: f64 = 4.0 / 3.0;
-const IMAGE_WIDTH: usize = 400;
-const IMAGE_HEIGHT: usize = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as usize;
-const SAMPLES_PER_PIXEL: usize = 2000; //100;
+use raytracer_weekend_lib::Raytracer;
+use scenes::Scene;
 
 const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -17,17 +15,28 @@ const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 #[derive(Clap)]
 #[clap(version = CRATE_VERSION, author = CRATE_AUTHOR)]
 struct Opts {
-    #[clap(default_value = "CornellBox")]
+    #[clap(subcommand)]
     scene: Scene,
+    #[clap(default_value = "400")]
+    width: usize,
+    #[clap(default_value = "1.7777778")]
+    aspect_ratio: f64,
+    #[clap(default_value = "100")]
+    samples_per_pixel: usize,
 }
 
 fn main() {
     let opts: Opts = Opts::parse();
 
-    let pixel_count = (IMAGE_WIDTH * IMAGE_HEIGHT) as u64;
+    let image_width = opts.width;
+    let aspect_ratio = opts.aspect_ratio;
+    let image_height = (image_width as f64 / aspect_ratio).round() as usize;
+    let samples_per_pixel = opts.samples_per_pixel;
+
+    let pixel_count = (image_width * image_height) as u64;
 
     let (world, cams, background) = opts.scene.generate(
-        (IMAGE_WIDTH as f64) / (IMAGE_HEIGHT as f64),
+        (image_width as f64) / (image_height as f64),
         &mut thread_rng(),
     );
 
@@ -36,9 +45,9 @@ fn main() {
             &world,
             &cam,
             background,
-            IMAGE_WIDTH,
-            IMAGE_HEIGHT,
-            SAMPLES_PER_PIXEL,
+            image_width,
+            image_height,
+            samples_per_pixel,
         );
 
         let progress_bar = ProgressBar::new(pixel_count);
@@ -49,7 +58,7 @@ fn main() {
         progress_bar.set_message(&format!("[{} / {}]", frame_no, cams.len()));
         let all_pixels: Vec<_> = raytracer.render().progress_with(progress_bar).collect();
 
-        let mut image = RgbImage::new(IMAGE_WIDTH as u32, IMAGE_HEIGHT as u32);
+        let mut image = RgbImage::new(image_width as u32, image_height as u32);
 
         image
             .pixels_mut()
@@ -61,7 +70,7 @@ fn main() {
                     let b = render_pixel.z();
 
                     // Divide the color by the number of samples and gamma-correct for gamma=2.0.
-                    let scale = 1.0 / SAMPLES_PER_PIXEL as f64;
+                    let scale = 1.0 / samples_per_pixel as f64;
                     let r = (scale * r).sqrt();
                     let g = (scale * g).sqrt();
                     let b = (scale * b).sqrt();
