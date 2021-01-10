@@ -1,3 +1,5 @@
+#![feature(array_map)]
+
 mod aabb;
 pub mod bvh;
 pub mod camera;

@@ -31,7 +31,8 @@ pub enum Scene {
     Book2FinalScene,
     AnimatedBook2FinalScene,
     SimpleTriangle,
-    ExampleWavefrontObj,
+    WavefrontCowObj,
+    WavefrontSuspensionObj,
 }
 
 impl Scene {
@@ -47,7 +48,8 @@ impl Scene {
             Scene::Book2FinalScene => book2_final_scene,
             Scene::AnimatedBook2FinalScene => animated_book2_final,
             Scene::SimpleTriangle => simple_triangle,
-            Scene::ExampleWavefrontObj => example_wavefront_obj,
+            Scene::WavefrontCowObj => wavefront_cow_obj,
+            Scene::WavefrontSuspensionObj => wavefront_suspension_obj,
         };
 
         generator(aspect_ratio, rng)
@@ -673,7 +675,7 @@ pub fn simple_triangle(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
             10.0,
             Box::new(material_ground),
         )),
-        Box::new(Triangle::new(
+        Box::new(Triangle::new_flat_shaded(
             [
                 Point3::new(-5.0, 0.0, 5.0),
                 Point3::new(0.0, 7.0, 0.0),
@@ -708,7 +710,7 @@ pub fn simple_triangle(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
     (world, vec![cam], DEFAULT_BACKGROUND)
 }
 
-pub fn example_wavefront_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+pub fn wavefront_cow_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     // World
     let checker = Checker::new(
         SolidColor::new_rgb(0.2, 0.3, 0.1),
@@ -740,6 +742,55 @@ pub fn example_wavefront_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     // Camera
     let look_from = Point3::new(13.0, 2.0, 3.0);
     let look_at = Point3::new(0.0, 2.5, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = Camera::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    (world, vec![cam], Color::new_const(0.085, 0.1, 0.125))
+}
+
+pub fn wavefront_suspension_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+    // World
+    let checker = Checker::new(
+        SolidColor::new_rgb(0.2, 0.3, 0.1),
+        SolidColor::new_rgb(0.9, 0.9, 0.9),
+        10.0,
+    );
+    let material_ground = Lambertian::new(checker);
+
+    let suspension = load_wavefront_obj("Normals_Try3.obj", rng).unwrap();
+    let suspension = Box::new(Translation::new(suspension, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable>;
+
+    let world: Vec<Box<dyn Hittable>> = vec![
+        Box::new(XYRectangle::new(
+            -5.0,
+            5.0,
+            -7.0,
+            7.0,
+            1.0,
+            Box::new(DiffuseLight::new(SolidColor::new_rgb(1.2, 1.0, 1.0))),
+        )),
+        suspension,
+    ];
+
+    // Camera
+    let look_from = Point3::new(0.5, 2.5, 0.8);
+    let look_at = Point3::new(-0.1, 2.3, 0.15);
     let v_up = Vec3::new(0.0, 1.0, 0.0);
     let distance_to_focus = 10.0;
     let aperture = 0.0;
