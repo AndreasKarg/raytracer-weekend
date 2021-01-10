@@ -159,10 +159,11 @@ pub fn book2_final_scene(
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
+    let mut rng = StdRng::seed_from_u64(1337);
+    let (world, cam, background) = book2_final_scene(16.0 / 9.0, &mut rng);
+
     c.bench_function("book2_final_scene", |b| {
         b.iter(|| {
-            let mut rng = StdRng::seed_from_u64(1337);
-            let (world, cam, background) = book2_final_scene(16.0 / 9.0, &mut rng);
             let raytracer = Raytracer::new(&world, &cam, background, 40, 22, 100);
             raytracer.render().for_each(drop);
         })

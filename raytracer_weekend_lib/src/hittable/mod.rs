@@ -14,6 +14,7 @@ use super::{
 pub mod rectangular;
 pub mod spherical;
 pub mod transformations;
+pub mod triangular;
 pub mod volumes;
 
 #[derive(Debug, Constructor)]
