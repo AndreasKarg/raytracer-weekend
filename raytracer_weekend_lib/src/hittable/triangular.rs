@@ -12,12 +12,12 @@ use crate::{
 };
 
 #[derive(Debug, Constructor)]
-pub struct Triangle<M: Material> {
+pub struct Triangle {
     vertices: [Point3; 3],
-    material: M,
+    material: Box<dyn Material>,
 }
 
-impl<M: Material> Triangle<M> {
+impl Triangle {
     fn min_max(nums: impl Iterator<Item = f64>) -> (f64, f64) {
         match nums.minmax() {
             MinMaxResult::NoElements => {
@@ -29,20 +29,22 @@ impl<M: Material> Triangle<M> {
     }
 }
 
-impl<M: Material> Hittable for Triangle<M> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord> {
+impl Hittable for Triangle {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, _rng: &mut ThreadRng) -> Option<HitRecord> {
         let vertex_a = self.vertices[0];
         let vertex_b = self.vertices[1];
         let vertex_c = self.vertices[2];
         let a_to_b = vertex_b - vertex_a;
         let a_to_c = vertex_c - vertex_a;
         let normal = a_to_b.cross(&a_to_c);
-        let determinant = -r.direction().dot(&normal);
+        let determinant = -ray.direction().dot(&normal);
         let inv_determinant = 1.0 / determinant;
-        let a_to_ray_origin = r.origin() - vertex_a;
-        let a_to_ray_origin_cross_direction = a_to_ray_origin.cross(&r.direction());
+        let a_to_ray_origin = ray.origin() - vertex_a;
+        let a_to_ray_origin_cross_direction = a_to_ray_origin.cross(&ray.direction());
+
         let u = a_to_c.dot(&a_to_ray_origin_cross_direction) * inv_determinant;
         let v = -a_to_b.dot(&a_to_ray_origin_cross_direction) * inv_determinant;
+
         let t = a_to_ray_origin.dot(&normal) * inv_determinant;
 
         if t < t_min || t > t_max {
@@ -50,21 +52,21 @@ impl<M: Material> Hittable for Triangle<M> {
         }
 
         let triangle_was_hit =
-            determinant >= 1e-6 && t >= 0.0 && u >= 0.0 && v >= 0.0 && (u + v) <= 1.0;
+            t >= 0.0 && u >= 0.0 && v >= 0.0 && (u + v) <= 1.0;
 
         if !triangle_was_hit {
             return None;
         }
 
-        let p = r.at(t);
+        let p = ray.at(t);
 
         // TODO: Compute texture u/v properly
         Some(HitRecord::new_with_face_normal(
             p,
             t,
-            Point2d { u: 0.0, v: 0.0 },
-            &self.material,
-            r,
+            Point2d { u, v },
+            self.material.as_ref(),
+            ray,
             normal,
         ))
     }

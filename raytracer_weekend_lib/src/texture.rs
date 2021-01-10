@@ -66,3 +66,12 @@ impl Texture for Noise {
             * (1.0 + (self.scale * p.z() + 10.0 * self.noise.turbulence(&(*p), 7)).sin())
     }
 }
+
+#[derive(Debug, Clone, Constructor)]
+pub struct UVDebug {}
+
+impl Texture for UVDebug {
+    fn value(&self, uv: Point2d, _p: &Vec3) -> Color {
+        Color::new(uv.u, uv.v, 0.0)
+    }
+}
