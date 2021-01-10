@@ -19,6 +19,7 @@ use raytracer_weekend_lib::{
     vec3::{Color, Point3, Vec3},
     Raytracer,
 };
+use rayon::ThreadPoolBuilder;
 
 pub fn book2_final_scene(
     aspect_ratio: f64,
@@ -159,6 +160,7 @@ pub fn book2_final_scene(
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
+    ThreadPoolBuilder::new().num_threads(1).build_global().unwrap();
     let mut rng = StdRng::seed_from_u64(1337);
     let (world, cam, background) = book2_final_scene(16.0 / 9.0, &mut rng);
 
