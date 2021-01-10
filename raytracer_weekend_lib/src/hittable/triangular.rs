@@ -1,14 +1,21 @@
+use std::fs;
+
 use derive_more::Constructor;
 use itertools::{Itertools, MinMaxResult};
 use rand::prelude::ThreadRng;
+use wavefront_obj::{
+    obj,
+    obj::{Geometry, Object, Primitive, Vertex},
+};
 
 use crate::{
     aabb::Aabb,
+    bvh::BvhNode,
     hittable::{HitRecord, Hittable},
-    material::Material,
+    material::{Lambertian, Material},
     ray::Ray,
     texture::Point2d,
-    vec3::Point3,
+    vec3::{Color, Point3},
 };
 
 #[derive(Debug, Constructor)]
@@ -51,8 +58,7 @@ impl Hittable for Triangle {
             return None;
         }
 
-        let triangle_was_hit =
-            t >= 0.0 && u >= 0.0 && v >= 0.0 && (u + v) <= 1.0;
+        let triangle_was_hit = t >= 0.0 && u >= 0.0 && v >= 0.0 && (u + v) <= 1.0;
 
         if !triangle_was_hit {
             return None;
@@ -81,4 +87,60 @@ impl Hittable for Triangle {
 
         Some(Aabb::new(min, max))
     }
+}
+
+impl From<Vertex> for Point3 {
+    fn from(v: Vertex) -> Self {
+        Self::new(v.x, v.y, v.z)
+    }
+}
+
+fn parse_geometry<'a>(
+    geometry: &'a Geometry,
+    vertices: &'a [Vertex],
+) -> impl Iterator<Item = Box<dyn Hittable>> + 'a {
+    geometry.shapes.iter().map(move |shape| {
+        match shape.primitive {
+            Primitive::Point(_) => {
+                panic!()
+            }
+            Primitive::Line(_, _) => {
+                panic!()
+            }
+            Primitive::Triangle(vertex_1_idx, vertex_2_idx, vertex_3_idx) => {
+                let vertex_1 = vertices[vertex_1_idx.0];
+                let vertex_2 = vertices[vertex_2_idx.0];
+                let vertex_3 = vertices[vertex_3_idx.0];
+
+                // TODO: Handle materials properly
+                Box::new(Triangle::new(
+                    [vertex_1.into(), vertex_2.into(), vertex_3.into()],
+                    Box::new(Lambertian::new_solid_color(Color::new(0.5, 0.5, 0.5))),
+                )) as Box<dyn Hittable>
+            }
+        }
+    })
+}
+
+fn parse_individual_object(object: &Object) -> Vec<Box<dyn Hittable>> {
+    object
+        .geometry
+        .iter()
+        .flat_map(|geometry| parse_geometry(geometry, &object.vertices))
+        .collect()
+}
+
+pub fn load_wavefront_obj(
+    path: &str,
+    rng: &mut ThreadRng,
+) -> Result<Box<dyn Hittable>, Box<dyn std::error::Error>> {
+    let file = fs::read_to_string(path)?;
+    let object_set = obj::parse(file)?;
+    let triangles: Vec<Box<dyn Hittable>> = object_set
+        .objects
+        .iter()
+        .flat_map(parse_individual_object)
+        .collect();
+    // TODO: Sort out this time thing
+    Ok(Box::new(BvhNode::new(triangles, 0.0, 1.0, rng)))
 }

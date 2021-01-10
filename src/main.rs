@@ -17,11 +17,11 @@ const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 struct Opts {
     #[clap(subcommand)]
     scene: Scene,
-    #[clap(default_value = "400")]
+    #[clap(long, short, default_value = "400")]
     width: usize,
-    #[clap(default_value = "1.7777778")]
+    #[clap(long, short, default_value = "1.7777778")]
     aspect_ratio: f64,
-    #[clap(default_value = "100")]
+    #[clap(long, short, default_value = "100")]
     samples_per_pixel: usize,
 }
 

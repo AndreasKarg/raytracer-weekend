@@ -105,3 +105,13 @@ impl Hittable for &[Box<dyn Hittable>] {
         (*self).bounding_box(time0, time1)
     }
 }
+
+impl Hittable for Box<dyn Hittable> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord> {
+        self.as_ref().hit(r, t_min, t_max, rng)
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+        self.as_ref().bounding_box(time0, time1)
+    }
+}
