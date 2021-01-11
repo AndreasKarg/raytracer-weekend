@@ -249,7 +249,7 @@ pub fn two_perlin_spheres(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
 
 pub fn earth(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
     // World
-    let earth_texture = ImageTexture::open("earthmap.jpg").unwrap();
+    let earth_texture = ImageTexture::open("models/earthmap.jpg").unwrap();
     let earth_surface = Lambertian::new(earth_texture);
 
     let world: Vec<Box<dyn Hittable>> = vec![Box::new(Sphere::new(
@@ -285,7 +285,7 @@ pub fn earth(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
 
 pub fn simple_light(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     // World
-    let earth_texture = ImageTexture::open("earthmap.jpg").unwrap();
+    let earth_texture = ImageTexture::open("models/earthmap.jpg").unwrap();
     let earth_surface = DiffuseLight::new(earth_texture);
     // let earth_surface = DiffuseLight::new(SolidColor::new_rgb(4.0, 4.0, 4.0));
 
@@ -559,7 +559,9 @@ pub fn book2_final_scene(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
         SolidColor::new_rgb(1.0, 1.0, 1.0),
     )));
 
-    let emat = Box::new(Lambertian::new(ImageTexture::open("earthmap.jpg").unwrap()));
+    let emat = Box::new(Lambertian::new(
+        ImageTexture::open("models/earthmap.jpg").unwrap(),
+    ));
     objects.push(Box::new(Sphere::new(
         Point3::new(400.0, 200.0, 400.0),
         100.0,
@@ -719,7 +721,7 @@ pub fn wavefront_cow_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     );
     let material_ground = Lambertian::new(checker);
 
-    let cow = load_wavefront_obj("cow-nonormals.obj", rng).unwrap();
+    let cow = load_wavefront_obj("models/cow-nonormals.obj", rng).unwrap();
     let cow = Box::new(Translation::new(cow, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable>;
 
     let world: Vec<Box<dyn Hittable>> = vec![
@@ -773,8 +775,9 @@ pub fn wavefront_suspension_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World
     );
     let material_ground = Lambertian::new(checker);
 
-    let suspension = load_wavefront_obj("Normals_Try3.obj", rng).unwrap();
-    let suspension = Box::new(Translation::new(suspension, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable>;
+    let suspension = load_wavefront_obj("models/Normals_Try3.obj", rng).unwrap();
+    let suspension =
+        Box::new(Translation::new(suspension, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable>;
 
     let world: Vec<Box<dyn Hittable>> = vec![
         Box::new(XYRectangle::new(
