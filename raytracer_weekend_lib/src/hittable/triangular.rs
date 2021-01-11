@@ -13,9 +13,10 @@ use crate::{
     hittable::{HitRecord, Hittable},
     material::{Lambertian, Material},
     ray::Ray,
-    texture::Point2d,
+    texture::{Point2d, Checker},
     vec3::{Color, Point3, Vec3},
 };
+use crate::texture::SolidColor;
 
 #[derive(Debug, Clone)]
 pub struct Triangle {
@@ -97,7 +98,8 @@ impl Hittable for Triangle {
 
         let p = ray.at(t);
 
-        let hit_normal = (1.0-u-v) * self.normals[0] + u*self.normals[1] + v*self.normals[2];
+        let hit_normal =
+            (1.0 - u - v) * self.normals[0] + u * self.normals[1] + v * self.normals[2];
 
         // TODO: Compute texture u/v properly
         Some(HitRecord::new_with_face_normal(
@@ -150,11 +152,19 @@ fn parse_geometry<'a>(
                 let normal_2: Option<Vec3> = vertex_2_idx.2.map(|idx| normals[idx].into());
                 let normal_3: Option<Vec3> = vertex_3_idx.2.map(|idx| normals[idx].into());
 
+                let checker = Checker::new(
+                    SolidColor::new_rgb(0.2, 0.3, 0.1),
+                    SolidColor::new_rgb(0.9, 0.9, 0.9),
+                    10.0,
+                );
+                let material = Lambertian::new(checker);
+
                 // TODO: Handle materials properly
                 Box::new(Triangle::new(
                     [vertex_1.into(), vertex_2.into(), vertex_3.into()],
                     [normal_1, normal_2, normal_3],
-                    Box::new(Lambertian::new_solid_color(Color::new(0.9, 0.9, 0.9))),
+                    // Box::new(Lambertian::new_solid_color(Color::new(0.9, 0.9, 0.9))),
+                    Box::new(material)
                 )) as Box<dyn Hittable>
             }
         }

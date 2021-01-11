@@ -33,6 +33,7 @@ pub enum Scene {
     SimpleTriangle,
     WavefrontCowObj,
     WavefrontSuspensionObj,
+    TexturedCapsule,
 }
 
 impl Scene {
@@ -50,6 +51,7 @@ impl Scene {
             Scene::SimpleTriangle => simple_triangle,
             Scene::WavefrontCowObj => wavefront_cow_obj,
             Scene::WavefrontSuspensionObj => wavefront_suspension_obj,
+            Scene::TexturedCapsule => textured_capsule,
         };
 
         generator(aspect_ratio, rng)
@@ -768,13 +770,6 @@ pub fn wavefront_cow_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
 
 pub fn wavefront_suspension_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     // World
-    let checker = Checker::new(
-        SolidColor::new_rgb(0.2, 0.3, 0.1),
-        SolidColor::new_rgb(0.9, 0.9, 0.9),
-        10.0,
-    );
-    let material_ground = Lambertian::new(checker);
-
     let suspension = load_wavefront_obj("models/Normals_Try3.obj", rng).unwrap();
     let suspension =
         Box::new(Translation::new(suspension, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable>;
@@ -794,6 +789,47 @@ pub fn wavefront_suspension_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World
     // Camera
     let look_from = Point3::new(0.5, 2.5, 0.8);
     let look_at = Point3::new(-0.1, 2.3, 0.15);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = Camera::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    (world, vec![cam], Color::new_const(0.085, 0.1, 0.125))
+}
+
+pub fn textured_capsule(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+    // World
+    let capsule = load_wavefront_obj("models/capsule.obj", rng).unwrap();
+
+    let world: Vec<Box<dyn Hittable>> = vec![
+        Box::new(XYRectangle::new(
+            -5.0,
+            5.0,
+            -7.0,
+            7.0,
+            3.0,
+            Box::new(DiffuseLight::new(SolidColor::new_rgb(1.2, 1.0, 1.0))),
+        )),
+        capsule,
+    ];
+
+    // Camera
+    let look_from = Point3::new(3.5, 1.0, -1.5);
+    let look_at = Point3::new(-0.1, 0.0, 0.15);
     let v_up = Vec3::new(0.0, 1.0, 0.0);
     let distance_to_focus = 10.0;
     let aperture = 0.0;
