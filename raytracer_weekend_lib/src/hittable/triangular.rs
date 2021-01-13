@@ -1,35 +1,38 @@
-use std::fs;
+use std::{collections::HashMap, fs, sync::Arc};
 
 use itertools::{Itertools, MinMaxResult};
 use rand::prelude::ThreadRng;
 use wavefront_obj::{
+    mtl,
+    mtl::{Illumination, MtlSet},
     obj,
-    obj::{Geometry, Normal, Object, Primitive, Vertex},
+    obj::{Geometry, Normal, Object, Primitive, TVertex, Vertex},
 };
 
 use crate::{
     aabb::Aabb,
     bvh::BvhNode,
     hittable::{HitRecord, Hittable},
+    image_texture::ImageTexture,
+    light_source::DiffuseLight,
     material::{Lambertian, Material},
     ray::Ray,
-    texture::{Point2d, Checker},
+    texture::{Checker, Point2d, SolidColor},
     vec3::{Color, Point3, Vec3},
 };
-use crate::texture::SolidColor;
 
 #[derive(Debug, Clone)]
 pub struct Triangle {
     vertices: [Point3; 3],
     normals: [Vec3; 3],
-    material: Box<dyn Material>,
+    material: Arc<dyn Material>,
 }
 
 impl Triangle {
     pub fn new(
         vertices: [Point3; 3],
         normals: [Option<Vec3>; 3],
-        material: Box<dyn Material>,
+        material: Arc<dyn Material>,
     ) -> Self {
         let vertex_a = vertices[0];
         let vertex_b = vertices[1];
@@ -47,7 +50,7 @@ impl Triangle {
         }
     }
 
-    pub fn new_flat_shaded(vertices: [Point3; 3], material: Box<dyn Material>) -> Self {
+    pub fn new_flat_shaded(vertices: [Point3; 3], material: Arc<dyn Material>) -> Self {
         Self::new(vertices, [None, None, None], material)
     }
 
@@ -130,11 +133,26 @@ impl From<Vertex> for Point3 {
     }
 }
 
+impl From<TVertex> for Point2d {
+    fn from(v: TVertex) -> Self {
+        Self { u: v.u, v: v.v }
+    }
+}
+
 fn parse_geometry<'a>(
     geometry: &'a Geometry,
     vertices: &'a [Vertex],
     normals: &'a [Normal],
+    texture_vertices: &'a [TVertex],
+    materials: &Option<HashMap<String, Arc<dyn Material>>>,
 ) -> impl Iterator<Item = Box<dyn Hittable>> + 'a {
+    let material = if let Some(mat_name) = geometry.material_name.as_ref() {
+        let mat_lib = materials.as_ref().unwrap();
+        mat_lib[mat_name].clone()
+    } else {
+        Arc::new(DiffuseLight::new(SolidColor::new_rgb(1.0, 0.0, 1.0)))
+    };
+
     geometry.shapes.iter().map(move |shape| {
         match shape.primitive {
             Primitive::Point(_) => {
@@ -148,34 +166,44 @@ fn parse_geometry<'a>(
                 let vertex_2 = vertices[vertex_2_idx.0];
                 let vertex_3 = vertices[vertex_3_idx.0];
 
+                let texture_vertex_1: Option<Point2d> =
+                    vertex_1_idx.1.map(|idx| texture_vertices[idx].into());
+                let texture_vertex_2: Option<Point2d> =
+                    vertex_2_idx.1.map(|idx| texture_vertices[idx].into());
+                let texture_vertex_3: Option<Point2d> =
+                    vertex_3_idx.1.map(|idx| texture_vertices[idx].into());
+
                 let normal_1: Option<Vec3> = vertex_1_idx.2.map(|idx| normals[idx].into());
                 let normal_2: Option<Vec3> = vertex_2_idx.2.map(|idx| normals[idx].into());
                 let normal_3: Option<Vec3> = vertex_3_idx.2.map(|idx| normals[idx].into());
-
-                let checker = Checker::new(
-                    SolidColor::new_rgb(0.2, 0.3, 0.1),
-                    SolidColor::new_rgb(0.9, 0.9, 0.9),
-                    10.0,
-                );
-                let material = Lambertian::new(checker);
 
                 // TODO: Handle materials properly
                 Box::new(Triangle::new(
                     [vertex_1.into(), vertex_2.into(), vertex_3.into()],
                     [normal_1, normal_2, normal_3],
-                    // Box::new(Lambertian::new_solid_color(Color::new(0.9, 0.9, 0.9))),
-                    Box::new(material)
+                    material.clone(),
                 )) as Box<dyn Hittable>
             }
         }
     })
 }
 
-fn parse_individual_object(object: &Object) -> Vec<Box<dyn Hittable>> {
+fn parse_individual_object(
+    object: &Object,
+    materials: &Option<HashMap<String, Arc<dyn Material>>>,
+) -> Vec<Box<dyn Hittable>> {
     object
         .geometry
         .iter()
-        .flat_map(|geometry| parse_geometry(geometry, &object.vertices, &object.normals))
+        .flat_map(|geometry| {
+            parse_geometry(
+                geometry,
+                &object.vertices,
+                &object.normals,
+                &object.tex_vertices,
+                materials,
+            )
+        })
         .collect()
 }
 
@@ -183,13 +211,63 @@ pub fn load_wavefront_obj(
     path: &str,
     rng: &mut ThreadRng,
 ) -> Result<Box<dyn Hittable>, Box<dyn std::error::Error>> {
-    let file = fs::read_to_string(path)?;
-    let object_set = obj::parse(file)?;
+    let obj_file = fs::read_to_string(path)?;
+    let object_set = obj::parse(obj_file)?;
+    let materials = object_set
+        .material_library
+        .as_ref()
+        .map(|filename| {
+            let mut base_path = fs::canonicalize(path).unwrap();
+            println!("{}", base_path.display());
+            base_path.pop();
+            base_path.push(filename);
+
+            let path = base_path.to_str().unwrap().to_owned();
+            println!("{}", &path);
+
+            path
+        })
+        .map(load_wavefront_mtl)
+        .transpose()?;
     let triangles: Vec<Box<dyn Hittable>> = object_set
         .objects
         .iter()
-        .flat_map(parse_individual_object)
+        .flat_map(|obj| parse_individual_object(obj, &materials))
         .collect();
     // TODO: Sort out this time thing
     Ok(Box::new(BvhNode::new(triangles, 0.0, 1.0, rng)))
+}
+
+fn load_wavefront_mtl(
+    path: String,
+) -> Result<HashMap<String, Arc<dyn Material>>, Box<dyn std::error::Error>> {
+    let mtl_file = fs::read_to_string(path)?;
+    let material_set = mtl::parse(mtl_file)?;
+
+    let materials: HashMap<_, _> = material_set
+        .materials
+        .iter()
+        .map(|mtl| {
+            let name = mtl.name.clone();
+            let parsed_mtl = parse_material(mtl);
+
+            (name, parsed_mtl)
+        })
+        .collect();
+
+    Ok(materials)
+}
+
+fn parse_material(obj_material: &mtl::Material) -> Arc<dyn Material> {
+    if obj_material.illumination != Illumination::AmbientDiffuse {
+        panic!()
+    }
+
+    let texture = obj_material
+        .ambient_map
+        .as_ref()
+        .map(|path| ImageTexture::open(&path).unwrap())
+        .unwrap();
+
+    Arc::new(Lambertian::new(texture))
 }

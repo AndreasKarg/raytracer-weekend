@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use clap::Clap;
 use rand::prelude::*;
 use raytracer_weekend_lib::{
@@ -685,7 +687,7 @@ pub fn simple_triangle(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
                 Point3::new(0.0, 7.0, 0.0),
                 Point3::new(5.0, 0.0, -5.0),
             ],
-            Box::new(Lambertian::new(UVDebug::new())),
+            Arc::new(Lambertian::new(UVDebug::new())),
         )),
     ];
 
