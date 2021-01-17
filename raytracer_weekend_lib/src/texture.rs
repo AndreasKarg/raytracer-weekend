@@ -1,4 +1,7 @@
-use std::fmt::Debug;
+use std::{
+    fmt::Debug,
+    ops::{Add, Mul},
+};
 
 use derive_more::Constructor;
 
@@ -9,6 +12,28 @@ use crate::perlin::Perlin;
 pub struct Point2d {
     pub u: f64,
     pub v: f64,
+}
+
+impl Mul<Point2d> for f64 {
+    type Output = Point2d;
+
+    fn mul(self, rhs: Point2d) -> Self::Output {
+        Point2d {
+            u: self * rhs.u,
+            v: self * rhs.v,
+        }
+    }
+}
+
+impl Add for Point2d {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            u: self.u + rhs.u,
+            v: self.v + rhs.v,
+        }
+    }
 }
 
 pub trait Texture: Debug + Send + Sync + Clone {

@@ -1,4 +1,9 @@
-use std::{collections::HashMap, fs, sync::Arc};
+use std::{
+    collections::HashMap,
+    fs,
+    ops::{Add, Mul},
+    sync::Arc,
+};
 
 use itertools::{Itertools, MinMaxResult};
 use rand::prelude::ThreadRng;
@@ -25,6 +30,7 @@ use crate::{
 pub struct Triangle {
     vertices: [Point3; 3],
     normals: [Vec3; 3],
+    texture_uv: [Point2d; 3],
     material: Arc<dyn Material>,
 }
 
@@ -32,6 +38,7 @@ impl Triangle {
     pub fn new(
         vertices: [Point3; 3],
         normals: [Option<Vec3>; 3],
+        texture_uv: [Option<Point2d>; 3],
         material: Arc<dyn Material>,
     ) -> Self {
         let vertex_a = vertices[0];
@@ -43,15 +50,25 @@ impl Triangle {
 
         let normals = normals.map(|vertex_normal| vertex_normal.unwrap_or(triangle_normal));
 
+        let default_uv = [
+            Point2d { u: 0.0, v: 0.0 },
+            Point2d { u: 1.0, v: 0.0 },
+            Point2d { u: 0.0, v: 1.0 },
+        ];
+        let texture_uv = texture_uv
+            .zip(default_uv)
+            .map(|(param, default)| param.unwrap_or(default));
+
         Self {
             vertices,
             normals,
+            texture_uv,
             material,
         }
     }
 
     pub fn new_flat_shaded(vertices: [Point3; 3], material: Arc<dyn Material>) -> Self {
-        Self::new(vertices, [None, None, None], material)
+        Self::new(vertices, [None, None, None], [None, None, None], material)
     }
 
     fn min_max(nums: impl Iterator<Item = f64>) -> (f64, f64) {
@@ -101,14 +118,14 @@ impl Hittable for Triangle {
 
         let p = ray.at(t);
 
-        let hit_normal =
-            (1.0 - u - v) * self.normals[0] + u * self.normals[1] + v * self.normals[2];
+        let hit_normal = Self::interpolate_barycentric(u, v, &self.normals);
+        let hit_uv = Self::interpolate_barycentric(u, v, &self.texture_uv);
 
         // TODO: Compute texture u/v properly
         Some(HitRecord::new_with_face_normal(
             p,
             t,
-            Point2d { u, v },
+            hit_uv,
             self.material.as_ref(),
             ray,
             hit_normal,
@@ -166,11 +183,11 @@ fn parse_geometry<'a>(
                 let vertex_2 = vertices[vertex_2_idx.0];
                 let vertex_3 = vertices[vertex_3_idx.0];
 
-                let texture_vertex_1: Option<Point2d> =
+                let texture_uv_1: Option<Point2d> =
                     vertex_1_idx.1.map(|idx| texture_vertices[idx].into());
-                let texture_vertex_2: Option<Point2d> =
+                let texture_uv_2: Option<Point2d> =
                     vertex_2_idx.1.map(|idx| texture_vertices[idx].into());
-                let texture_vertex_3: Option<Point2d> =
+                let texture_uv_3: Option<Point2d> =
                     vertex_3_idx.1.map(|idx| texture_vertices[idx].into());
 
                 let normal_1: Option<Vec3> = vertex_1_idx.2.map(|idx| normals[idx].into());
@@ -181,6 +198,7 @@ fn parse_geometry<'a>(
                 Box::new(Triangle::new(
                     [vertex_1.into(), vertex_2.into(), vertex_3.into()],
                     [normal_1, normal_2, normal_3],
+                    [texture_uv_1, texture_uv_2, texture_uv_3],
                     material.clone(),
                 )) as Box<dyn Hittable>
             }
@@ -216,17 +234,7 @@ pub fn load_wavefront_obj(
     let materials = object_set
         .material_library
         .as_ref()
-        .map(|filename| {
-            let mut base_path = fs::canonicalize(path).unwrap();
-            println!("{}", base_path.display());
-            base_path.pop();
-            base_path.push(filename);
-
-            let path = base_path.to_str().unwrap().to_owned();
-            println!("{}", &path);
-
-            path
-        })
+        .map(|filename| path_to_file_in_same_folder(path, filename))
         .map(load_wavefront_mtl)
         .transpose()?;
     let triangles: Vec<Box<dyn Hittable>> = object_set
@@ -238,10 +246,22 @@ pub fn load_wavefront_obj(
     Ok(Box::new(BvhNode::new(triangles, 0.0, 1.0, rng)))
 }
 
+fn path_to_file_in_same_folder(path: &str, filename: &str) -> String {
+    let mut base_path = fs::canonicalize(path).unwrap();
+    println!("{}", base_path.display());
+    base_path.pop();
+    base_path.push(filename);
+
+    let path = base_path.to_str().unwrap().to_owned();
+    println!("{}", &path);
+
+    path
+}
+
 fn load_wavefront_mtl(
     path: String,
 ) -> Result<HashMap<String, Arc<dyn Material>>, Box<dyn std::error::Error>> {
-    let mtl_file = fs::read_to_string(path)?;
+    let mtl_file = fs::read_to_string(path.clone())?;
     let material_set = mtl::parse(mtl_file)?;
 
     let materials: HashMap<_, _> = material_set
@@ -249,7 +269,7 @@ fn load_wavefront_mtl(
         .iter()
         .map(|mtl| {
             let name = mtl.name.clone();
-            let parsed_mtl = parse_material(mtl);
+            let parsed_mtl = parse_material(mtl, path.as_ref());
 
             (name, parsed_mtl)
         })
@@ -258,16 +278,29 @@ fn load_wavefront_mtl(
     Ok(materials)
 }
 
-fn parse_material(obj_material: &mtl::Material) -> Arc<dyn Material> {
+fn parse_material(obj_material: &mtl::Material, mtl_path: &str) -> Arc<dyn Material> {
     if obj_material.illumination != Illumination::AmbientDiffuse {
         panic!()
     }
 
     let texture = obj_material
-        .ambient_map
+        .diffuse_map
         .as_ref()
+        .map(|filename| path_to_file_in_same_folder(mtl_path, filename))
         .map(|path| ImageTexture::open(&path).unwrap())
         .unwrap();
 
     Arc::new(Lambertian::new(texture))
+}
+
+impl Triangle {
+    fn interpolate_barycentric<T>(u: f64, v: f64, interpolatee: &[T; 3]) -> T
+    where
+        f64: Mul<T, Output = T>,
+        T: Add<Output = T> + Clone,
+    {
+        (1.0 - u - v) * interpolatee[0].clone()
+            + u * interpolatee[1].clone()
+            + v * interpolatee[2].clone()
+    }
 }

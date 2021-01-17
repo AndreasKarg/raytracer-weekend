@@ -1,4 +1,4 @@
-#![feature(array_map)]
+#![feature(array_map, array_zip)]
 
 mod aabb;
 pub mod bvh;

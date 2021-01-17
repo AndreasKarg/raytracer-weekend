@@ -35,7 +35,7 @@ pub enum Scene {
     SimpleTriangle,
     WavefrontCowObj,
     WavefrontSuspensionObj,
-    TexturedCapsule,
+    TexturedMonument,
 }
 
 impl Scene {
@@ -53,7 +53,7 @@ impl Scene {
             Scene::SimpleTriangle => simple_triangle,
             Scene::WavefrontCowObj => wavefront_cow_obj,
             Scene::WavefrontSuspensionObj => wavefront_suspension_obj,
-            Scene::TexturedCapsule => textured_capsule,
+            Scene::TexturedMonument => textured_monument,
         };
 
         generator(aspect_ratio, rng)
@@ -813,26 +813,29 @@ pub fn wavefront_suspension_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World
     (world, vec![cam], Color::new_const(0.085, 0.1, 0.125))
 }
 
-pub fn textured_capsule(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+pub fn textured_monument(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     // World
-    let capsule = load_wavefront_obj("models/capsule.obj", rng).unwrap();
+    let monument = Box::new(Translation::new(
+        load_wavefront_obj("models/monument_downscaled_polygon_reduced.obj", rng).unwrap(),
+        Vec3::new(0.0, 0.0, -19.0),
+    ));
 
     let world: Vec<Box<dyn Hittable>> = vec![
         Box::new(XYRectangle::new(
-            -5.0,
-            5.0,
-            -7.0,
-            7.0,
-            3.0,
+            -15.0,
+            15.0,
+            -17.0,
+            17.0,
+            33.0,
             Box::new(DiffuseLight::new(SolidColor::new_rgb(1.2, 1.0, 1.0))),
         )),
-        capsule,
+        monument,
     ];
 
     // Camera
-    let look_from = Point3::new(3.5, 1.0, -1.5);
-    let look_at = Point3::new(-0.1, 0.0, 0.15);
-    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let look_from = Point3::new(-5.0, -30.0, 25.0);
+    let look_at = Point3::new(0.0, 0.0, 5.0);
+    let v_up = Vec3::new(1.0, 0.0, 0.0);
     let distance_to_focus = 10.0;
     let aperture = 0.0;
     let vfow = 40.0;
