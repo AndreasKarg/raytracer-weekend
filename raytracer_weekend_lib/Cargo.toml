@@ -10,11 +10,11 @@ edition = "2018"
 derive_more = "0.99.11"
 rand = "0.8.0"
 rayon = "1.5.0"
-itertools = "0.9.0"
+itertools = "0.10.0"
 image = "0.23.12"
 dyn-clone = "1.0.3"
 num-traits = "0.2.14"
-wavefront_obj = "9.0.0"
+wavefront_obj = "10.0.0"
 
 [dev-dependencies]
 criterion = "0.3"
