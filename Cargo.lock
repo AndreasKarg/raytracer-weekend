@@ -468,6 +468,7 @@ dependencies = [
  "defmt",
  "defmt-rtt",
  "panic-probe",
+ "raytracer_weekend_lib",
  "stm32l4-hal",
 ]
 
