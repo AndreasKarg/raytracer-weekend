@@ -1,4 +1,7 @@
 #![feature(array_map, array_zip)]
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
 
 mod aabb;
 pub mod bvh;
@@ -11,6 +14,8 @@ pub mod perlin;
 mod ray;
 pub mod texture;
 pub mod vec3;
+
+use alloc::{boxed::Box, vec::Vec};
 
 use camera::Camera;
 use derive_more::Constructor;

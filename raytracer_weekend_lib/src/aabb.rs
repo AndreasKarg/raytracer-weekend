@@ -1,8 +1,8 @@
 ///! An implementation of an Axis-Aligned Bounding Box (AABB)
 use {
     super::{ray::Ray, vec3::Point3},
+    core::mem::swap,
     derive_more::Constructor,
-    std::mem::swap,
 };
 
 #[derive(Constructor, Debug, Clone)]

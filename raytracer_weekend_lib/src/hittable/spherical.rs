@@ -1,4 +1,5 @@
-use std::f64::consts::PI;
+use alloc::boxed::Box;
+use core::f64::consts::PI;
 
 use derive_more::Constructor;
 use rand::prelude::ThreadRng;

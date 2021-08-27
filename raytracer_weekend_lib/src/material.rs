@@ -17,7 +17,7 @@ pub struct Scatter {
     pub scattered_ray: Ray,
 }
 
-pub trait Material: std::fmt::Debug + Sync + Send + DynClone {
+pub trait Material: core::fmt::Debug + Sync + Send + DynClone {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<Scatter>;
     fn emitted(&self, uv: Point2d, p: &Point3) -> Color;
 }

@@ -1,4 +1,5 @@
-use std::{
+use alloc::string::String;
+use core::{
     any::type_name,
     fmt::{Debug, Formatter},
 };
@@ -17,6 +18,7 @@ pub struct ImageTexture {
 }
 
 impl ImageTexture {
+    #[cfg(feature = "std")]
     pub fn open(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let image = ImageReader::open(path)?.decode()?;
 
@@ -49,7 +51,7 @@ impl Texture for ImageTexture {
 }
 
 impl Debug for ImageTexture {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         f.debug_struct(type_name::<Self>())
             .field("image", &self.path)
             .finish()

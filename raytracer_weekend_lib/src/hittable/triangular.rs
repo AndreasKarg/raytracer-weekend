@@ -1,9 +1,5 @@
-use std::{
-    collections::HashMap,
-    fs,
-    ops::{Add, Mul},
-    sync::Arc,
-};
+use alloc::{boxed::Box, prelude::v1::String, sync::Arc, vec::Vec};
+use core::ops::{Add, Mul};
 
 use itertools::{Itertools, MinMaxResult};
 use rand::prelude::ThreadRng;
@@ -13,6 +9,8 @@ use wavefront_obj::{
     obj,
     obj::{Geometry, Normal, Object, Primitive, TVertex, Vertex},
 };
+#[cfg(feature = "std")]
+use {std::collections::HashMap, std::fs};
 
 use crate::{
     aabb::Aabb,
@@ -156,6 +154,7 @@ impl From<TVertex> for Point2d {
     }
 }
 
+#[cfg(feature = "std")]
 fn parse_geometry<'a>(
     geometry: &'a Geometry,
     vertices: &'a [Vertex],
@@ -206,6 +205,7 @@ fn parse_geometry<'a>(
     })
 }
 
+#[cfg(feature = "std")]
 fn parse_individual_object(
     object: &Object,
     materials: &Option<HashMap<String, Arc<dyn Material>>>,
@@ -225,6 +225,7 @@ fn parse_individual_object(
         .collect()
 }
 
+#[cfg(feature = "std")]
 pub fn load_wavefront_obj(
     path: &str,
     rng: &mut ThreadRng,
@@ -246,18 +247,22 @@ pub fn load_wavefront_obj(
     Ok(Box::new(BvhNode::new(triangles, 0.0, 1.0, rng)))
 }
 
+#[cfg(feature = "std")]
 fn path_to_file_in_same_folder(path: &str, filename: &str) -> String {
     let mut base_path = fs::canonicalize(path).unwrap();
-    println!("{}", base_path.display());
+    // TODO: Sort out println
+    // println!("{}", base_path.display());
     base_path.pop();
     base_path.push(filename);
 
     let path = base_path.to_str().unwrap().to_owned();
-    println!("{}", &path);
+    // TODO: Sort out println
+    // println!("{}", &path);
 
     path
 }
 
+#[cfg(feature = "std")]
 fn load_wavefront_mtl(
     path: String,
 ) -> Result<HashMap<String, Arc<dyn Material>>, Box<dyn std::error::Error>> {
@@ -278,6 +283,7 @@ fn load_wavefront_mtl(
     Ok(materials)
 }
 
+#[cfg(feature = "std")]
 fn parse_material(obj_material: &mtl::Material, mtl_path: &str) -> Arc<dyn Material> {
     if obj_material.illumination != Illumination::AmbientDiffuse {
         panic!()

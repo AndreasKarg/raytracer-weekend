@@ -1,4 +1,4 @@
-use std::{
+use core::{
     fmt::{Debug, Display, Formatter},
     ops::{
         Add, AddAssign, BitAnd, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Range, Sub,
@@ -351,7 +351,7 @@ pub type Point3 = Vec3;
 pub type Color = Vec3;
 
 impl Display for Vec3 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(f, "{} {} {}", self.e[0], self.e[1], self.e[2])
     }
 }

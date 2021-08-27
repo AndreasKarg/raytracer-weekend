@@ -1,4 +1,5 @@
-use std::cmp::Ordering;
+use alloc::{boxed::Box, vec::Vec};
+use core::cmp::Ordering;
 
 use rand::prelude::{Rng, ThreadRng};
 

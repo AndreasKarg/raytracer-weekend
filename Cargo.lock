@@ -118,6 +118,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
 
 [[package]]
+name = "core-error"
+version = "0.0.1-rc4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7851bcb61e74ebcf5f2f1f1ee119f647c03fec697768bbcc86c26654fd21f977"
+dependencies = [
+ "version_check",
+]
+
+[[package]]
 name = "crc32fast"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -592,6 +601,7 @@ dependencies = [
 name = "raytracer_weekend_lib"
 version = "0.1.0"
 dependencies = [
+ "core-error",
  "derive_more",
  "dyn-clone",
  "image",

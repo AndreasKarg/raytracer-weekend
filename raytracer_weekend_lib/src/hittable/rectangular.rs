@@ -1,3 +1,5 @@
+use alloc::boxed::Box;
+
 use derive_more::Constructor;
 use rand::prelude::ThreadRng;
 
