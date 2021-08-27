@@ -30,6 +30,3 @@ debug = true
 [[bench]]
 name = "basic_benchmark"
 harness = false
-
-[workspace]
-
