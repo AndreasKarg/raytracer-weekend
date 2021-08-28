@@ -30,6 +30,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "alloc-cortex-m"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a67ad0fe14be887ed94e5722d14861c1877b128edbda2dd372e64d5243d614ae"
+dependencies = [
+ "cortex-m 0.6.7",
+ "linked_list_allocator",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -463,11 +473,13 @@ dependencies = [
 name = "discovery-app"
 version = "0.1.0"
 dependencies = [
+ "alloc-cortex-m",
  "cortex-m 0.7.3",
  "cortex-m-rt",
  "defmt",
  "defmt-rtt",
  "panic-probe",
+ "rand",
  "raytracer_weekend_lib",
  "stm32l4-hal",
 ]
@@ -688,6 +700,12 @@ name = "libc"
 version = "0.2.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3cb00336871be5ed2c8ed44b60ae9959dc5b9f08539422ed43f09e34ecaeba21"
+
+[[package]]
+name = "linked_list_allocator"
+version = "0.8.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "822add9edb1860698b79522510da17bef885171f75aa395cff099d770c609c24"
 
 [[package]]
 name = "log"

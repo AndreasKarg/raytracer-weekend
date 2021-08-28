@@ -46,15 +46,14 @@ pub struct Raytracer<'a> {
 }
 
 #[cfg(feature = "rayon")]
-trait RenderIterator = ParallelIterator<Item = Color>;
+pub trait RenderIterator = ParallelIterator<Item = Color>;
 
 #[cfg(not(feature = "rayon"))]
-trait RenderIterator = Iterator<Item = Color>;
+pub trait RenderIterator = Iterator<Item = Color>;
 
 impl<'a> Raytracer<'a> {
     pub fn render(&self) -> impl RenderIterator + '_ {
-        let pixel_range: Vec<_> =
-            iproduct!((0..self.image_height).rev(), 0..self.image_width).collect();
+        let pixel_range = iproduct!((0..self.image_height).rev(), 0..self.image_width);
 
         let mut rng;
 

@@ -152,14 +152,14 @@ impl<T: Hittable> Hittable for YRotation<T> {
     }
 }
 
-pub trait Transformable<R: Rng> {
+pub trait Transformable {
     type Inner: Hittable;
 
     fn rotate_y(self, angle_degrees: f32) -> YRotation<Self::Inner>;
     fn translate(self, offset: Vec3) -> Translation<Self::Inner>;
 }
 
-impl<R: Rng, T: Hittable> Transformable<R> for T {
+impl<T: Hittable> Transformable for T {
     type Inner = T;
 
     fn rotate_y(self, angle_degrees: f32) -> YRotation<Self::Inner> {
