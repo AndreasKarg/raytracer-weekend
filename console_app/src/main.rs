@@ -36,7 +36,7 @@ fn main() {
     let pixel_count = (image_width * image_height) as u64;
 
     let (world, cams, background) = opts.scene.generate(
-        (image_width as f64) / (image_height as f64),
+        (image_width as f32) / (image_height as f32),
         &mut thread_rng(),
     );
 
@@ -75,7 +75,7 @@ fn main() {
                     let b = render_pixel.z();
 
                     // Divide the color by the number of samples and gamma-correct for gamma=2.0.
-                    let scale = 1.0 / samples_per_pixel as f64;
+                    let scale = 1.0 / samples_per_pixel as f32;
                     let r = (scale * r).sqrt();
                     let g = (scale * g).sqrt();
                     let b = (scale * b).sqrt();

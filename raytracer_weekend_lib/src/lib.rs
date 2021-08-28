@@ -55,27 +55,18 @@ impl<'a> Raytracer<'a> {
     pub fn render(&self) -> impl RenderIterator + '_ {
         let pixel_range = iproduct!((0..self.image_height).rev(), 0..self.image_width);
 
-        let mut rng;
-
-        #[cfg(feature = "std")]
-        {
-            rng = thread_rng()
-        };
-
-        #[cfg(not(feature = "std"))]
-        {
-            rng = SmallRng::seed_from_u64(0xb234e6fea3886a1e);
-        }
-
         #[cfg(feature = "rayon")]
         {
-            pixel_range
-                .into_par_iter()
-                .map(move |(j, i)| self.sample_pixel(j, i, &mut rng))
+            let pixel_range: Vec<_> = pixel_range.collect();
+            pixel_range.into_par_iter().map(move |(j, i)| {
+                let mut rng = thread_rng();
+                self.sample_pixel(j, i, &mut rng)
+            })
         }
 
         #[cfg(not(feature = "rayon"))]
         {
+            let rng = SmallRng::seed_from_u64(0xb234e6fea3886a1e);
             pixel_range
                 .into_iter()
                 .map(move |(j, i)| self.sample_pixel(j, i, &mut rng))

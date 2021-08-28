@@ -39,7 +39,7 @@ pub enum Scene {
 }
 
 impl Scene {
-    pub fn generate(&self, aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+    pub fn generate(&self, aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         let generator = match self {
             Scene::JumpyBalls => jumpy_balls,
             Scene::TwoSpheres => two_spheres,
@@ -60,7 +60,7 @@ impl Scene {
     }
 }
 
-pub fn jumpy_balls(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     let checker = Checker::new(
         SolidColor::new_rgb(0.2, 0.3, 0.1),
         SolidColor::new_rgb(0.9, 0.9, 0.9),
@@ -101,10 +101,10 @@ pub fn jumpy_balls(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
 
     for a in -11..11 {
         for b in -11..11 {
-            let a = a as f64;
-            let b = b as f64;
+            let a = a as f32;
+            let b = b as f32;
 
-            let center = Point3::new(a + 0.9 * rng.gen::<f64>(), 0.2, b + 0.9 * rng.gen::<f64>());
+            let center = Point3::new(a + 0.9 * rng.gen::<f32>(), 0.2, b + 0.9 * rng.gen::<f32>());
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() <= 0.9 {
                 continue;
@@ -161,7 +161,7 @@ pub fn jumpy_balls(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     (world, vec![cam], DEFAULT_BACKGROUND)
 }
 
-pub fn two_spheres(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
+pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
     let checker = Checker::new(
         SolidColor::new_rgb(0.2, 0.3, 0.1),
@@ -208,7 +208,7 @@ pub fn two_spheres(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
     (world, vec![cam], DEFAULT_BACKGROUND)
 }
 
-pub fn two_perlin_spheres(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+pub fn two_perlin_spheres(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     // World
     let perlin_material = Noise::new(Perlin::new(rng), 4.0);
     let material_ground = Lambertian::new(perlin_material);
@@ -251,7 +251,7 @@ pub fn two_perlin_spheres(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     (world, vec![cam], DEFAULT_BACKGROUND)
 }
 
-pub fn earth(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
+pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
     let earth_texture = ImageTexture::open("models/earthmap.jpg").unwrap();
     let earth_surface = Lambertian::new(earth_texture);
@@ -287,7 +287,7 @@ pub fn earth(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
     (world, vec![cam], DEFAULT_BACKGROUND)
 }
 
-pub fn simple_light(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+pub fn simple_light(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     // World
     let earth_texture = ImageTexture::open("models/earthmap.jpg").unwrap();
     let earth_surface = DiffuseLight::new(earth_texture);
@@ -347,7 +347,7 @@ pub fn simple_light(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     (world, vec![cam], Color::new(0.0, 0.0, 0.0))
 }
 
-pub fn cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
+pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
     let red = Box::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
     let white = Box::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));
@@ -413,7 +413,7 @@ pub fn cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
     (world, vec![cam], Color::new(0.0, 0.0, 0.0))
 }
 
-pub fn smokey_cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
+pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
     let red = Box::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
     let white = Box::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));
@@ -482,15 +482,15 @@ pub fn smokey_cornell_box(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
     (world, vec![cam], Color::new(0.0, 0.0, 0.0))
 }
 
-pub fn book2_final_scene(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     let mut boxes1: Vec<Box<dyn Hittable>> = Vec::new();
     let ground = Box::new(Lambertian::new_solid_color(Color::new(0.48, 0.83, 0.53)));
 
     let boxes_per_side = 20;
     for i in 0..boxes_per_side {
         for j in 0..boxes_per_side {
-            let i = i as f64;
-            let j = j as f64;
+            let i = i as f32;
+            let j = j as f32;
 
             let w = 100.0;
             let x0 = -1000.0 + i * w;
@@ -620,7 +620,7 @@ pub fn book2_final_scene(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
 }
 
 pub fn animated_book2_final(
-    aspect_ratio: f64,
+    aspect_ratio: f32,
     rng: &mut ThreadRng,
 ) -> (Vec<Box<dyn Hittable>>, Vec<Camera>, Color) {
     let (world, _, background) = book2_final_scene(aspect_ratio, rng);
@@ -640,7 +640,7 @@ pub fn animated_book2_final(
     let cameras: Vec<_> = (0..(frames as usize))
         .into_iter()
         .map(|frame| {
-            let from_x = 478.0 - frame as f64 * (2.0 * 478.0) / frames;
+            let from_x = 478.0 - frame as f32 * (2.0 * 478.0) / frames;
             let from_y = 278.0;
             let from_z = -600.0;
 
@@ -666,7 +666,7 @@ pub fn animated_book2_final(
     (world, cameras, background)
 }
 
-pub fn simple_triangle(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
+pub fn simple_triangle(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
     let checker = Checker::new(
         SolidColor::new_rgb(0.2, 0.3, 0.1),
@@ -716,7 +716,7 @@ pub fn simple_triangle(aspect_ratio: f64, _rng: &mut ThreadRng) -> World {
     (world, vec![cam], DEFAULT_BACKGROUND)
 }
 
-pub fn wavefront_cow_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     // World
     let checker = Checker::new(
         SolidColor::new_rgb(0.2, 0.3, 0.1),
@@ -770,7 +770,7 @@ pub fn wavefront_cow_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
     (world, vec![cam], Color::new_const(0.085, 0.1, 0.125))
 }
 
-pub fn wavefront_suspension_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+pub fn wavefront_suspension_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     // World
     let suspension = load_wavefront_obj("models/Normals_Try3.obj", rng).unwrap();
     let suspension =
@@ -813,7 +813,7 @@ pub fn wavefront_suspension_obj(aspect_ratio: f64, rng: &mut ThreadRng) -> World
     (world, vec![cam], Color::new_const(0.085, 0.1, 0.125))
 }
 
-pub fn textured_monument(aspect_ratio: f64, rng: &mut ThreadRng) -> World {
+pub fn textured_monument(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     // World
     let monument = Box::new(Translation::new(
         load_wavefront_obj("models/monument_downscaled_polygon_reduced.obj", rng).unwrap(),

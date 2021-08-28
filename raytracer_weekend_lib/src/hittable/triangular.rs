@@ -151,14 +151,17 @@ impl Hittable for Triangle {
 #[cfg(feature = "wavefront_obj")]
 impl From<Vertex> for Point3 {
     fn from(v: Vertex) -> Self {
-        Self::new(v.x, v.y, v.z)
+        Self::new(v.x as f32, v.y as f32, v.z as f32)
     }
 }
 
 #[cfg(feature = "wavefront_obj")]
 impl From<TVertex> for Point2d {
     fn from(v: TVertex) -> Self {
-        Self { u: v.u, v: v.v }
+        Self {
+            u: v.u as f32,
+            v: v.v as f32,
+        }
     }
 }
 
@@ -236,7 +239,7 @@ fn parse_individual_object(
 #[cfg(feature = "std")]
 pub fn load_wavefront_obj(
     path: &str,
-    rng: &mut dyn Rng,
+    rng: &mut ActiveRng,
 ) -> Result<Box<dyn Hittable>, Box<dyn std::error::Error>> {
     let obj_file = fs::read_to_string(path)?;
     let object_set = obj::parse(obj_file)?;
