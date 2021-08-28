@@ -66,7 +66,7 @@ impl<'a> Raytracer<'a> {
 
         #[cfg(not(feature = "rayon"))]
         {
-            let rng = SmallRng::seed_from_u64(0xb234e6fea3886a1e);
+            let mut rng = SmallRng::seed_from_u64(0xb234e6fea3886a1e);
             pixel_range
                 .into_iter()
                 .map(move |(j, i)| self.sample_pixel(j, i, &mut rng))

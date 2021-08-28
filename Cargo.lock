@@ -16,12 +16,6 @@ checksum = "aae1277d39aeec15cb388266ecc24b11c80469deae6067e17a1a7aa9e5c1f234"
 
 [[package]]
 name = "aligned"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d39da9b88ae1a81c03c9c082b8db83f1d0e93914126041962af61034ab44c4a5"
-
-[[package]]
-name = "aligned"
 version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a785a543aea40f5e4e2e93bb2655d31bc21bb391fff65697150973e383f16bb"
@@ -97,9 +91,9 @@ checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
 
 [[package]]
 name = "bstr"
-version = "0.2.16"
+version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90682c8d613ad3373e66de8c6411e0ae2ab2571e879d2efbf73558cc66f21279"
+checksum = "a40b47ad93e1a5404e6c18dec46b628214fee441c70f4ab5d6942142cc268a3d"
 dependencies = [
  "lazy_static",
  "memchr",
@@ -218,23 +212,11 @@ dependencies = [
 
 [[package]]
 name = "cortex-m"
-version = "0.5.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59971a5cf4dacacaf738dd9d8660875118fce790f800f661893eb20894c1d622"
-dependencies = [
- "aligned 0.2.0",
- "bare-metal",
- "cortex-m 0.6.7",
- "volatile-register",
-]
-
-[[package]]
-name = "cortex-m"
 version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9075300b07c6a56263b9b582c214d0ff037b00d45ec9fde1cc711490c56f1bb9"
 dependencies = [
- "aligned 0.3.5",
+ "aligned",
  "bare-metal",
  "bitfield",
  "cortex-m 0.7.3",
@@ -478,10 +460,11 @@ dependencies = [
  "cortex-m-rt",
  "defmt",
  "defmt-rtt",
+ "nb 1.0.0",
  "panic-probe",
  "rand",
  "raytracer_weekend_lib",
- "stm32l4-hal",
+ "stm32l4xx-hal",
 ]
 
 [[package]]
@@ -718,9 +701,9 @@ dependencies = [
 
 [[package]]
 name = "memchr"
-version = "2.4.1"
+version = "2.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "308cc39be01b73d0d18f82a0e7b2a3df85245f84af96fdddc5d202d27e47b86a"
+checksum = "0ee1c47aaa256ecabcaea351eae4a9b01ef39ed810004e298d2511ed284b1525"
 
 [[package]]
 name = "memoffset"
@@ -1217,25 +1200,28 @@ checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "stm32l4"
-version = "0.4.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "718681406d5fdf25e70005dd1ce909e83b52da30d8a8001f692a420c36ff61c7"
+checksum = "a9abc2787195d7055b342be5a7934d74099fd7e92b81c0771002b3b35ccfc85b"
 dependencies = [
  "bare-metal",
- "cortex-m 0.5.11",
+ "cortex-m 0.6.7",
  "vcell",
 ]
 
 [[package]]
-name = "stm32l4-hal"
-version = "0.3.0"
+name = "stm32l4xx-hal"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d74c7cdbb1c026b53cd0d63956a29057bbdce05c4b9a5195b6ad2570400a7947"
+checksum = "3fc8fef7443befd04ba8714ccb9475d86639794492e2b2dcbfbe675bbae8fafa"
 dependencies = [
+ "as-slice",
  "cast",
- "cortex-m 0.5.11",
+ "cortex-m 0.6.7",
  "embedded-hal",
+ "generic-array 0.13.3",
  "nb 0.1.3",
+ "stable_deref_trait",
  "stm32l4",
  "void",
 ]

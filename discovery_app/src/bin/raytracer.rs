@@ -39,7 +39,7 @@ fn main() -> ! {
     let size = 65536; // in bytes
     unsafe { ALLOCATOR.init(start, size) }
 
-    defmt::info!("ALlocator set up...");
+    defmt::info!("Allocator set up...");
 
     let mut rng = SmallRng::seed_from_u64(1234);
 
