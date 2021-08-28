@@ -1,5 +1,4 @@
 use derive_more::Constructor;
-use rand::prelude::ThreadRng;
 
 use crate::{
     hittable::HitRecord,
@@ -7,6 +6,7 @@ use crate::{
     ray::Ray,
     texture::{Point2d, Texture},
     vec3::{Color, Point3},
+    ActiveRng,
 };
 
 #[derive(Constructor, Debug, Clone)]
@@ -15,7 +15,7 @@ pub struct DiffuseLight<T: Texture> {
 }
 
 impl<T: Texture> Material for DiffuseLight<T> {
-    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _rng: &mut ThreadRng) -> Option<Scatter> {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _rng: &mut ActiveRng) -> Option<Scatter> {
         None
     }
 

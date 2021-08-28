@@ -1,4 +1,4 @@
-use rand::{prelude::ThreadRng, Rng};
+use rand::Rng;
 
 use super::{
     ray::Ray,
@@ -61,7 +61,7 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, s: f64, t: f64, rng: &mut ThreadRng) -> Ray {
+    pub fn get_ray(&self, s: f64, t: f64, rng: &mut impl Rng) -> Ray {
         let rd = self.lens_radius * Vec3::random_in_unit_disk(rng);
         let offset = self.u * rd.x() + self.v * rd.y();
         Ray::new(

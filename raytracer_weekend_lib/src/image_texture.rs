@@ -1,3 +1,5 @@
+#![cfg(feature = "image")]
+
 use alloc::string::String;
 use core::{
     any::type_name,
@@ -18,7 +20,6 @@ pub struct ImageTexture {
 }
 
 impl ImageTexture {
-    #[cfg(feature = "std")]
     pub fn open(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let image = ImageReader::open(path)?.decode()?;
 

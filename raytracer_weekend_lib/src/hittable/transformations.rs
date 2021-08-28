@@ -1,11 +1,14 @@
+use core::fmt::Debug;
+
 use derive_more::Constructor;
-use rand::prelude::ThreadRng;
+use rand::prelude::Rng;
 
 use crate::{
     aabb::Aabb,
     hittable::{HitRecord, Hittable},
     ray::Ray,
     vec3::{Point3, Vec3},
+    ActiveRng,
 };
 
 #[derive(Debug, Constructor)]
@@ -15,7 +18,7 @@ pub struct Translation<T: Hittable> {
 }
 
 impl<T: Hittable> Hittable for Translation<T> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord> {
         let translated_ray = Ray::new(r.origin() - self.offset, r.direction(), r.time());
 
         let hit = self.inner.hit(&translated_ray, t_min, t_max, rng)?;
@@ -107,7 +110,7 @@ impl<T: Hittable> YRotation<T> {
 }
 
 impl<T: Hittable> Hittable for YRotation<T> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord> {
         let sin_theta = self.sin_theta;
         let cos_theta = self.cos_theta;
 
@@ -147,14 +150,14 @@ impl<T: Hittable> Hittable for YRotation<T> {
     }
 }
 
-pub trait Transformable {
+pub trait Transformable<R: Rng> {
     type Inner: Hittable;
 
     fn rotate_y(self, angle_degrees: f64) -> YRotation<Self::Inner>;
     fn translate(self, offset: Vec3) -> Translation<Self::Inner>;
 }
 
-impl<T: Hittable> Transformable for T {
+impl<R: Rng, T: Hittable> Transformable<R> for T {
     type Inner = T;
 
     fn rotate_y(self, angle_degrees: f64) -> YRotation<Self::Inner> {

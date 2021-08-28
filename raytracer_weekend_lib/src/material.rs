@@ -1,6 +1,5 @@
 use derive_more::Constructor;
 use dyn_clone::{clone_trait_object, DynClone};
-use rand::{rngs::ThreadRng, Rng};
 
 use super::{
     hittable::HitRecord,
@@ -10,6 +9,7 @@ use super::{
 use crate::{
     texture::{Point2d, SolidColor, Texture},
     vec3::Point3,
+    ActiveRng,
 };
 
 pub struct Scatter {
@@ -18,7 +18,7 @@ pub struct Scatter {
 }
 
 pub trait Material: core::fmt::Debug + Sync + Send + DynClone {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<Scatter>;
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter>;
     fn emitted(&self, uv: Point2d, p: &Point3) -> Color;
 }
 
@@ -36,7 +36,7 @@ impl Lambertian<SolidColor> {
 }
 
 impl<T: Texture> Material for Lambertian<T> {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<Scatter> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
         let mut scatter_direction = rec.normal + Vec3::random_unit_vector(rng);
 
         if scatter_direction.is_near_zero() {
@@ -72,7 +72,7 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<Scatter> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
         let reflected = r_in.direction().unit_vector().reflect(&rec.normal);
         let scattered_ray = Ray::new(
             rec.p,
@@ -110,7 +110,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<Scatter> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
         let ir = self.ir;
 
         let attenuation = Color::new(1.0, 1.0, 1.0);
@@ -148,7 +148,7 @@ pub struct Isotropic<T: Texture> {
 }
 
 impl<T: Texture> Material for Isotropic<T> {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ThreadRng) -> Option<Scatter> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
         let attenuation = self.albedo.value(rec.texture_uv, &rec.p);
         let scattered_ray = Ray::new(rec.p, Vec3::random_in_unit_sphere(rng), r_in.time());
 

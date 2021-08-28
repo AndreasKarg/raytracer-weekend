@@ -1,7 +1,7 @@
 use alloc::boxed::Box;
+use core::fmt::Debug;
 
 use derive_more::Constructor;
-use rand::prelude::ThreadRng;
 
 use crate::{
     aabb::Aabb,
@@ -10,6 +10,7 @@ use crate::{
     ray::Ray,
     texture::Point2d,
     vec3::{Point3, Vec3},
+    ActiveRng,
 };
 
 #[derive(Debug, Constructor)]
@@ -23,7 +24,7 @@ pub struct XYRectangle {
 }
 
 impl Hittable for XYRectangle {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, _rng: &mut ThreadRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, _rng: &mut ActiveRng) -> Option<HitRecord> {
         let x0 = self.x0;
         let y0 = self.y0;
         let x1 = self.x1;
@@ -74,7 +75,7 @@ pub struct XZRectangle {
 }
 
 impl Hittable for XZRectangle {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, _rng: &mut ThreadRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, _rng: &mut ActiveRng) -> Option<HitRecord> {
         let x0 = self.x0;
         let z0 = self.z0;
         let x1 = self.x1;
@@ -125,7 +126,7 @@ pub struct YZRectangle {
 }
 
 impl Hittable for YZRectangle {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, _rng: &mut ThreadRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, _rng: &mut ActiveRng) -> Option<HitRecord> {
         let y0 = self.y0;
         let z0 = self.z0;
         let y1 = self.y1;
@@ -234,7 +235,7 @@ impl Cuboid {
 }
 
 impl Hittable for Cuboid {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord> {
         self.sides.hit(r, t_min, t_max, rng)
     }
 

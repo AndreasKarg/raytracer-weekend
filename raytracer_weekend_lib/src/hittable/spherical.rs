@@ -2,7 +2,7 @@ use alloc::boxed::Box;
 use core::f64::consts::PI;
 
 use derive_more::Constructor;
-use rand::prelude::ThreadRng;
+use rand::prelude::Rng;
 
 use crate::{
     aabb::Aabb,
@@ -11,6 +11,7 @@ use crate::{
     ray::Ray,
     texture::Point2d,
     vec3::{Point3, Vec3},
+    ActiveRng,
 };
 
 fn hit_sphere<'a>(
@@ -82,7 +83,7 @@ pub struct Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, _rng: &mut ThreadRng) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, _rng: &mut ActiveRng) -> Option<HitRecord> {
         hit_sphere(
             ray,
             t_min,
@@ -122,7 +123,7 @@ impl MovingSphere {
 }
 
 impl Hittable for MovingSphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, _rng: &mut ThreadRng) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, _rng: &mut ActiveRng) -> Option<HitRecord> {
         let center_at_time = self.center_at_time(ray.time());
 
         hit_sphere(

@@ -1,10 +1,10 @@
 use alloc::{boxed::Box, vec::Vec};
-use core::cmp::Ordering;
+use core::{cmp::Ordering, fmt::Debug};
 
-use rand::prelude::{Rng, ThreadRng};
+use rand::prelude::Rng;
 
 use super::{aabb::Aabb, hittable::Hittable};
-use crate::{hittable::HitRecord, ray::Ray};
+use crate::{hittable::HitRecord, ray::Ray, ActiveRng};
 
 ///! An implementation of a Boundary Volume Hierarchy thingamajig.
 
@@ -98,7 +98,7 @@ impl BvhNode {
 }
 
 impl Hittable for BvhNode {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord<'_>> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord<'_>> {
         if !self.bounding_box.hit(r, t_min, t_max) {
             return None;
         };

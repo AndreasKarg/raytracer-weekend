@@ -1,4 +1,6 @@
-use rand::{prelude::ThreadRng, Rng};
+use core::fmt::Debug;
+
+use rand::Rng;
 
 use crate::{
     aabb::Aabb,
@@ -7,6 +9,7 @@ use crate::{
     ray::Ray,
     texture::{Point2d, Texture},
     vec3::Vec3,
+    ActiveRng,
 };
 
 #[derive(Debug)]
@@ -30,7 +33,7 @@ impl<H: Hittable, T: Texture> ConstantMedium<H, T> {
 }
 
 impl<H: Hittable, T: Texture> Hittable for ConstantMedium<H, T> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ThreadRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord> {
         let rec1 = self
             .boundary
             .hit(r, f64::NEG_INFINITY, f64::INFINITY, rng)?;

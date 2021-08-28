@@ -2,26 +2,30 @@ use alloc::{boxed::Box, prelude::v1::String, sync::Arc, vec::Vec};
 use core::ops::{Add, Mul};
 
 use itertools::{Itertools, MinMaxResult};
-use rand::prelude::ThreadRng;
-use wavefront_obj::{
-    mtl,
-    mtl::{Illumination, MtlSet},
-    obj,
-    obj::{Geometry, Normal, Object, Primitive, TVertex, Vertex},
-};
 #[cfg(feature = "std")]
-use {std::collections::HashMap, std::fs};
+use {
+    std::collections::HashMap,
+    std::fs,
+    wavefront_obj::{
+        mtl,
+        mtl::{Illumination, MtlSet},
+        obj,
+        obj::{Geometry, Normal, Object, Primitive, TVertex, Vertex},
+    },
+};
 
+#[cfg(feature = "std")]
+use crate::image_texture::ImageTexture;
 use crate::{
     aabb::Aabb,
     bvh::BvhNode,
     hittable::{HitRecord, Hittable},
-    image_texture::ImageTexture,
     light_source::DiffuseLight,
     material::{Lambertian, Material},
     ray::Ray,
     texture::{Checker, Point2d, SolidColor},
     vec3::{Color, Point3, Vec3},
+    ActiveRng,
 };
 
 #[derive(Debug, Clone)]
@@ -87,7 +91,7 @@ impl Triangle {
 }
 
 impl Hittable for Triangle {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, _rng: &mut ThreadRng) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, _rng: &mut ActiveRng) -> Option<HitRecord> {
         let vertex_a = self.vertices[0];
         let vertex_b = self.vertices[1];
         let vertex_c = self.vertices[2];
@@ -142,12 +146,14 @@ impl Hittable for Triangle {
     }
 }
 
+#[cfg(feature = "wavefront_obj")]
 impl From<Vertex> for Point3 {
     fn from(v: Vertex) -> Self {
         Self::new(v.x, v.y, v.z)
     }
 }
 
+#[cfg(feature = "wavefront_obj")]
 impl From<TVertex> for Point2d {
     fn from(v: TVertex) -> Self {
         Self { u: v.u, v: v.v }
@@ -228,7 +234,7 @@ fn parse_individual_object(
 #[cfg(feature = "std")]
 pub fn load_wavefront_obj(
     path: &str,
-    rng: &mut ThreadRng,
+    rng: &mut dyn Rng,
 ) -> Result<Box<dyn Hittable>, Box<dyn std::error::Error>> {
     let obj_file = fs::read_to_string(path)?;
     let object_set = obj::parse(obj_file)?;
