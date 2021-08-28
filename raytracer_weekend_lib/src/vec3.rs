@@ -9,7 +9,11 @@ use core::{
 use micromath::F32Ext;
 use num_traits::Num;
 use rand::Rng;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct GenericVec3<T>
 where
     T: Num + Copy,

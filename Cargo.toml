@@ -3,5 +3,6 @@ members = [
     "console_app",
     "raytracer_weekend_lib",
     "discovery_app",
-    "discovery_app/testsuite"
+    "discovery_app/testsuite",
+    "discovery_host_receiver",
 ]

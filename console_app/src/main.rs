@@ -18,11 +18,11 @@ struct Opts {
     #[clap(subcommand)]
     scene: Scene,
     #[clap(long, short, default_value = "400")]
-    width: usize,
+    width: u32,
     #[clap(long, short, default_value = "1.7777778")]
     aspect_ratio: f64,
     #[clap(long, short, default_value = "100")]
-    samples_per_pixel: usize,
+    samples_per_pixel: u32,
 }
 
 fn main() {
@@ -30,7 +30,7 @@ fn main() {
 
     let image_width = opts.width;
     let aspect_ratio = opts.aspect_ratio;
-    let image_height = (image_width as f64 / aspect_ratio).round() as usize;
+    let image_height = (image_width as f64 / aspect_ratio).round() as u32;
     let samples_per_pixel = opts.samples_per_pixel;
 
     let pixel_count = (image_width * image_height) as u64;
@@ -70,9 +70,10 @@ fn main() {
             .zip(all_pixels.iter())
             .for_each(|(img_pixel, render_pixel)| {
                 {
-                    let r = render_pixel.x();
-                    let g = render_pixel.y();
-                    let b = render_pixel.z();
+                    let color = render_pixel.color;
+                    let r = color.x();
+                    let g = color.y();
+                    let b = color.z();
 
                     // Divide the color by the number of samples and gamma-correct for gamma=2.0.
                     let scale = 1.0 / samples_per_pixel as f32;

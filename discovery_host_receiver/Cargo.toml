@@ -1,0 +1,11 @@
+[package]
+name = "discovery_host_receiver"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+postcard = "0.7"
+serialport = "4.0"
+raytracer_weekend_lib = { path = "../raytracer_weekend_lib" }

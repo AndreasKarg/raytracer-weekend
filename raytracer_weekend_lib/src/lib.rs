@@ -25,6 +25,8 @@ use rand::prelude::*;
 use ray::Ray;
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use vec3::Color;
 
 const MAX_DEPTH: usize = 50;
@@ -40,16 +42,16 @@ pub struct Raytracer<'a> {
     world: &'a [Box<dyn Hittable>],
     cam: &'a Camera,
     background: Color,
-    image_width: usize,
-    image_height: usize,
-    samples_per_pixel: usize,
+    image_width: u32,
+    image_height: u32,
+    samples_per_pixel: u32,
 }
 
 #[cfg(feature = "rayon")]
-pub trait RenderIterator = ParallelIterator<Item = Color>;
+pub trait RenderIterator = ParallelIterator<Item = Pixel>;
 
 #[cfg(not(feature = "rayon"))]
-pub trait RenderIterator = Iterator<Item = Color>;
+pub trait RenderIterator = Iterator<Item = Pixel>;
 
 impl<'a> Raytracer<'a> {
     pub fn render(&self) -> impl RenderIterator + '_ {
@@ -73,7 +75,7 @@ impl<'a> Raytracer<'a> {
         }
     }
 
-    fn sample_pixel(&self, pixel_row: usize, pixel_column: usize, rng: &mut ActiveRng) -> Color {
+    fn sample_pixel(&self, pixel_row: u32, pixel_column: u32, rng: &mut ActiveRng) -> Pixel {
         let image_width = self.image_width;
         let image_height = self.image_height;
 
@@ -85,7 +87,11 @@ impl<'a> Raytracer<'a> {
             pixel_color += self.sample_ray(&r, rng, MAX_DEPTH);
         }
 
-        pixel_color
+        Pixel {
+            row: pixel_row,
+            column: pixel_column,
+            color: pixel_color,
+        }
     }
 
     fn sample_ray(&self, r: &Ray, rng: &mut ActiveRng, depth: usize) -> Color {
@@ -109,4 +115,12 @@ impl<'a> Raytracer<'a> {
 
         emitted + scatter.attenuation * self.sample_ray(&scatter.scattered_ray, rng, depth - 1)
     }
+}
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct Pixel {
+    pub row: u32,
+    pub column: u32,
+    pub color: Color,
 }

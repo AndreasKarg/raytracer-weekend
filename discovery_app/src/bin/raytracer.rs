@@ -9,6 +9,8 @@ use core::alloc::Layout;
 
 use alloc_cortex_m::CortexMHeap;
 use discovery_app as _;
+use heapless;
+use postcard::{to_vec, to_vec_cobs};
 use rand::{prelude::SmallRng, Rng, SeedableRng};
 use raytracer_weekend_lib::{
     bvh::BvhNode,
@@ -28,6 +30,11 @@ use raytracer_weekend_lib::{
     vec3::{Color, Point3, Vec3},
     Raytracer,
 };
+use stm32l4xx_hal::{
+    pac::USART2,
+    prelude::*,
+    serial::{Config, Rx, Serial, Tx},
+};
 
 // global logger + panicking-behavior + memory layout
 
@@ -40,6 +47,8 @@ fn main() -> ! {
     unsafe { ALLOCATOR.init(start, size) }
 
     defmt::info!("Allocator set up...");
+
+    let (mut tx, _rx) = setup_usart2();
 
     let mut rng = SmallRng::seed_from_u64(1234);
 
@@ -70,8 +79,21 @@ fn main() -> ! {
         for (idx, pixel) in all_pixels.enumerate() {
             /*if idx % 1 == 0*/
             {
-                defmt::info!("{} pixels calculated!", idx)
+                defmt::info!("{} pixels calculated!", idx);
+                defmt::info!(
+                    "row: {}, col: {}, color.r: {}, color.g: {}, color.b: {}",
+                    pixel.row,
+                    pixel.column,
+                    pixel.color.x(),
+                    pixel.color.y(),
+                    pixel.color.z()
+                );
             }
+
+            let serialised: heapless::Vec<u8, 256> = to_vec(&pixel).unwrap();
+            // tx.write(0x00).unwrap();
+            tx.bwrite_all(&serialised).unwrap();
+            tx.bflush();
         }
     }
 
@@ -148,6 +170,39 @@ pub fn jumpy_balls(aspect_ratio: f32, rng: &mut SmallRng) -> World {
     );
 
     (world, vec![cam], Color::new(0.0, 0.0, 0.0))
+}
+
+fn setup_usart2() -> (Tx<USART2>, Rx<USART2>) {
+    let p = stm32l4xx_hal::stm32::Peripherals::take().unwrap();
+
+    let mut flash = p.FLASH.constrain();
+    let mut rcc = p.RCC.constrain();
+    let mut pwr = p.PWR.constrain(&mut rcc.apb1r1);
+
+    let mut gpiod = p.GPIOD.split(&mut rcc.ahb2);
+
+    // clock configuration using the default settings (all clocks run at 8 MHz)
+    let clocks = rcc.cfgr.freeze(&mut flash.acr, &mut pwr);
+    // TRY this alternate clock configuration (clocks run at nearly the maximum frequency)
+    // let clocks = rcc
+    //     .cfgr
+    //     .sysclk(80.mhz())
+    //     .pclk1(80.mhz())
+    //     .pclk2(80.mhz())
+    //     .freeze(&mut flash.acr, &mut pwr);
+
+    let tx = gpiod.pd5.into_af7(&mut gpiod.moder, &mut gpiod.afrl);
+    let rx = gpiod.pd6.into_af7(&mut gpiod.moder, &mut gpiod.afrl);
+
+    let serial = Serial::usart2(
+        p.USART2,
+        (tx, rx),
+        Config::default().baudrate(9_600.bps()),
+        clocks,
+        &mut rcc.apb1r1,
+    );
+
+    serial.split()
 }
 
 #[global_allocator]
