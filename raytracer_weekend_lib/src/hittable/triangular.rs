@@ -2,6 +2,8 @@ use alloc::{boxed::Box, prelude::v1::String, sync::Arc, vec::Vec};
 use core::ops::{Add, Mul};
 
 use itertools::{Itertools, MinMaxResult};
+#[cfg(feature = "no_std")]
+use micromath::F32Ext;
 #[cfg(feature = "std")]
 use {
     std::collections::HashMap,
@@ -73,7 +75,7 @@ impl Triangle {
         Self::new(vertices, [None, None, None], [None, None, None], material)
     }
 
-    fn min_max(nums: impl Iterator<Item = f64>) -> (f64, f64) {
+    fn min_max(nums: impl Iterator<Item = f32>) -> (f32, f32) {
         let mut min_max = match nums.minmax() {
             MinMaxResult::NoElements => {
                 panic!()
@@ -91,7 +93,7 @@ impl Triangle {
 }
 
 impl Hittable for Triangle {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, _rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
         let vertex_a = self.vertices[0];
         let vertex_b = self.vertices[1];
         let vertex_c = self.vertices[2];
@@ -134,7 +136,7 @@ impl Hittable for Triangle {
         ))
     }
 
-    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
         let min_max_x = Self::min_max(self.vertices.iter().map(|v| v.x()));
         let min_max_y = Self::min_max(self.vertices.iter().map(|v| v.y()));
         let min_max_z = Self::min_max(self.vertices.iter().map(|v| v.z()));
@@ -306,9 +308,9 @@ fn parse_material(obj_material: &mtl::Material, mtl_path: &str) -> Arc<dyn Mater
 }
 
 impl Triangle {
-    fn interpolate_barycentric<T>(u: f64, v: f64, interpolatee: &[T; 3]) -> T
+    fn interpolate_barycentric<T>(u: f32, v: f32, interpolatee: &[T; 3]) -> T
     where
-        f64: Mul<T, Output = T>,
+        f32: Mul<T, Output = T>,
         T: Add<Output = T> + Clone,
     {
         (1.0 - u - v) * interpolatee[0].clone()

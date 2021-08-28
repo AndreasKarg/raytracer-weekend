@@ -4,17 +4,19 @@ use core::{
 };
 
 use derive_more::Constructor;
+#[cfg(feature = "no_std")]
+use micromath::F32Ext;
 
 use super::vec3::{Color, Vec3};
 use crate::perlin::Perlin;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Point2d {
-    pub u: f64,
-    pub v: f64,
+    pub u: f32,
+    pub v: f32,
 }
 
-impl Mul<Point2d> for f64 {
+impl Mul<Point2d> for f32 {
     type Output = Point2d;
 
     fn mul(self, rhs: Point2d) -> Self::Output {
@@ -46,7 +48,7 @@ pub struct SolidColor {
 }
 
 impl SolidColor {
-    pub fn new_rgb(red: f64, green: f64, blue: f64) -> Self {
+    pub fn new_rgb(red: f32, green: f32, blue: f32) -> Self {
         Self::new(Color::new(red, green, blue))
     }
 }
@@ -61,7 +63,7 @@ impl Texture for SolidColor {
 pub struct Checker<E: Texture, O: Texture> {
     odd: O,
     even: E,
-    frequency: f64,
+    frequency: f32,
 }
 
 impl<E: Texture, O: Texture> Texture for Checker<E, O> {
@@ -81,7 +83,7 @@ impl<E: Texture, O: Texture> Texture for Checker<E, O> {
 #[derive(Debug, Constructor, Clone)]
 pub struct Noise {
     noise: Perlin,
-    scale: f64,
+    scale: f32,
 }
 
 impl Texture for Noise {

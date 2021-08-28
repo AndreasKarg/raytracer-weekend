@@ -89,8 +89,8 @@ impl<'a> Raytracer<'a> {
 
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
         for _ in 0..self.samples_per_pixel {
-            let u = (pixel_column as f64 + rng.gen::<f64>()) / ((image_width - 1) as f64);
-            let v = (pixel_row as f64 + rng.gen::<f64>()) / ((image_height - 1) as f64);
+            let u = (pixel_column as f32 + rng.gen::<f32>()) / ((image_width - 1) as f32);
+            let v = (pixel_row as f32 + rng.gen::<f32>()) / ((image_height - 1) as f32);
             let r = self.cam.get_ray(u, v, rng);
             pixel_color += self.sample_ray(&r, rng, MAX_DEPTH);
         }
@@ -103,7 +103,7 @@ impl<'a> Raytracer<'a> {
             return Color::new(0.0, 0.0, 0.0);
         }
 
-        let hit_record = match self.world.hit(r, 0.001, f64::INFINITY, rng) {
+        let hit_record = match self.world.hit(r, 0.001, f32::INFINITY, rng) {
             Some(hit) => hit,
             _ => return self.background,
         };

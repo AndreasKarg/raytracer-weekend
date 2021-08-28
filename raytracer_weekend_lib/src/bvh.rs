@@ -18,8 +18,8 @@ pub struct BvhNode {
 impl BvhNode {
     pub fn new(
         mut src_objects: Vec<Box<dyn Hittable>>,
-        time0: f64,
-        time1: f64,
+        time0: f32,
+        time1: f32,
         rng: &mut impl Rng,
     ) -> Self {
         let axis = rng.gen_range(0..=2);
@@ -98,7 +98,7 @@ impl BvhNode {
 }
 
 impl Hittable for BvhNode {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord<'_>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord<'_>> {
         if !self.bounding_box.hit(r, t_min, t_max) {
             return None;
         };
@@ -119,7 +119,7 @@ impl Hittable for BvhNode {
         }
     }
 
-    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
         Some(self.bounding_box.clone())
     }
 }

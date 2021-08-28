@@ -1,5 +1,8 @@
 use derive_more::Constructor;
 use dyn_clone::{clone_trait_object, DynClone};
+#[cfg(feature = "no_std")]
+use micromath::F32Ext;
+use rand::Rng;
 
 use super::{
     hittable::HitRecord,
@@ -60,11 +63,11 @@ impl<T: Texture> Material for Lambertian<T> {
 #[derive(Debug, Clone)]
 pub struct Metal {
     albedo: Color,
-    fuzz: f64,
+    fuzz: f32,
 }
 
 impl Metal {
-    pub fn new(albedo: Color, fuzz: f64) -> Self {
+    pub fn new(albedo: Color, fuzz: f32) -> Self {
         assert!(fuzz <= 1.0);
 
         Self { albedo, fuzz }
@@ -98,11 +101,11 @@ impl Material for Metal {
 
 #[derive(Debug, Constructor, Clone)]
 pub struct Dielectric {
-    ir: f64,
+    ir: f32,
 }
 
 impl Dielectric {
-    fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
+    fn reflectance(cosine: f32, ref_idx: f32) -> f32 {
         let r0 = (1.0 - ref_idx) / (1.0 + ref_idx);
         let r0 = r0 * r0;
         r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
@@ -122,12 +125,13 @@ impl Material for Dielectric {
 
         let cannot_refract = (refraction_ratio * sin_theta) > 1.0;
 
-        let direction =
-            if cannot_refract || Self::reflectance(cos_theta, refraction_ratio) > rng.gen() {
-                unit_direction.reflect(&rec.normal)
-            } else {
-                unit_direction.refract(&rec.normal, refraction_ratio)
-            };
+        let direction = if cannot_refract
+            || Self::reflectance(cos_theta, refraction_ratio) > rng.gen::<f32>()
+        {
+            unit_direction.reflect(&rec.normal)
+        } else {
+            unit_direction.refract(&rec.normal, refraction_ratio)
+        };
 
         let scattered_ray = Ray::new(rec.p, direction, r_in.time());
 

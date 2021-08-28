@@ -10,7 +10,7 @@ cortex-m-rt = "0.6.13"
 defmt = "0.2.0"
 defmt-rtt = "0.2.0"
 panic-probe = { version = "0.2.0", features = ["print-defmt"] }
-raytracer_weekend_lib = { path = "../raytracer_weekend_lib", default-features = false}
+raytracer_weekend_lib = { path = "../raytracer_weekend_lib", default-features = false, features = ["no_std"]}
 stm32l4-hal = "0.3.0"
 
 [features]

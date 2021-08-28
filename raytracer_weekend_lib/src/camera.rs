@@ -1,3 +1,5 @@
+#[cfg(feature = "no_std")]
+use micromath::F32Ext;
 use rand::Rng;
 
 use super::{
@@ -13,9 +15,9 @@ pub struct Camera {
     u: Vec3,
     v: Vec3,
     _w: Vec3,
-    lens_radius: f64,
-    time0: f64,
-    time1: f64,
+    lens_radius: f32,
+    time0: f32,
+    time1: f32,
 }
 
 impl Camera {
@@ -24,12 +26,12 @@ impl Camera {
         look_from: Point3,
         look_at: Point3,
         up_vector: Vec3,
-        vertical_field_of_view: f64,
-        aspect_ratio: f64,
-        aperture: f64,
-        focus_dist: f64,
-        time0: f64,
-        time1: f64,
+        vertical_field_of_view: f32,
+        aspect_ratio: f32,
+        aperture: f32,
+        focus_dist: f32,
+        time0: f32,
+        time1: f32,
     ) -> Self {
         let theta = vertical_field_of_view.to_radians();
         let h = (theta / 2.0).tan();
@@ -61,7 +63,7 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, s: f64, t: f64, rng: &mut impl Rng) -> Ray {
+    pub fn get_ray(&self, s: f32, t: f32, rng: &mut impl Rng) -> Ray {
         let rd = self.lens_radius * Vec3::random_in_unit_disk(rng);
         let offset = self.u * rd.x() + self.v * rd.y();
         Ray::new(

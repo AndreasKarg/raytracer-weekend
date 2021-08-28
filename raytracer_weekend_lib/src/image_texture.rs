@@ -37,16 +37,16 @@ impl Texture for ImageTexture {
         let u = uv.u.clamp(0.0, 1.0);
         let v = 1.0 - uv.v.clamp(0.0, 1.0);
 
-        let i = ((u * image.width() as f64) as u32).clamp(0, image.width() - 1);
-        let j = ((v * image.height() as f64) as u32).clamp(0, image.height() - 1);
+        let i = ((u * image.width() as f32) as u32).clamp(0, image.width() - 1);
+        let j = ((v * image.height() as f32) as u32).clamp(0, image.height() - 1);
 
         let color_scale = 1.0 / 255.0;
         let pixel = image.get_pixel(i, j);
 
         Color::new(
-            pixel[0] as f64 * color_scale,
-            pixel[1] as f64 * color_scale,
-            pixel[2] as f64 * color_scale,
+            pixel[0] as f32 * color_scale,
+            pixel[1] as f32 * color_scale,
+            pixel[2] as f32 * color_scale,
         )
     }
 }

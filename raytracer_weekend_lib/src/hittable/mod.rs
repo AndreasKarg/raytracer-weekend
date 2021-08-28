@@ -23,7 +23,7 @@ pub struct HitRecord<'a> {
     pub p: Point3,
     pub normal: Vec3,
     pub material: &'a (dyn Material + 'a),
-    pub t: f64,
+    pub t: f32,
     pub texture_uv: Point2d,
     pub is_front_face: bool,
 }
@@ -31,7 +31,7 @@ pub struct HitRecord<'a> {
 impl<'a> HitRecord<'a> {
     pub fn new_with_face_normal(
         p: Point3,
-        t: f64,
+        t: f32,
         texture_uv: Point2d,
         material: &'a (dyn Material + 'a),
         ray: &Ray,
@@ -49,12 +49,12 @@ impl<'a> HitRecord<'a> {
 }
 
 pub trait Hittable: Sync + Send + Debug {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord>;
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb>;
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord>;
+    fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb>;
 }
 
 impl Hittable for [Box<dyn Hittable>] {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
         let mut closest_so_far = t_max;
         let mut rec = None;
 
@@ -68,7 +68,7 @@ impl Hittable for [Box<dyn Hittable>] {
         rec
     }
 
-    fn bounding_box(&self, t0: f64, t1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, t0: f32, t1: f32) -> Option<Aabb> {
         if self.is_empty() {
             return None;
         }
@@ -88,31 +88,31 @@ impl Hittable for [Box<dyn Hittable>] {
 }
 
 impl Hittable for Vec<Box<dyn Hittable>> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
         self.as_slice().hit(r, t_min, t_max, rng)
     }
 
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb> {
         self.as_slice().bounding_box(time0, time1)
     }
 }
 
 impl Hittable for &[Box<dyn Hittable>] {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
         (*self).hit(r, t_min, t_max, rng)
     }
 
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb> {
         (*self).bounding_box(time0, time1)
     }
 }
 
 impl Hittable for Box<dyn Hittable> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
         self.as_ref().hit(r, t_min, t_max, rng)
     }
 
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb> {
         self.as_ref().bounding_box(time0, time1)
     }
 }

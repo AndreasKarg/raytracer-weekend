@@ -1,6 +1,8 @@
 use core::fmt::Debug;
 
 use derive_more::Constructor;
+#[cfg(feature = "no_std")]
+use micromath::F32Ext;
 use rand::prelude::Rng;
 
 use crate::{
@@ -18,7 +20,7 @@ pub struct Translation<T: Hittable> {
 }
 
 impl<T: Hittable> Hittable for Translation<T> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
         let translated_ray = Ray::new(r.origin() - self.offset, r.direction(), r.time());
 
         let hit = self.inner.hit(&translated_ray, t_min, t_max, rng)?;
@@ -35,7 +37,7 @@ impl<T: Hittable> Hittable for Translation<T> {
         ))
     }
 
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb> {
         let bounding_box = self.inner.bounding_box(time0, time1)?;
 
         Some(Aabb::new(
@@ -48,13 +50,13 @@ impl<T: Hittable> Hittable for Translation<T> {
 #[derive(Debug)]
 pub struct YRotation<T: Hittable> {
     inner: T,
-    sin_theta: f64,
-    cos_theta: f64,
+    sin_theta: f32,
+    cos_theta: f32,
     bounding_box: Option<Aabb>,
 }
 
 impl<T: Hittable> YRotation<T> {
-    pub fn new(inner: T, angle_degrees: f64) -> Self {
+    pub fn new(inner: T, angle_degrees: f32) -> Self {
         let angle_radians = angle_degrees.to_radians();
 
         let sin_theta = angle_radians.sin();
@@ -72,16 +74,16 @@ impl<T: Hittable> YRotation<T> {
         }
     }
 
-    fn rotate_bounding_box(bbox: Aabb, sin_theta: f64, cos_theta: f64) -> Aabb {
-        let mut min = Point3::new(f64::INFINITY, f64::INFINITY, f64::INFINITY);
-        let mut max = Point3::new(f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+    fn rotate_bounding_box(bbox: Aabb, sin_theta: f32, cos_theta: f32) -> Aabb {
+        let mut min = Point3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY);
+        let mut max = Point3::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY);
 
         for i in 0..2 {
             for j in 0..2 {
                 for k in 0..2 {
-                    let i = i as f64;
-                    let j = j as f64;
-                    let k = k as f64;
+                    let i = i as f32;
+                    let j = j as f32;
+                    let k = k as f32;
 
                     let ijk: Vec3 = (i, j, k).into();
                     let one: Vec3 = (1.0, 1.0, 1.0).into();
@@ -110,7 +112,7 @@ impl<T: Hittable> YRotation<T> {
 }
 
 impl<T: Hittable> Hittable for YRotation<T> {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
         let sin_theta = self.sin_theta;
         let cos_theta = self.cos_theta;
 
@@ -145,7 +147,7 @@ impl<T: Hittable> Hittable for YRotation<T> {
         ))
     }
 
-    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
         self.bounding_box.clone()
     }
 }
@@ -153,14 +155,14 @@ impl<T: Hittable> Hittable for YRotation<T> {
 pub trait Transformable<R: Rng> {
     type Inner: Hittable;
 
-    fn rotate_y(self, angle_degrees: f64) -> YRotation<Self::Inner>;
+    fn rotate_y(self, angle_degrees: f32) -> YRotation<Self::Inner>;
     fn translate(self, offset: Vec3) -> Translation<Self::Inner>;
 }
 
 impl<R: Rng, T: Hittable> Transformable<R> for T {
     type Inner = T;
 
-    fn rotate_y(self, angle_degrees: f64) -> YRotation<Self::Inner> {
+    fn rotate_y(self, angle_degrees: f32) -> YRotation<Self::Inner> {
         YRotation::new(self, angle_degrees)
     }
 

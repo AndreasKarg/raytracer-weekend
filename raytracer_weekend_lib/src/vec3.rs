@@ -5,9 +5,10 @@ use core::{
     },
 };
 
+#[cfg(feature = "no_std")]
+use micromath::F32Ext;
 use num_traits::Num;
 use rand::Rng;
-
 #[derive(Copy, Clone, Debug)]
 pub struct GenericVec3<T>
 where
@@ -68,12 +69,12 @@ impl<T: Num + Copy> From<(T, T, T)> for GenericVec3<T> {
     }
 }
 
-impl GenericVec3<f64> {
-    pub const fn new_const(e0: f64, e1: f64, e2: f64) -> Self {
+impl GenericVec3<f32> {
+    pub const fn new_const(e0: f32, e1: f32, e2: f32) -> Self {
         Self { e: [e0, e1, e2] }
     }
 
-    pub fn length(&self) -> f64 {
+    pub fn length(&self) -> f32 {
         self.length_squared().sqrt()
     }
 
@@ -85,7 +86,7 @@ impl GenericVec3<f64> {
         Self::random_min_max(rng, 0.0..1.0)
     }
 
-    pub fn random_min_max(rng: &mut impl Rng, range: Range<f64>) -> Self {
+    pub fn random_min_max(rng: &mut impl Rng, range: Range<f32>) -> Self {
         Self::new(
             rng.gen_range(range.clone()),
             rng.gen_range(range.clone()),
@@ -127,7 +128,7 @@ impl GenericVec3<f64> {
 
     pub fn is_near_zero(&self) -> bool {
         // Return true if the vector is close to zero in all dimensions.
-        const S: f64 = 1e-8;
+        const S: f32 = 1e-8;
 
         (self.e[0].abs() < S) && (self.e[1].abs() < S) && (self.e[2].abs() < S)
     }
@@ -136,7 +137,7 @@ impl GenericVec3<f64> {
         *self - 2.0 * self.dot(normal) * *normal
     }
 
-    pub fn refract(&self, n: &Vec3, eta_i_over_eta_t: f64) -> Self {
+    pub fn refract(&self, n: &Vec3, eta_i_over_eta_t: f32) -> Self {
         let uv = *self;
         let n = *n;
         let cos_theta = (-uv).dot(&n).min(1.0);
@@ -170,10 +171,10 @@ impl GenericVec3<i64> {
 }
 
 impl GenericVec3<usize> {
-    pub fn to_f64(&self) -> GenericVec3<f64> {
-        let e0 = self.e[0] as f64;
-        let e1 = self.e[1] as f64;
-        let e2 = self.e[2] as f64;
+    pub fn to_f32(&self) -> GenericVec3<f32> {
+        let e0 = self.e[0] as f32;
+        let e1 = self.e[1] as f32;
+        let e2 = self.e[2] as f32;
 
         GenericVec3 { e: [e0, e1, e2] }
     }
@@ -242,7 +243,7 @@ where
     }
 }
 
-impl Mul<GenericVec3<f64>> for f64 {
+impl Mul<GenericVec3<f32>> for f32 {
     type Output = GenericVec3<Self>;
 
     fn mul(self, rhs: Self::Output) -> Self::Output {
@@ -346,7 +347,7 @@ impl<T: Num + Copy, const N: usize> CopyIndex<GenericVec3<usize>> for [[T; N]; 3
     }
 }
 
-pub type Vec3 = GenericVec3<f64>;
+pub type Vec3 = GenericVec3<f32>;
 pub type Point3 = Vec3;
 pub type Color = Vec3;
 

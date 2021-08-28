@@ -1,7 +1,8 @@
+#[cfg(feature = "no_std")]
+use micromath::F32Ext;
 use rand::prelude::*;
 
 use crate::vec3::{CopyIndex, GenericVec3, Point3, Vec3};
-
 const POINT_COUNT: usize = 256;
 
 #[derive(Debug, Clone)]
@@ -46,7 +47,7 @@ impl Perlin {
         }
     }
 
-    pub fn noise(&self, p: &Point3) -> f64 {
+    pub fn noise(&self, p: &Point3) -> f32 {
         let p = *p;
         let base_point_on_lattice = p.floor().to_i64().to_usize();
         let point_within_lattice_cell = p - p.floor();
@@ -73,7 +74,7 @@ impl Perlin {
         Self::perlin_interp(gradient_cube, point_within_lattice_cell)
     }
 
-    pub fn turbulence(&self, p: &Point3, depth: usize) -> f64 {
+    pub fn turbulence(&self, p: &Point3, depth: usize) -> f32 {
         let mut accum = 0.0;
         let mut temp_p = *p;
         let mut weight = 1.0;
@@ -87,7 +88,7 @@ impl Perlin {
         accum.abs()
     }
 
-    fn perlin_interp(gradient_cube: [[[Vec3; 2]; 2]; 2], point_within_lattice_cell: Vec3) -> f64 {
+    fn perlin_interp(gradient_cube: [[[Vec3; 2]; 2]; 2], point_within_lattice_cell: Vec3) -> f32 {
         let point_within_lattice_cell = Perlin::filter_hermit(point_within_lattice_cell);
 
         let mut accum = 0.0;
@@ -98,7 +99,7 @@ impl Perlin {
             for row in 0..2 {
                 for column in 0..2 {
                     let current_point_on_lattice: GenericVec3<usize> = (aisle, row, column).into();
-                    let current_point_on_lattice = current_point_on_lattice.to_f64();
+                    let current_point_on_lattice = current_point_on_lattice.to_f32();
                     let weight_v = point_within_lattice_cell - current_point_on_lattice;
 
                     let unit_vector: Vec3 = (1.0, 1.0, 1.0).into();

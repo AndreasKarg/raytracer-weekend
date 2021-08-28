@@ -1,8 +1,9 @@
 use alloc::boxed::Box;
-use core::f64::consts::PI;
+use core::f32::consts::PI;
 
 use derive_more::Constructor;
-use rand::prelude::Rng;
+#[cfg(feature = "no_std")]
+use micromath::F32Ext;
 
 use crate::{
     aabb::Aabb,
@@ -16,10 +17,10 @@ use crate::{
 
 fn hit_sphere<'a>(
     ray: &Ray,
-    t_min: f64,
-    t_max: f64,
+    t_min: f32,
+    t_max: f32,
     center: Vec3,
-    radius: f64,
+    radius: f32,
     material: &'a (dyn Material + 'a),
 ) -> Option<HitRecord<'a>> {
     let origin_to_center = ray.origin() - center;
@@ -78,12 +79,12 @@ fn get_sphere_uv(p: &Point3) -> Point2d {
 #[derive(Constructor, Debug, Clone)]
 pub struct Sphere {
     center: Point3,
-    radius: f64,
+    radius: f32,
     material: Box<dyn Material>,
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, _rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
         hit_sphere(
             ray,
             t_min,
@@ -94,7 +95,7 @@ impl Hittable for Sphere {
         )
     }
 
-    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
         let center = self.center;
         let radius = self.radius;
         let radius_vector = Vec3::new(radius, radius, radius);
@@ -105,15 +106,15 @@ impl Hittable for Sphere {
 #[derive(Constructor, Debug)]
 pub struct MovingSphere {
     center0: Point3,
-    time0: f64,
+    time0: f32,
     center1: Point3,
-    time1: f64,
-    radius: f64,
+    time1: f32,
+    radius: f32,
     material: Box<dyn Material>,
 }
 
 impl MovingSphere {
-    fn center_at_time(&self, time: f64) -> Point3 {
+    fn center_at_time(&self, time: f32) -> Point3 {
         let center0 = self.center0;
         let time0 = self.time0;
         let center1 = self.center1;
@@ -123,7 +124,7 @@ impl MovingSphere {
 }
 
 impl Hittable for MovingSphere {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, _rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
         let center_at_time = self.center_at_time(ray.time());
 
         hit_sphere(
@@ -136,7 +137,7 @@ impl Hittable for MovingSphere {
         )
     }
 
-    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+    fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb> {
         let start_center = self.center_at_time(time0);
         let end_center = self.center_at_time(time1);
         let radius = self.radius;
