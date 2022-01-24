@@ -90,7 +90,10 @@ fn main() -> ! {
                 );
             }
 
-            let serialised: heapless::Vec<u8, 256> = to_vec(&pixel).unwrap();
+            let serialised: heapless::Vec<u8, 256> = to_vec_cobs(&pixel).unwrap();
+            let serialised: heapless::Vec<u8, 256> =
+                to_vec_cobs("foobar! Mefonilasa undso weiter.").unwrap();
+
             // tx.write(0x00).unwrap();
             tx.bwrite_all(&serialised).unwrap();
             tx.bflush();
@@ -208,7 +211,7 @@ fn setup_usart2() -> (Tx<USART2>, Rx<USART2>) {
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 
-#[alloc_error_handler]
-fn oom(_: Layout) -> ! {
-    defmt::panic!()
-}
+// #[alloc_error_handler]
+// fn oom(_: Layout) -> ! {
+//     defmt::panic!()
+// }
