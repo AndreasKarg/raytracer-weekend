@@ -1,48 +1,41 @@
+#![feature(let_else)]
+
 use std::{
     io::{Read, Write},
     time::Duration,
 };
 
-use postcard::{take_from_bytes, take_from_bytes_cobs};
+use postcard::{from_bytes_cobs, take_from_bytes, take_from_bytes_cobs};
 use raytracer_weekend_lib::Pixel;
 use serialport::ClearBuffer;
 
 fn main() {
     println!("Hello, world!");
 
-    let port = serialport::new("COM3", 9600)
+    let port = serialport::new("COM12", 9600)
         .timeout(Duration::from_millis(100000))
         .open()
         .expect("Failed to open port");
 
-    let mut buf = Vec::new();
-
     port.clear(ClearBuffer::All);
 
-    let mut bytes = port.bytes().peekable();
+    let mut bytes = port.bytes();
 
-    while *bytes.peek().unwrap().as_ref().unwrap() != 0x00 {
-        println!("Skipping..!");
-        bytes.next();
-    }
+    loop {
+        println!("Awaiting chunk...");
+        let chunk: Result<Vec<_>, _> = bytes
+            .by_ref()
+            .map_while(|b| match b {
+                Ok(0) => None,
+                Ok(b) => Some(Ok(b)),
+                err => Some(err),
+            })
+            .collect();
+        let mut chunk = chunk.expect("Serial port error! WTF!");
 
-    for byte in bytes {
-        let byte = byte.unwrap();
-        buf.push(byte);
-
-        println!(
-            "Pushing byte {:#?} ({}), now at length {}",
-            char::from(byte),
-            byte,
-            buf.len()
-        );
-
-        // match take_from_bytes_cobs::<Pixel>(&mut buf) {
-        match take_from_bytes_cobs::<String>(&mut buf) {
-            Ok((pixel, residual)) => {
-                println!("Got a pixel: {:#?}", pixel.as_bytes());
-                println!("And the rest: {:#?}", residual);
-                buf = residual.to_vec();
+        match from_bytes_cobs::<Pixel>(&mut chunk) {
+            Ok(pixel) => {
+                println!("Got a pixel: {:#?}", pixel);
             }
             Err(postcard::Error::DeserializeUnexpectedEnd) => {
                 println!("Not enough data...");

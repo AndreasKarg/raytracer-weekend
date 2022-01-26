@@ -6,3 +6,6 @@ members = [
     "discovery_app/testsuite",
     "discovery_host_receiver",
 ]
+
+[profile.release.package.raytracer_weekend_console]
+debug = true

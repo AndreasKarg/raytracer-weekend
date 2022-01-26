@@ -79,7 +79,7 @@ fn main() -> ! {
         column: 456,
         color: Color::new(1.0, 2.0, 100.0),
     };
-    let pixel = "Foobar";
+    // let pixel = "Foobar";
 
     let mut buf = [0u8; 256];
 
@@ -104,7 +104,7 @@ fn main() -> ! {
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 
-// #[alloc_error_handler]
-// fn oom(_: Layout) -> ! {
-//     defmt::panic!()
-// }
+#[alloc_error_handler]
+fn oom(_: Layout) -> ! {
+    defmt::panic!()
+}

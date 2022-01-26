@@ -2,7 +2,7 @@
 name = "raytracer_weekend_console"
 version = "0.1.0"
 authors = ["Andreas Karg <clonkman.alternative@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,6 +13,3 @@ rayon = "1.5.0"
 clap = "3.0.0-beta.2"
 rand = "0.8.0"
 image = "0.23.12"
-
-[profile.release]
-debug = true
