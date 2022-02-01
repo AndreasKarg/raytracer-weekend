@@ -66,7 +66,7 @@ fn main() {
                 progress_bar.set_position(0);
 
                 state = Some((
-                    image::RgbImage::new(width, height),
+                    image::DynamicImage::new_rgb8(width, height),
                     progress_bar,
                     samples_per_pixel,
                 ));
@@ -90,7 +90,7 @@ fn main() {
                 let ig = (255.999 * g.clamp(0.0, 0.999)) as u8;
                 let ib = (255.999 * b.clamp(0.0, 0.999)) as u8;
 
-                let p = img.get_pixel_mut(column, row);
+                let p = img.as_mut_rgb8().unwrap().get_pixel_mut(column, row);
                 *p = Rgb([ir, ig, ib]);
 
                 progress_bar.inc(1);
@@ -101,7 +101,8 @@ fn main() {
                 };
 
                 progress_bar.finish();
-                img.save("foo.png").unwrap();
+                let rotated = img.rotate180();
+                rotated.save("foo.png").unwrap();
             }
         }
     }
