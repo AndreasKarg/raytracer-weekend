@@ -197,14 +197,14 @@ fn setup_usart2() -> (Tx<USART2>, Rx<USART2>) {
     let mut gpiod = p.GPIOD.split(&mut rcc.ahb2);
 
     // clock configuration using the default settings (all clocks run at 8 MHz)
-    let clocks = rcc.cfgr.freeze(&mut flash.acr, &mut pwr);
+    // let clocks = rcc.cfgr.freeze(&mut flash.acr, &mut pwr);
     // TRY this alternate clock configuration (clocks run at nearly the maximum frequency)
-    // let clocks = rcc
-    //     .cfgr
-    //     .sysclk(80.mhz())
-    //     .pclk1(80.mhz())
-    //     .pclk2(80.mhz())
-    //     .freeze(&mut flash.acr, &mut pwr);
+    let clocks = rcc
+        .cfgr
+        .sysclk(80.mhz())
+        .pclk1(80.mhz())
+        .pclk2(80.mhz())
+        .freeze(&mut flash.acr, &mut pwr);
 
     let tx = gpiod.pd5.into_af7(&mut gpiod.moder, &mut gpiod.afrl);
     let rx = gpiod.pd6.into_af7(&mut gpiod.moder, &mut gpiod.afrl);
@@ -212,7 +212,7 @@ fn setup_usart2() -> (Tx<USART2>, Rx<USART2>) {
     let serial = Serial::usart2(
         p.USART2,
         (tx, rx),
-        Config::default().baudrate(9_600.bps()),
+        Config::default().baudrate(115_200.bps()),
         clocks,
         &mut rcc.apb1r1,
     );

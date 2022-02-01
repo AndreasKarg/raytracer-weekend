@@ -11,7 +11,7 @@ use serialport::ClearBuffer;
 fn main() {
     println!("Hello, world!");
 
-    let port = serialport::new("COM12", 9600)
+    let port = serialport::new("COM12", 115_200)
         .timeout(Duration::from_millis(1000000))
         .open()
         .expect("Failed to open port");
