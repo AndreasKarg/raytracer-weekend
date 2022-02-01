@@ -5,6 +5,7 @@ members = [
     "discovery_app",
     "discovery_app/testsuite",
     "discovery_host_receiver",
+    "discovery_host_receiver_gui",
 ]
 
 [profile.release.package.raytracer_weekend_console]

@@ -52,12 +52,12 @@ fn main() -> ! {
 
     let mut rng = SmallRng::seed_from_u64(1234);
 
-    let image_width = 64;
-    let image_height = 64;
+    let image_width = 32;
+    let image_height = 32;
 
     let aspect_ratio = image_width as f32 / image_height as f32;
 
-    let samples_per_pixel = 200;
+    let samples_per_pixel = 50;
 
     let image_start_msg: heapless::Vec<u8, 256> = to_vec_cobs(&ProgressMessage::ImageStart {
         width: image_width,
@@ -72,7 +72,7 @@ fn main() -> ! {
 
     defmt::info!("Creating world...");
 
-    let (world, cams, background) = jumpy_balls(aspect_ratio, &mut rng);
+    let (world, cams, background) = cornell_box(aspect_ratio, &mut rng);
     defmt::info!("World created.");
 
     for (frame_no, cam) in cams.iter().enumerate() {
@@ -118,7 +118,7 @@ fn main() -> ! {
 type World = (Vec<Box<dyn Hittable>>, Vec<Camera>, Color);
 static DEFAULT_BACKGROUND: Color = Color::new_const(0.7, 0.8, 1.00);
 
-pub fn jumpy_balls(aspect_ratio: f32, rng: &mut SmallRng) -> World {
+pub fn cornell_box(aspect_ratio: f32, rng: &mut SmallRng) -> World {
     // World
     let red = Box::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
     let white = Box::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));

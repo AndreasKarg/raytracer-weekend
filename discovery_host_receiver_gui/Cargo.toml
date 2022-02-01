@@ -1,0 +1,14 @@
+[package]
+name = "discovery_host_receiver_gui"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dioxus = { version = "0.1.7", features = ["desktop"] }
+image = { version = "0.23.12" }
+indicatif = { version = "0.16" }
+postcard = "0.7"
+raytracer_weekend_lib = { path = "../raytracer_weekend_lib" }
+serialport = "4.0"
