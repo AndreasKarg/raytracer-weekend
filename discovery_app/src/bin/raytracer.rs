@@ -28,7 +28,7 @@ use raytracer_weekend_lib::{
     perlin::Perlin,
     texture::{Checker, Noise, SolidColor, UVDebug},
     vec3::{Color, Point3, Vec3},
-    Raytracer,
+    ProgressMessage, Raytracer,
 };
 use stm32l4xx_hal::{
     pac::USART2,
@@ -52,12 +52,23 @@ fn main() -> ! {
 
     let mut rng = SmallRng::seed_from_u64(1234);
 
-    let image_width = 120;
-    let image_height = 80;
+    let image_width = 64;
+    let image_height = 64;
 
     let aspect_ratio = image_width as f32 / image_height as f32;
 
-    let samples_per_pixel = 10;
+    let samples_per_pixel = 200;
+
+    let image_start_msg: heapless::Vec<u8, 256> = to_vec_cobs(&ProgressMessage::ImageStart {
+        width: image_width,
+        height: image_height,
+        samples_per_pixel,
+    })
+    .unwrap();
+
+    tx.bwrite_all(&[0x00, 0x00, 0x00, 0x00]).unwrap();
+    tx.bwrite_all(&image_start_msg).unwrap();
+    // tx.bflush().unwrap();
 
     defmt::info!("Creating world...");
 
@@ -90,15 +101,16 @@ fn main() -> ! {
                 );
             }
 
-            let serialised: heapless::Vec<u8, 256> = to_vec_cobs(&pixel).unwrap();
             let serialised: heapless::Vec<u8, 256> =
-                to_vec_cobs("foobar! Mefonilasa undso weiter.").unwrap();
-
-            // tx.write(0x00).unwrap();
+                to_vec_cobs(&ProgressMessage::Pixel(pixel)).unwrap();
             tx.bwrite_all(&serialised).unwrap();
-            tx.bflush();
+            // tx.bflush();
         }
     }
+
+    let serialised: heapless::Vec<u8, 256> = to_vec_cobs(&ProgressMessage::ImageEnd).unwrap();
+    tx.bwrite_all(&serialised).unwrap();
+    tx.bflush().unwrap();
 
     discovery_app::exit()
 }
@@ -211,7 +223,7 @@ fn setup_usart2() -> (Tx<USART2>, Rx<USART2>) {
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 
-// #[alloc_error_handler]
-// fn oom(_: Layout) -> ! {
-//     defmt::panic!()
-// }
+#[alloc_error_handler]
+fn my_example_handler(layout: core::alloc::Layout) -> ! {
+    panic!("memory allocation of {} bytes failed", layout.size())
+}

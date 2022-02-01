@@ -533,6 +533,8 @@ dependencies = [
 name = "discovery_host_receiver"
 version = "0.1.0"
 dependencies = [
+ "image",
+ "indicatif",
  "postcard",
  "raytracer_weekend_lib",
  "serialport",
