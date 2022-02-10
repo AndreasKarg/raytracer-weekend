@@ -1,24 +1,60 @@
 #![feature(let_else)]
 
-use std::{io::Read, time::Duration};
+use std::{cell::Cell, io::Read, time::Duration};
 
+use dioxus::{
+    core::exports::futures_channel::mpsc::{unbounded, UnboundedReceiver},
+    prelude::*,
+};
 use image::Rgb;
 use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
 use postcard::from_bytes_cobs;
 use raytracer_weekend_lib::{Pixel, ProgressMessage};
-use serialport::ClearBuffer;
+use tokio_serial::{ClearBuffer, SerialPort};
 
 fn main() {
-    println!("Hello, world!");
+    let (sender, receiver) = unbounded();
 
-    let port = serialport::new("COM12", 115_200)
+    let serial_port = tokio_serial::new("COM12", 115_200)
         .timeout(Duration::from_millis(1000000))
         .open()
         .expect("Failed to open port");
 
-    port.clear(ClearBuffer::All).unwrap();
+    serial_port.clear(ClearBuffer::All).unwrap();
 
-    let mut bytes = port.bytes();
+    // launch our IO thread
+    std::thread::spawn(move || {
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .unwrap()
+            .block_on(async move {
+                serial_rx_loop(serial_port);
+            });
+    });
+
+    // launch our app on the current thread - important because we spawn a window
+    dioxus::desktop::launch_with_props(
+        app,
+        AppProps {
+            receiver: Cell::new(Some(receiver)),
+        },
+        |c| c,
+    )
+}
+
+struct AppProps {
+    receiver: Cell<Option<UnboundedReceiver<Vec<()>>>>,
+}
+
+fn app(cx: Scope<AppProps>) -> Element {
+    rsx!(cx, div { "Current stopwatch time: nom" })
+}
+
+fn serial_rx_loop(serial_port: Box<impl SerialPort + ?Sized>) -> ! {
+    println!("Hello, world!");
+
+    let mut bytes = serial_port.bytes();
 
     let mut state = None;
 
