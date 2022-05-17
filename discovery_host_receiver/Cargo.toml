@@ -8,6 +8,6 @@ edition = "2018"
 [dependencies]
 postcard = "0.7"
 serialport = "4.0"
-image = { version = "0.23.12" }
+image = { version = "0.24" }
 indicatif = { version = "0.16" }
 raytracer_weekend_lib = { path = "../raytracer_weekend_lib" }

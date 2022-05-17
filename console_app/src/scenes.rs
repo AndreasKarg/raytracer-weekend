@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use clap::Clap;
+use clap::Parser;
 use rand::prelude::*;
 use raytracer_weekend_lib::{
     bvh::BvhNode,
@@ -21,7 +21,7 @@ use raytracer_weekend_lib::{
     vec3::{Color, Point3, Vec3},
 };
 
-#[derive(Clap)]
+#[derive(Parser)]
 pub enum Scene {
     JumpyBalls,
     TwoSpheres,

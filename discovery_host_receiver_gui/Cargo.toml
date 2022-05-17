@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { version = "0.1.7", features = ["desktop"] }
-image = { version = "0.23.12" }
+dioxus = { version = "0.2", features = ["desktop"] }
+image = { version = "0.24" }
 indicatif = { version = "0.16" }
 postcard = "0.7"
 raytracer_weekend_lib = { path = "../raytracer_weekend_lib" }

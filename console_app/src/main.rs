@@ -1,6 +1,6 @@
 mod scenes;
 
-use clap::Clap;
+use clap::Parser;
 use image::{Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
 use rand::thread_rng;
@@ -12,7 +12,7 @@ const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 
 /// My raytracer, based on the book series on the interwebs.
-#[derive(Clap)]
+#[derive(Parser)]
 #[clap(version = CRATE_VERSION, author = CRATE_AUTHOR)]
 struct Opts {
     #[clap(subcommand)]
