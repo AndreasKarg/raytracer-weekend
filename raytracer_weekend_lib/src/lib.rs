@@ -1,4 +1,4 @@
-#![feature(array_map, array_zip, trait_alias)]
+#![feature(array_zip, trait_alias)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
