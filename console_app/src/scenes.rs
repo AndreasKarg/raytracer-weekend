@@ -23,37 +23,37 @@ use raytracer_weekend_lib::{
 
 #[derive(Parser)]
 pub enum Scene {
-    JumpyBalls,
-    TwoSpheres,
-    TwoPerlinSpheres,
-    Earth,
-    SimpleLight,
+    // JumpyBalls,
+    // TwoSpheres,
+    // TwoPerlinSpheres,
+    // Earth,
+    // SimpleLight,
     CornellBox,
-    SmokeyCornellBox,
-    Book2FinalScene,
-    AnimatedBook2FinalScene,
-    SimpleTriangle,
-    WavefrontCowObj,
-    WavefrontSuspensionObj,
-    TexturedMonument,
+    // SmokeyCornellBox,
+    // Book2FinalScene,
+    // AnimatedBook2FinalScene,
+    // SimpleTriangle,
+    // WavefrontCowObj,
+    // WavefrontSuspensionObj,
+    // TexturedMonument,
 }
 
 impl Scene {
     pub fn generate(&self, aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         let generator = match self {
-            Scene::JumpyBalls => jumpy_balls,
-            Scene::TwoSpheres => two_spheres,
-            Scene::TwoPerlinSpheres => two_perlin_spheres,
-            Scene::Earth => earth,
-            Scene::SimpleLight => simple_light,
+            // Scene::JumpyBalls => jumpy_balls,
+            // Scene::TwoSpheres => two_spheres,
+            // Scene::TwoPerlinSpheres => two_perlin_spheres,
+            // Scene::Earth => earth,
+            // Scene::SimpleLight => simple_light,
             Scene::CornellBox => cornell_box,
-            Scene::SmokeyCornellBox => smokey_cornell_box,
-            Scene::Book2FinalScene => book2_final_scene,
-            Scene::AnimatedBook2FinalScene => animated_book2_final,
-            Scene::SimpleTriangle => simple_triangle,
-            Scene::WavefrontCowObj => wavefront_cow_obj,
-            Scene::WavefrontSuspensionObj => wavefront_suspension_obj,
-            Scene::TexturedMonument => textured_monument,
+            // Scene::SmokeyCornellBox => smokey_cornell_box,
+            // Scene::Book2FinalScene => book2_final_scene,
+            // Scene::AnimatedBook2FinalScene => animated_book2_final,
+            // Scene::SimpleTriangle => simple_triangle,
+            // Scene::WavefrontCowObj => wavefront_cow_obj,
+            // Scene::WavefrontSuspensionObj => wavefront_suspension_obj,
+            // Scene::TexturedMonument => textured_monument,
         };
 
         generator(aspect_ratio, rng)
