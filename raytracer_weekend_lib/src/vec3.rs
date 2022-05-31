@@ -130,6 +130,18 @@ impl GenericVec3<f32> {
         }
     }
 
+    pub fn random_cosine_direction(rng: &mut impl Rng) -> Self {
+        let r1: f32 = rng.gen();
+        let r2: f32 = rng.gen();
+        let z = (1.0 - r2).sqrt();
+
+        let phi = 2.0 * std::f32::consts::PI * r1;
+        let x = phi.cos() * r2.sqrt();
+        let y = phi.sin() * r2.sqrt();
+
+        Self::new(x, y, z)
+    }
+
     pub fn is_near_zero(&self) -> bool {
         // Return true if the vector is close to zero in all dimensions.
         const S: f32 = 1e-8;

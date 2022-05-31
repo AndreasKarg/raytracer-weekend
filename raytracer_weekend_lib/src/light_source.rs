@@ -19,6 +19,10 @@ impl<T: Texture> Material for DiffuseLight<T> {
         None
     }
 
+    fn scattering_pdf(&self, r_in: &Ray, rec: &HitRecord, scattered_ray: &Ray) -> f32 {
+        todo!()
+    }
+
     fn emitted(&self, uv: Point2d, p: &Point3) -> Color {
         self.emit.value(uv, p)
     }

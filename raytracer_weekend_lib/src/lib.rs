@@ -1,4 +1,4 @@
-#![feature(array_zip, trait_alias)]
+#![feature(array_zip, trait_alias, let_else)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
@@ -10,6 +10,7 @@ pub mod hittable;
 pub mod image_texture;
 pub mod light_source;
 pub mod material;
+mod orthonormal_base;
 pub mod perlin;
 mod ray;
 pub mod texture;
@@ -108,12 +109,17 @@ impl<'a> Raytracer<'a> {
             .material
             .emitted(hit_record.texture_uv, &hit_record.p);
 
-        let scatter = match hit_record.material.scatter(r, &hit_record, rng) {
-            Some(scatter) => scatter,
-            _ => return emitted,
+        let Some(scatter) = hit_record.material.scatter(r, &hit_record, rng) else {
+            return emitted;
         };
 
-        emitted + scatter.attenuation * self.sample_ray(&scatter.scattered_ray, rng, depth - 1)
+        emitted
+            + scatter.attenuation
+                * hit_record
+                    .material
+                    .scattering_pdf(r, &hit_record, &scatter.scattered_ray)
+                * self.sample_ray(&scatter.scattered_ray, rng, depth - 1)
+                / scatter.pdf
     }
 }
 
