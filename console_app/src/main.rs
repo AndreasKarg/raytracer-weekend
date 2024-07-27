@@ -93,7 +93,7 @@ fn run_render(world: World, args: RenderArgs) {
 
         let all_pixels: Vec<_> = raytracer.render().progress_with(frame_progress).collect();
 
-        let mut image = RgbImage::new(image_width as u32, image_height as u32);
+        let mut image = RgbImage::new(image_width, image_height);
 
         image
             .pixels_mut()

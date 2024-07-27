@@ -1,18 +1,21 @@
-use raytracer_weekend_lib::hittable::Hittable;
 use std::fmt::Debug;
 use std::path::PathBuf;
-use dyn_clone::{clone_trait_object, DynClone};
+
 use derive_more::Constructor;
-use raytracer_weekend_lib::hittable::spherical::Sphere;
+use dyn_clone::{clone_trait_object, DynClone};
 use serde::{Deserialize, Serialize};
+
 use raytracer_weekend_lib::ActiveRng;
 use raytracer_weekend_lib::bvh::BvhNode;
+use raytracer_weekend_lib::hittable::Hittable;
 use raytracer_weekend_lib::hittable::rectangular::{Cuboid, XYRectangle, XZRectangle, YZRectangle};
+use raytracer_weekend_lib::hittable::spherical::Sphere;
 use raytracer_weekend_lib::hittable::transformations::{Translation, YRotation};
-use raytracer_weekend_lib::hittable::triangular::load_wavefront_obj;
+use raytracer_weekend_lib::hittable::triangular::{load_wavefront_obj, Triangle};
 use raytracer_weekend_lib::hittable::volumes::ConstantMedium;
-use raytracer_weekend_lib::material::Material;
+use raytracer_weekend_lib::texture::Point2d;
 use raytracer_weekend_lib::vec3::{Point3, Vec3};
+
 use crate::material::MaterialDescriptor;
 use crate::texture::TextureDescriptor;
 
@@ -239,5 +242,45 @@ impl HittableDescriptor for BvhNodeDescriptor {
             self.time1,
             rng,
         ))
+    }
+}
+
+pub trait Transformable {
+    type Inner: HittableDescriptor;
+
+    fn rotate_y(self, angle_degrees: f32) -> Box<YRotationDescriptor>;
+    fn translate(self, offset: Vec3) -> Box<TranslationDescriptor>;
+}
+
+impl<T: HittableDescriptor + 'static> Transformable for Box<T> {
+    type Inner = T;
+
+    fn rotate_y(self, angle_degrees: f32) -> Box<YRotationDescriptor> {
+        Box::new(YRotationDescriptor::new(self, angle_degrees))
+    }
+
+    fn translate(self, offset: Vec3) -> Box<TranslationDescriptor> {
+        Box::new(TranslationDescriptor::new(self, offset))
+    }
+}
+
+#[derive(Debug, Clone, Constructor, Serialize, Deserialize)]
+pub struct TriangleDescriptor {
+    vertices: [Point3; 3],
+    normals: [Option<Vec3>; 3],
+    texture_uv: [Option<Point2d>; 3],
+    material: Box<dyn MaterialDescriptor>,
+}
+
+impl TriangleDescriptor {
+    pub fn new_flat_shaded(vertices: [Point3; 3], material: Box<dyn MaterialDescriptor>) -> Self {
+        Self::new(vertices, [None, None, None], [None, None, None], material)
+    }
+}
+
+#[typetag::serde(name = "Triangle")]
+impl HittableDescriptor for TriangleDescriptor {
+    fn to_hittable(&self, rng: &mut ActiveRng) -> Box<dyn Hittable> {
+        Box::new(Triangle::new(self.vertices, self.normals, self.texture_uv, self.material.to_material(rng).into()))
     }
 }

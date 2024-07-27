@@ -1,14 +1,15 @@
-use derive_more::Constructor;
-use serde::{Deserialize, Serialize};
-use raytracer_weekend_lib::texture::{Noise, Texture};
-use raytracer_weekend_lib::vec3::Color;
 use std::fmt::Debug;
 use std::path::PathBuf;
+
+use derive_more::Constructor;
 use dyn_clone::{clone_trait_object, DynClone};
+use serde::{Deserialize, Serialize};
+
 use raytracer_weekend_lib::ActiveRng;
 use raytracer_weekend_lib::image_texture::ImageTexture;
-use raytracer_weekend_lib::light_source::DiffuseLight;
 use raytracer_weekend_lib::perlin::Perlin;
+use raytracer_weekend_lib::texture::{Noise, Texture, UVDebug};
+use raytracer_weekend_lib::vec3::Color;
 
 #[typetag::serde]
 pub trait TextureDescriptor: Sync + Send + Debug + DynClone {
@@ -60,7 +61,7 @@ pub struct ImageTextureDescriptor {
 #[typetag::serde(name = "ImageTexture")]
 impl TextureDescriptor for ImageTextureDescriptor {
     fn to_texture(&self, _: &mut ActiveRng) -> Box<dyn Texture> {
-        Box::new(ImageTexture::open(&self.path.to_str().unwrap()).unwrap())
+        Box::new(ImageTexture::open(self.path.to_str().unwrap()).unwrap())
     }
 }
 
@@ -73,5 +74,15 @@ pub struct NoiseDescriptor {
 impl TextureDescriptor for NoiseDescriptor {
     fn to_texture(&self, rng: &mut ActiveRng) -> Box<dyn Texture> {
         Box::new(Noise::new(Perlin::new(rng), self.scale))
+    }
+}
+
+#[derive(Debug, Clone, Constructor, Serialize, Deserialize)]
+pub struct UVDebugDescriptor {}
+
+#[typetag::serde(name = "UVDebug")]
+impl TextureDescriptor for UVDebugDescriptor {
+    fn to_texture(&self, _: &mut ActiveRng) -> Box<dyn Texture> {
+        Box::new(UVDebug {})
     }
 }

@@ -5,7 +5,6 @@ use dyn_clone::{clone_trait_object, DynClone};
 use raytracer_weekend_lib::ActiveRng;
 use raytracer_weekend_lib::light_source::DiffuseLight;
 use raytracer_weekend_lib::material::{Dielectric, Lambertian, Material, Metal};
-use raytracer_weekend_lib::texture::{SolidColor, Texture};
 use raytracer_weekend_lib::vec3::Color;
 use crate::texture::{SolidColorDescriptor, TextureDescriptor};
 

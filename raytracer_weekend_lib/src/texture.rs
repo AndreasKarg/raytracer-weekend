@@ -12,6 +12,7 @@ use super::vec3::{Color, Vec3};
 use crate::perlin::Perlin;
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Point2d {
     pub u: f32,
     pub v: f32,

@@ -1,35 +1,37 @@
 use alloc::sync::Arc;
 use core::ops::{Add, Mul};
 use std::path::Path;
+
 use iter_fixed::IntoIteratorFixed;
 use itertools::{Itertools, MinMaxResult};
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
+
 #[cfg(feature = "std")]
 use {
     std::collections::HashMap,
     std::fs,
     wavefront_obj::{
         mtl,
-        mtl::{Illumination, MtlSet},
+        mtl::Illumination,
         obj,
         obj::{Geometry, Normal, Object, Primitive, TVertex, Vertex},
     },
 };
 
-#[cfg(feature = "std")]
-use crate::image_texture::ImageTexture;
 use crate::{
     aabb::Aabb,
+    ActiveRng,
     bvh::BvhNode,
     hittable::{HitRecord, Hittable},
     light_source::DiffuseLight,
     material::{Lambertian, Material},
     ray::Ray,
-    texture::{Checker, Point2d, SolidColor},
-    vec3::{Color, Point3, Vec3},
-    ActiveRng,
+    texture::{Point2d, SolidColor},
+    vec3::{Point3, Vec3},
 };
+#[cfg(feature = "std")]
+use crate::image_texture::ImageTexture;
 
 #[derive(Debug, Clone)]
 pub struct Triangle {

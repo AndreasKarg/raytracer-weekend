@@ -1,13 +1,12 @@
 use std::path::PathBuf;
 use clap::Subcommand;
 use rand::prelude::*;
-use raytracer_weekend_lib::bvh::BvhNode;
-use raytracer_weekend_lib::hittable::volumes::ConstantMedium;
+
 use raytracer_weekend_lib::vec3::{Color, Point3, Vec3};
 use raytracer_weekend_saveload::{CameraDescriptor, World};
-use raytracer_weekend_saveload::hittable::{BvhNodeDescriptor, ConstantMediumDescriptor, CuboidDescriptor, HittableDescriptor, MovingSphereDescriptor, SphereDescriptor, TranslationDescriptor, WavefrontObjDescriptor, XYRectangleDescriptor, XZRectangleDescriptor, YRotationDescriptor};
+use raytracer_weekend_saveload::hittable::{BvhNodeDescriptor, ConstantMediumDescriptor, CuboidDescriptor, HittableDescriptor, MovingSphereDescriptor, SphereDescriptor, Transformable, TranslationDescriptor, TriangleDescriptor, WavefrontObjDescriptor, XYRectangleDescriptor, XZRectangleDescriptor, YRotationDescriptor, YZRectangleDescriptor};
 use raytracer_weekend_saveload::material::{DielectricDescriptor, DiffuseLightDescriptor, LambertianDescriptor, MaterialDescriptor, MetalDescriptor};
-use raytracer_weekend_saveload::texture::{CheckerDescriptor, ImageTextureDescriptor, NoiseDescriptor, SolidColorDescriptor};
+use raytracer_weekend_saveload::texture::{CheckerDescriptor, ImageTextureDescriptor, NoiseDescriptor, SolidColorDescriptor, UVDebugDescriptor};
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum Scene {
@@ -15,14 +14,13 @@ pub enum Scene {
     TwoSpheres,
     TwoPerlinSpheres,
     Earth,
-    // SimpleLight,
-    // CornellBox,
-    // SmokeyCornellBox,
-    Book2FinalScene,
-    AnimatedBook2FinalScene,
-    // SimpleTriangle,
+    SimpleLight,
+    CornellBox,
+    SmokeyCornellBox,
+    Book2Final,
+    AnimatedBook2Final,
+    SimpleTriangle,
     WavefrontCowObj,
-    // WavefrontSuspensionObj,
     TexturedMonument,
 }
 
@@ -33,14 +31,13 @@ impl Scene {
             Scene::TwoSpheres => two_spheres,
             Scene::TwoPerlinSpheres => two_perlin_spheres,
             Scene::Earth => earth,
-            // Scene::SimpleLight => simple_light,
-            // Scene::CornellBox => cornell_box,
-            // Scene::SmokeyCornellBox => smokey_cornell_box,
-            Scene::Book2FinalScene => book2_final_scene,
-            Scene::AnimatedBook2FinalScene => animated_book2_final,
-            // Scene::SimpleTriangle => simple_triangle,
+            Scene::SimpleLight => simple_light,
+            Scene::CornellBox => cornell_box,
+            Scene::SmokeyCornellBox => smokey_cornell_box,
+            Scene::Book2Final => book2_final_scene,
+            Scene::AnimatedBook2Final => animated_book2_final,
+            Scene::SimpleTriangle => simple_triangle,
             Scene::WavefrontCowObj => wavefront_cow_obj,
-            // Scene::WavefrontSuspensionObj => wavefront_suspension_obj,
             Scene::TexturedMonument => textured_monument,
         };
 
@@ -196,7 +193,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
 }
 
-pub fn two_perlin_spheres(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
+pub fn two_perlin_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
     let perlin_material = Box::new(NoiseDescriptor::new(4.0));
     let material_ground = LambertianDescriptor::new(perlin_material);
@@ -274,202 +271,202 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 
     World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
 }
-//
-// pub fn simple_light(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
-//     // World
-//     let earth_texture = ImageTextureDescriptor::open("models/earthmap.jpg").unwrap();
-//     let earth_surface = DiffuseLightDescriptor::new(earth_texture);
-//     // let earth_surface = DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(4.0, 4.0, 4.0));
-//
-//     let perlin_material = NoiseDescriptor::new(Perlin::new(rng), 4.0);
-//     let material_ground = LambertianDescriptor::new(perlin_material);
-//
-//     let world: Vec<Box<dyn HittableDescriptor>> = vec![
-//         Box::new(SphereDescriptor::new(
-//             Point3::new(0.0, -1000.0, 0.0),
-//             1000.0,
-//             Box::new(material_ground.clone()),
-//         )),
-//         Box::new(SphereDescriptor::new(
-//             Point3::new(0.0, 2.0, 0.0),
-//             2.0,
-//             Box::new(material_ground),
-//         )),
-//         Box::new(XYRectangleDescriptor::new(
-//             3.0,
-//             5.0,
-//             1.0,
-//             3.0,
-//             -2.0,
-//             Box::new(earth_surface.clone()),
-//         )),
-//         Box::new(SphereDescriptor::new(
-//             Point3::new(0.0, 6.0, 0.0),
-//             2.0,
-//             Box::new(earth_surface),
-//         )),
-//     ];
-//
-//     // Camera
-//     let look_from = Point3::new(26.0, 3.0, 6.0);
-//     let look_at = Point3::new(0.0, 2.0, 0.0);
-//     let v_up = Vec3::new(0.0, 1.0, 0.0);
-//     let distance_to_focus = 10.0;
-//     let aperture = 0.0;
-//     let vfow = 20.0;
-//     let time0 = 0.0;
-//     let time1 = 1.0;
-//
-//     let cam =CameraDescriptor::new(
-//         look_from,
-//         look_at,
-//         v_up,
-//         vfow,
-//         aspect_ratio,
-//         aperture,
-//         distance_to_focus,
-//         time0,
-//         time1,
-//     );
-//
-//     World { geometry: world, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
-// }
-//
-// pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
-//     // World
-//     let red = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.65, 0.05, 0.05)));
-//     let white = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.73, 0.73, 0.73)));
-//     let green = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.12, 0.45, 0.15)));
-//     let light = Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(15.0, 15.0, 15.0)));
-//
-//     let box1 = CuboidDescriptor::new(
-//         Point3::new(0.0, 0.0, 0.0),
-//         Point3::new(165.0, 330.0, 165.0),
-//         white.clone(),
-//     )
-//         .rotate_y(15.0)
-//         .translate(Vec3::new(265.0, 0.0, 295.0));
-//
-//     let box2 = CuboidDescriptor::new(
-//         Point3::new(0.0, 0.0, 0.0),
-//         Point3::new(165.0, 165.0, 165.0),
-//         white.clone(),
-//     )
-//         .rotate_y(-18.0)
-//         .translate(Vec3::new(130.0, 0.0, 65.0));
-//
-//     let world: Vec<Box<dyn HittableDescriptor>> = vec![
-//         Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
-//         Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
-//         Box::new(XZRectangleDescriptor::new(213.0, 343.0, 227.0, 332.0, 554.0, light)),
-//         Box::new(XZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, white.clone())),
-//         Box::new(XZRectangleDescriptor::new(
-//             0.0,
-//             555.0,
-//             0.0,
-//             555.0,
-//             555.0,
-//             white.clone(),
-//         )),
-//         Box::new(XYRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, white)),
-//         Box::new(box1),
-//         Box::new(box2),
-//     ];
-//
-//     // Camera
-//     let look_from = Point3::new(278.0, 278.0, -800.0);
-//     let look_at = Point3::new(278.0, 278.0, 0.0);
-//     let v_up = Vec3::new(0.0, 1.0, 0.0);
-//     let distance_to_focus = 10.0;
-//     let aperture = 0.0;
-//     let vfow = 40.0;
-//     let time0 = 0.0;
-//     let time1 = 1.0;
-//
-//     let cam =CameraDescriptor::new(
-//         look_from,
-//         look_at,
-//         v_up,
-//         vfow,
-//         aspect_ratio,
-//         aperture,
-//         distance_to_focus,
-//         time0,
-//         time1,
-//     );
-//
-//     World { geometry: world, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
-// }
-//
-// pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
-//     // World
-//     let red = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.65, 0.05, 0.05)));
-//     let white = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.73, 0.73, 0.73)));
-//     let green = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.12, 0.45, 0.15)));
-//     let light = Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(7.0, 7.0, 7.0)));
-//
-//     let box1 = CuboidDescriptor::new(
-//         Point3::new(0.0, 0.0, 0.0),
-//         Point3::new(165.0, 330.0, 165.0),
-//         white.clone(),
-//     )
-//         .rotate_y(15.0)
-//         .translate(Vec3::new(265.0, 0.0, 295.0));
-//
-//     let box2 = CuboidDescriptor::new(
-//         Point3::new(0.0, 0.0, 0.0),
-//         Point3::new(165.0, 165.0, 165.0),
-//         white.clone(),
-//     )
-//         .rotate_y(-18.0)
-//         .translate(Vec3::new(130.0, 0.0, 65.0));
-//
-//     let box1 = ConstantMedium::new(box1, 0.005, SolidColorDescriptor::new_rgb(0.0, 0.0, 0.0));
-//     let box2 = ConstantMedium::new(box2, 0.005, SolidColorDescriptor::new_rgb(1.0, 1.0, 1.0));
-//
-//     let world: Vec<Box<dyn HittableDescriptor>> = vec![
-//         Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
-//         Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
-//         Box::new(XZRectangleDescriptor::new(113.0, 443.0, 127.0, 432.0, 554.0, light)),
-//         Box::new(XZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, white.clone())),
-//         Box::new(XZRectangleDescriptor::new(
-//             0.0,
-//             555.0,
-//             0.0,
-//             555.0,
-//             555.0,
-//             white.clone(),
-//         )),
-//         Box::new(XYRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, white)),
-//         Box::new(box1),
-//         Box::new(box2),
-//     ];
-//
-//     // Camera
-//     let look_from = Point3::new(278.0, 278.0, -800.0);
-//     let look_at = Point3::new(278.0, 278.0, 0.0);
-//     let v_up = Vec3::new(0.0, 1.0, 0.0);
-//     let distance_to_focus = 10.0;
-//     let aperture = 0.0;
-//     let vfow = 40.0;
-//     let time0 = 0.0;
-//     let time1 = 1.0;
-//
-//     let cam =CameraDescriptor::new(
-//         look_from,
-//         look_at,
-//         v_up,
-//         vfow,
-//         aspect_ratio,
-//         aperture,
-//         distance_to_focus,
-//         time0,
-//         time1,
-//     );
-//
-//     World { geometry: world, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
-// }
-//
+
+pub fn simple_light(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+    // World
+    let earth_texture = Box::new(ImageTextureDescriptor::new(PathBuf::from("models/earthmap.jpg")));
+    let earth_surface = DiffuseLightDescriptor::new(earth_texture);
+    // let earth_surface = DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(4.0, 4.0, 4.0));
+
+    let perlin_material = Box::new(NoiseDescriptor::new(4.0));
+    let material_ground = LambertianDescriptor::new(perlin_material);
+
+    let world: Vec<Box<dyn HittableDescriptor>> = vec![
+        Box::new(SphereDescriptor::new(
+            Point3::new(0.0, -1000.0, 0.0),
+            1000.0,
+            Box::new(material_ground.clone()),
+        )),
+        Box::new(SphereDescriptor::new(
+            Point3::new(0.0, 2.0, 0.0),
+            2.0,
+            Box::new(material_ground),
+        )),
+        Box::new(XYRectangleDescriptor::new(
+            3.0,
+            5.0,
+            1.0,
+            3.0,
+            -2.0,
+            Box::new(earth_surface.clone()),
+        )),
+        Box::new(SphereDescriptor::new(
+            Point3::new(0.0, 6.0, 0.0),
+            2.0,
+            Box::new(earth_surface),
+        )),
+    ];
+
+    // Camera
+    let look_from = Point3::new(26.0, 3.0, 6.0);
+    let look_at = Point3::new(0.0, 2.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 20.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = CameraDescriptor::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    World { geometry: world, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
+}
+
+pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+    // World
+    let red = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.65, 0.05, 0.05)));
+    let white = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.73, 0.73, 0.73)));
+    let green = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.12, 0.45, 0.15)));
+    let light = Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(15.0, 15.0, 15.0)));
+
+    let box1 = Box::new(CuboidDescriptor::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 330.0, 165.0),
+        white.clone(),
+    ))
+        .rotate_y(15.0)
+        .translate(Vec3::new(265.0, 0.0, 295.0));
+
+    let box2 = Box::new(CuboidDescriptor::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 165.0, 165.0),
+        white.clone(),
+    ))
+        .rotate_y(-18.0)
+        .translate(Vec3::new(130.0, 0.0, 65.0));
+
+    let world: Vec<Box<dyn HittableDescriptor>> = vec![
+        Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
+        Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
+        Box::new(XZRectangleDescriptor::new(213.0, 343.0, 227.0, 332.0, 554.0, light)),
+        Box::new(XZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, white.clone())),
+        Box::new(XZRectangleDescriptor::new(
+            0.0,
+            555.0,
+            0.0,
+            555.0,
+            555.0,
+            white.clone(),
+        )),
+        Box::new(XYRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, white)),
+        box1,
+        box2,
+    ];
+
+    // Camera
+    let look_from = Point3::new(278.0, 278.0, -800.0);
+    let look_at = Point3::new(278.0, 278.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = CameraDescriptor::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    World { geometry: world, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
+}
+
+pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+    // World
+    let red = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.65, 0.05, 0.05)));
+    let white = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.73, 0.73, 0.73)));
+    let green = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.12, 0.45, 0.15)));
+    let light = Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(7.0, 7.0, 7.0)));
+
+    let box1 = Box::new(CuboidDescriptor::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 330.0, 165.0),
+        white.clone(),
+    ))
+        .rotate_y(15.0)
+        .translate(Vec3::new(265.0, 0.0, 295.0));
+
+    let box2 = Box::new(CuboidDescriptor::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 165.0, 165.0),
+        white.clone(),
+    ))
+        .rotate_y(-18.0)
+        .translate(Vec3::new(130.0, 0.0, 65.0));
+
+    let box1 = Box::new(ConstantMediumDescriptor::new(box1, 0.005, SolidColorDescriptor::new_rgb(0.0, 0.0, 0.0)));
+    let box2 = Box::new(ConstantMediumDescriptor::new(box2, 0.005, SolidColorDescriptor::new_rgb(1.0, 1.0, 1.0)));
+
+    let world: Vec<Box<dyn HittableDescriptor>> = vec![
+        Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
+        Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
+        Box::new(XZRectangleDescriptor::new(113.0, 443.0, 127.0, 432.0, 554.0, light)),
+        Box::new(XZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, white.clone())),
+        Box::new(XZRectangleDescriptor::new(
+            0.0,
+            555.0,
+            0.0,
+            555.0,
+            555.0,
+            white.clone(),
+        )),
+        Box::new(XYRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, white)),
+        box1,
+        box2,
+    ];
+
+    // Camera
+    let look_from = Point3::new(278.0, 278.0, -800.0);
+    let look_at = Point3::new(278.0, 278.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = CameraDescriptor::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    World { geometry: world, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
+}
+
 pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     let mut boxes1: Vec<Box<dyn HittableDescriptor>> = Vec::new();
     let ground = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.48, 0.83, 0.53)));
@@ -626,7 +623,6 @@ pub fn animated_book2_final(
     let frames = fps * len_s;
 
     let cameras: Vec<_> = (0..(frames as usize))
-        .into_iter()
         .map(|frame| {
             let from_x = 478.0 - frame as f32 * (2.0 * 478.0) / frames;
             let from_y = 278.0;
@@ -654,57 +650,57 @@ pub fn animated_book2_final(
     World { geometry: world, cameras, background: base_scene.background }
 }
 
-// pub fn simple_triangle(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
-//     // World
-//     let checker = CheckerDescriptor::new(
-//         SolidColorDescriptor::new_rgb(0.2, 0.3, 0.1),
-//         SolidColorDescriptor::new_rgb(0.9, 0.9, 0.9),
-//         10.0,
-//     );
-//     let material_ground = LambertianDescriptor::new(checker);
-//
-//     let world: Vec<Box<dyn HittableDescriptor>> = vec![
-//         Box::new(SphereDescriptor::new(
-//             Point3::new(0.0, -10.0, 0.0),
-//             10.0,
-//             Box::new(material_ground),
-//         )),
-//         Box::new(Triangle::new_flat_shaded(
-//             [
-//                 Point3::new(-5.0, 0.0, 5.0),
-//                 Point3::new(0.0, 7.0, 0.0),
-//                 Point3::new(5.0, 0.0, -5.0),
-//             ],
-//             Arc::new(LambertianDescriptor::new(UVDebug::new())),
-//         )),
-//     ];
-//
-//     // Camera
-//     let look_from = Point3::new(13.0, 2.0, 3.0);
-//     let look_at = Point3::new(0.0, 2.5, 0.0);
-//     let v_up = Vec3::new(0.0, 1.0, 0.0);
-//     let distance_to_focus = 10.0;
-//     let aperture = 0.0;
-//     let vfow = 40.0;
-//     let time0 = 0.0;
-//     let time1 = 1.0;
-//
-//     let cam =CameraDescriptor::new(
-//         look_from,
-//         look_at,
-//         v_up,
-//         vfow,
-//         aspect_ratio,
-//         aperture,
-//         distance_to_focus,
-//         time0,
-//         time1,
-//     );
-//
-//     World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
-// }
-//
-pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
+pub fn simple_triangle(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+    // World
+    let checker = Box::new(CheckerDescriptor::new(
+        SolidColorDescriptor::new_rgb(0.2, 0.3, 0.1),
+        SolidColorDescriptor::new_rgb(0.9, 0.9, 0.9),
+        10.0,
+    ));
+    let material_ground = LambertianDescriptor::new(checker);
+
+    let world: Vec<Box<dyn HittableDescriptor>> = vec![
+        Box::new(SphereDescriptor::new(
+            Point3::new(0.0, -10.0, 0.0),
+            10.0,
+            Box::new(material_ground),
+        )),
+        Box::new(TriangleDescriptor::new_flat_shaded(
+            [
+                Point3::new(-5.0, 0.0, 5.0),
+                Point3::new(0.0, 7.0, 0.0),
+                Point3::new(5.0, 0.0, -5.0),
+            ],
+            Box::new(LambertianDescriptor::new(Box::new(UVDebugDescriptor::new()))),
+        )),
+    ];
+
+    // Camera
+    let look_from = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 2.5, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = CameraDescriptor::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
+}
+
+pub fn wavefront_cow_obj(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
     let checker = Box::new(CheckerDescriptor::new(
         SolidColorDescriptor::new_rgb(0.2, 0.3, 0.1),
@@ -757,51 +753,8 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 
     World { geometry: world, cameras: vec![cam], background: Color::new_const(0.085, 0.1, 0.125) }
 }
-//
-// pub fn wavefront_suspension_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
-//     // World
-//     let suspension = load_wavefront_obj("models/Normals_Try3.obj", rng).unwrap();
-//     let suspension =
-//         Box::new(Translation::new(suspension, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn HittableDescriptor>;
-//
-//     let world: Vec<Box<dyn HittableDescriptor>> = vec![
-//         Box::new(XYRectangleDescriptor::new(
-//             -5.0,
-//             5.0,
-//             -7.0,
-//             7.0,
-//             1.0,
-//             Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(1.2, 1.0, 1.0))),
-//         )),
-//         suspension,
-//     ];
-//
-//     // Camera
-//     let look_from = Point3::new(0.5, 2.5, 0.8);
-//     let look_at = Point3::new(-0.1, 2.3, 0.15);
-//     let v_up = Vec3::new(0.0, 1.0, 0.0);
-//     let distance_to_focus = 10.0;
-//     let aperture = 0.0;
-//     let vfow = 40.0;
-//     let time0 = 0.0;
-//     let time1 = 1.0;
-//
-//     let cam =CameraDescriptor::new(
-//         look_from,
-//         look_at,
-//         v_up,
-//         vfow,
-//         aspect_ratio,
-//         aperture,
-//         distance_to_focus,
-//         time0,
-//         time1,
-//     );
-//
-//     World { geometry: world, cameras: vec![cam], background: Color::new_const(0.085, 0.1, 0.125) }
-// }
-//
-pub fn textured_monument(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
+
+pub fn textured_monument(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
     let monument = Box::new(TranslationDescriptor::new(
         Box::new(WavefrontObjDescriptor::new(PathBuf::from("models/monument_downscaled_polygon_reduced.obj"))),

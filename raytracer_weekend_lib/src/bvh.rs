@@ -1,3 +1,5 @@
+//! An implementation of a Boundary Volume Hierarchy thingamajig.
+
 use alloc::{boxed::Box, vec::Vec};
 use core::{cmp::Ordering, fmt::Debug};
 
@@ -5,8 +7,6 @@ use rand::prelude::Rng;
 
 use super::{aabb::Aabb, hittable::Hittable};
 use crate::{hittable::HitRecord, ray::Ray, ActiveRng};
-
-///! An implementation of a Boundary Volume Hierarchy thingamajig.
 
 #[derive(Debug)]
 pub struct BvhNode {

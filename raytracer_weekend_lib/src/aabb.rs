@@ -1,4 +1,4 @@
-///! An implementation of an Axis-Aligned Bounding Box (AABB)
+//! An implementation of an Axis-Aligned Bounding Box (AABB)
 use {
     super::{ray::Ray, vec3::Point3},
     core::mem::swap,
