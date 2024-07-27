@@ -1,6 +1,6 @@
 mod scenes;
 
-use clap::Parser;
+use clap::{Args, Parser, Subcommand};
 use image::{Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
 use rand::thread_rng;
@@ -15,7 +15,18 @@ const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 /// My raytracer, based on the book series on the interwebs.
 #[derive(Parser)]
 #[clap(version = CRATE_VERSION, author = CRATE_AUTHOR)]
-struct Args {
+struct MainArgs {
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(Debug, Subcommand)]
+enum Command {
+    Render(RenderArgs),
+}
+
+#[derive(Debug, Args)]
+struct RenderArgs {
     #[clap(subcommand)]
     scene: Scene,
     #[clap(long, short, default_value = "400")]
@@ -26,9 +37,7 @@ struct Args {
     samples_per_pixel: u32,
 }
 
-fn main() {
-    let args: Args = Args::parse();
-
+fn run_render(args: RenderArgs) {
     let image_width = args.width;
     let aspect_ratio = args.aspect_ratio;
     let image_height = (image_width as f64 / aspect_ratio).round() as u32;
@@ -96,5 +105,12 @@ fn main() {
         image
             .save(&format!("render/image_{:04}.png", frame_no))
             .unwrap();
+    }
+}
+
+fn main() {
+    let args: MainArgs = MainArgs::parse();
+    match args.command {
+        Command::Render(render_args) => run_render(render_args),
     }
 }
