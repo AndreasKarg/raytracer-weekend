@@ -35,21 +35,22 @@ fn main() {
 
     let pixel_count = (image_width * image_height) as u64;
 
-    let (world, cams, background) = opts.scene.generate(
+    let world = opts.scene.generate(
         (image_width as f32) / (image_height as f32),
         &mut thread_rng(),
     );
 
-    let overall_progress = ProgressBar::new(cams.len() as u64)
+    let cameras = world.cameras;
+    let overall_progress = ProgressBar::new(cameras.len() as u64)
         .with_style(ProgressStyle::default_bar().template(
             "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}",
         ));
 
-    for (frame_no, cam) in cams.iter().progress_with(overall_progress).enumerate() {
+    for (frame_no, cam) in cameras.iter().progress_with(overall_progress).enumerate() {
         let raytracer = Raytracer::new(
-            &world,
+            &world.geometry,
             &cam,
-            background,
+            world.background,
             image_width,
             image_height,
             samples_per_pixel,

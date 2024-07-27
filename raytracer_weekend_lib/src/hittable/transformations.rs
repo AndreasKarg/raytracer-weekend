@@ -3,7 +3,6 @@ use core::fmt::Debug;
 use derive_more::Constructor;
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
-use rand::prelude::Rng;
 
 use crate::{
     aabb::Aabb,

@@ -158,7 +158,7 @@ pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         1.0,
     );
 
-    (world, vec![cam], DEFAULT_BACKGROUND)
+    World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
 }
 
 pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
@@ -205,7 +205,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, vec![cam], DEFAULT_BACKGROUND)
+    World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
 }
 
 pub fn two_perlin_spheres(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
@@ -248,7 +248,7 @@ pub fn two_perlin_spheres(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, vec![cam], DEFAULT_BACKGROUND)
+    World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
 }
 
 pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
@@ -284,7 +284,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, vec![cam], DEFAULT_BACKGROUND)
+    World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
 }
 
 pub fn simple_light(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
@@ -344,7 +344,7 @@ pub fn simple_light(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, vec![cam], Color::new(0.0, 0.0, 0.0))
+    World { geometry: world, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
 }
 
 pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
@@ -359,16 +359,16 @@ pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         Point3::new(165.0, 330.0, 165.0),
         white.clone(),
     )
-    .rotate_y(15.0)
-    .translate(Vec3::new(265.0, 0.0, 295.0));
+        .rotate_y(15.0)
+        .translate(Vec3::new(265.0, 0.0, 295.0));
 
     let box2 = Cuboid::new(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 165.0, 165.0),
         white.clone(),
     )
-    .rotate_y(-18.0)
-    .translate(Vec3::new(130.0, 0.0, 65.0));
+        .rotate_y(-18.0)
+        .translate(Vec3::new(130.0, 0.0, 65.0));
 
     let world: Vec<Box<dyn Hittable>> = vec![
         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
@@ -410,7 +410,7 @@ pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, vec![cam], Color::new(0.0, 0.0, 0.0))
+    World { geometry: world, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
 }
 
 pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
@@ -425,16 +425,16 @@ pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         Point3::new(165.0, 330.0, 165.0),
         white.clone(),
     )
-    .rotate_y(15.0)
-    .translate(Vec3::new(265.0, 0.0, 295.0));
+        .rotate_y(15.0)
+        .translate(Vec3::new(265.0, 0.0, 295.0));
 
     let box2 = Cuboid::new(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 165.0, 165.0),
         white.clone(),
     )
-    .rotate_y(-18.0)
-    .translate(Vec3::new(130.0, 0.0, 65.0));
+        .rotate_y(-18.0)
+        .translate(Vec3::new(130.0, 0.0, 65.0));
 
     let box1 = ConstantMedium::new(box1, 0.005, SolidColor::new_rgb(0.0, 0.0, 0.0));
     let box2 = ConstantMedium::new(box2, 0.005, SolidColor::new_rgb(1.0, 1.0, 1.0));
@@ -479,7 +479,7 @@ pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, vec![cam], Color::new(0.0, 0.0, 0.0))
+    World { geometry: world, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
 }
 
 pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
@@ -616,14 +616,14 @@ pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (objects, vec![cam], Color::new(0.0, 0.0, 0.0))
+    World { geometry: objects, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
 }
 
 pub fn animated_book2_final(
     aspect_ratio: f32,
     rng: &mut ThreadRng,
-) -> (Vec<Box<dyn Hittable>>, Vec<Camera>, Color) {
-    let (world, _, background) = book2_final_scene(aspect_ratio, rng);
+) -> World {
+    let base_scene = book2_final_scene(aspect_ratio, rng);
 
     // Camera
     let look_at = Point3::new(278.0, 278.0, 278.0);
@@ -661,9 +661,9 @@ pub fn animated_book2_final(
         })
         .collect();
 
-    let world: Vec<Box<dyn Hittable>> = vec![Box::new(BvhNode::new(world, 0.0, 1.0, rng))];
+    let world: Vec<Box<dyn Hittable>> = vec![Box::new(BvhNode::new(base_scene.geometry, 0.0, 1.0, rng))];
 
-    (world, cameras, background)
+    World { geometry: world, cameras, background: base_scene.background }
 }
 
 pub fn simple_triangle(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
@@ -713,7 +713,7 @@ pub fn simple_triangle(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, vec![cam], DEFAULT_BACKGROUND)
+    World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
 }
 
 pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
@@ -767,7 +767,7 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, vec![cam], Color::new_const(0.085, 0.1, 0.125))
+    World { geometry: world, cameras: vec![cam], background: Color::new_const(0.085, 0.1, 0.125) }
 }
 
 pub fn wavefront_suspension_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
@@ -810,7 +810,7 @@ pub fn wavefront_suspension_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World
         time1,
     );
 
-    (world, vec![cam], Color::new_const(0.085, 0.1, 0.125))
+    World { geometry: world, cameras: vec![cam], background: Color::new_const(0.085, 0.1, 0.125) }
 }
 
 pub fn textured_monument(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
@@ -854,9 +854,14 @@ pub fn textured_monument(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    (world, vec![cam], Color::new_const(0.085, 0.1, 0.125))
+    World { geometry: world, cameras: vec![cam], background: Color::new_const(0.085, 0.1, 0.125) }
 }
 
-type World = (Vec<Box<dyn Hittable>>, Vec<Camera>, Color);
+#[derive(Debug)]
+pub struct World {
+    pub(crate) geometry: Vec<Box<dyn Hittable>>,
+    pub(crate) cameras: Vec<Camera>,
+    pub(crate) background: Color,
+}
 
 static DEFAULT_BACKGROUND: Color = Color::new_const(0.7, 0.8, 1.00);
