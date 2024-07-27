@@ -6,6 +6,7 @@ use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, Progres
 use rand::thread_rng;
 use rayon::prelude::*;
 use raytracer_weekend_lib::Raytracer;
+use raytracer_weekend_saveload::{HittableDescriptor, HittableDescriptorList};
 use scenes::Scene;
 
 const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -14,7 +15,7 @@ const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 /// My raytracer, based on the book series on the interwebs.
 #[derive(Parser)]
 #[clap(version = CRATE_VERSION, author = CRATE_AUTHOR)]
-struct Opts {
+struct Args {
     #[clap(subcommand)]
     scene: Scene,
     #[clap(long, short, default_value = "400")]
@@ -26,16 +27,16 @@ struct Opts {
 }
 
 fn main() {
-    let opts: Opts = Opts::parse();
+    let args: Args = Args::parse();
 
-    let image_width = opts.width;
-    let aspect_ratio = opts.aspect_ratio;
+    let image_width = args.width;
+    let aspect_ratio = args.aspect_ratio;
     let image_height = (image_width as f64 / aspect_ratio).round() as u32;
-    let samples_per_pixel = opts.samples_per_pixel;
+    let samples_per_pixel = args.samples_per_pixel;
 
     let pixel_count = (image_width * image_height) as u64;
 
-    let world = opts.scene.generate(
+    let world = args.scene.generate(
         (image_width as f32) / (image_height as f32),
         &mut thread_rng(),
     );
@@ -46,9 +47,11 @@ fn main() {
             "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}",
         ));
 
+    let geometry = world.geometry.to_hittables();
+
     for (frame_no, cam) in cameras.iter().progress_with(overall_progress).enumerate() {
         let raytracer = Raytracer::new(
-            &world.geometry,
+            &geometry,
             &cam,
             world.background,
             image_width,

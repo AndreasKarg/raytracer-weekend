@@ -1,4 +1,5 @@
 use derive_more::Constructor;
+use dyn_clone::DynClone;
 
 use crate::{
     hittable::HitRecord,
@@ -10,11 +11,11 @@ use crate::{
 };
 
 #[derive(Constructor, Debug, Clone)]
-pub struct DiffuseLight<T: Texture> {
+pub struct DiffuseLight<T: Texture + Clone> {
     emit: T,
 }
 
-impl<T: Texture> Material for DiffuseLight<T> {
+impl<T: Texture + Clone> Material for DiffuseLight<T> {
     fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _rng: &mut ActiveRng) -> Option<Scatter> {
         None
     }

@@ -15,13 +15,13 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub struct ConstantMedium<H: Hittable, T: Texture> {
+pub struct ConstantMedium<H: Hittable, T: Texture + Clone> {
     boundary: H,
     phase_function: Isotropic<T>,
     neg_inv_density: f32,
 }
 
-impl<H: Hittable, T: Texture> ConstantMedium<H, T> {
+impl<H: Hittable, T: Texture + Clone> ConstantMedium<H, T> {
     pub fn new(boundary: H, density: f32, texture: T) -> Self {
         let neg_inv_density = -1.0 / density;
         let phase_function = Isotropic::new(texture);
@@ -34,7 +34,7 @@ impl<H: Hittable, T: Texture> ConstantMedium<H, T> {
     }
 }
 
-impl<H: Hittable, T: Texture> Hittable for ConstantMedium<H, T> {
+impl<H: Hittable, T: Texture + Clone> Hittable for ConstantMedium<H, T> {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
         let rec1 = self
             .boundary

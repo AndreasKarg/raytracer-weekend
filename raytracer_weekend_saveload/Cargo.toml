@@ -1,0 +1,11 @@
+[package]
+name = "raytracer_weekend_saveload"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+raytracer_weekend_lib = { path = "../raytracer_weekend_lib" }
+serde = { version = "1.0.204", features = ["derive"] }
+typetag = "0.2.16"
+derive_more = { version = "1.0.0-beta.6", features = ["constructor"] }
+dyn-clone = "1.0.17"

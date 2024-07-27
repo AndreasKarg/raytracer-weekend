@@ -28,7 +28,7 @@ pub trait Material: core::fmt::Debug + Sync + Send + DynClone {
 clone_trait_object!(Material);
 
 #[derive(Debug, Constructor, Clone)]
-pub struct Lambertian<T: Texture> {
+pub struct Lambertian<T: Texture + Clone> {
     albedo: T,
 }
 
@@ -38,7 +38,7 @@ impl Lambertian<SolidColor> {
     }
 }
 
-impl<T: Texture> Material for Lambertian<T> {
+impl<T: Texture + Clone> Material for Lambertian<T> {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
         let mut scatter_direction = rec.normal + Vec3::random_unit_vector(rng);
 
@@ -147,11 +147,11 @@ impl Material for Dielectric {
 }
 
 #[derive(Debug, Clone, Constructor)]
-pub struct Isotropic<T: Texture> {
+pub struct Isotropic<T: Texture + Clone> {
     albedo: T,
 }
 
-impl<T: Texture> Material for Isotropic<T> {
+impl<T: Texture + Clone> Material for Isotropic<T> {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
         let attenuation = self.albedo.value(rec.texture_uv, &rec.p);
         let scattered_ray = Ray::new(rec.p, Vec3::random_in_unit_sphere(rng), r_in.time());
