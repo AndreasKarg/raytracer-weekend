@@ -3,7 +3,9 @@ use serde::{Deserialize, Serialize};
 use raytracer_weekend_lib::texture::Texture;
 use raytracer_weekend_lib::vec3::Color;
 use std::fmt::Debug;
+use std::path::PathBuf;
 use dyn_clone::{clone_trait_object, DynClone};
+use raytracer_weekend_lib::image_texture::ImageTexture;
 
 #[typetag::serde]
 pub trait TextureDescriptor: Sync + Send + Debug + DynClone {
@@ -44,5 +46,17 @@ impl TextureDescriptor for CheckerDescriptor {
             self.odd.to_texture(),
             self.frequency,
         ))
+    }
+}
+
+#[derive(Debug, Clone, Constructor, Serialize, Deserialize)]
+pub struct ImageTextureDescriptor {
+    path: PathBuf,
+}
+
+#[typetag::serde(name = "ImageTexture")]
+impl TextureDescriptor for ImageTextureDescriptor {
+    fn to_texture(&self) -> Box<dyn Texture> {
+        Box::new(ImageTexture::open(&self.path.to_str().unwrap()).unwrap())
     }
 }

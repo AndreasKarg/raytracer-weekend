@@ -1,17 +1,18 @@
+use std::path::PathBuf;
 use clap::Subcommand;
 use rand::prelude::*;
 use raytracer_weekend_lib::vec3::{Color, Point3, Vec3};
 use raytracer_weekend_saveload::{CameraDescriptor, World};
 use raytracer_weekend_saveload::hittable::{HittableDescriptor, MovingSphereDescriptor, SphereDescriptor};
 use raytracer_weekend_saveload::material::{DielectricDescriptor, LambertianDescriptor, MaterialDescriptor, MetalDescriptor};
-use raytracer_weekend_saveload::texture::{CheckerDescriptor, SolidColorDescriptor};
+use raytracer_weekend_saveload::texture::{CheckerDescriptor, ImageTextureDescriptor, SolidColorDescriptor};
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum Scene {
     JumpyBalls,
     TwoSpheres,
     // TwoPerlinSpheres,
-    // Earth,
+    Earth,
     // SimpleLight,
     // CornellBox,
     // SmokeyCornellBox,
@@ -29,7 +30,7 @@ impl Scene {
             Scene::JumpyBalls => jumpy_balls,
             Scene::TwoSpheres => two_spheres,
             // Scene::TwoPerlinSpheres => two_perlin_spheres,
-            // Scene::Earth => earth,
+            Scene::Earth => earth,
             // Scene::SimpleLight => simple_light,
             // Scene::CornellBox => cornell_box,
             // Scene::SmokeyCornellBox => smokey_cornell_box,
@@ -236,41 +237,41 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
 // }
 //
-// pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
-//     // World
-//     let earth_texture = ImageTextureDescriptor::open("models/earthmap.jpg").unwrap();
-//     let earth_surface = LambertianDescriptor::new(earth_texture);
-//
-//     let world: Vec<Box<dyn Hittable>> = vec![Box::new(SphereDescriptor::new(
-//         Point3::new(0.0, 0.0, 0.0),
-//         2.0,
-//         Box::new(earth_surface),
-//     ))];
-//
-//     // Camera
-//     let look_from = Point3::new(13.0, 2.0, 3.0);
-//     let look_at = Point3::new(0.0, 0.0, 0.0);
-//     let v_up = Vec3::new(0.0, 1.0, 0.0);
-//     let distance_to_focus = 10.0;
-//     let aperture = 0.0;
-//     let vfow = 20.0;
-//     let time0 = 0.0;
-//     let time1 = 1.0;
-//
-//     let cam = Camera::new(
-//         look_from,
-//         look_at,
-//         v_up,
-//         vfow,
-//         aspect_ratio,
-//         aperture,
-//         distance_to_focus,
-//         time0,
-//         time1,
-//     );
-//
-//     World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
-// }
+pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+    // World
+    let earth_texture = Box::new(ImageTextureDescriptor::new(PathBuf::from("models/earthmap.jpg")));
+    let earth_surface = LambertianDescriptor::new(earth_texture);
+
+    let world: Vec<Box<dyn HittableDescriptor>> = vec![Box::new(SphereDescriptor::new(
+        Point3::new(0.0, 0.0, 0.0),
+        2.0,
+        Box::new(earth_surface),
+    ))];
+
+    // Camera
+    let look_from = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 20.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = CameraDescriptor::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
+}
 //
 // pub fn simple_light(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 //     // World

@@ -40,7 +40,8 @@ enum Command {
         scene: Scene,
         output: PathBuf,
     },
-    ToYml {
+    #[clap(alias = "to-yml")]
+    ToYaml {
         #[command(subcommand)]
         scene: Scene,
         output: PathBuf,
@@ -160,7 +161,7 @@ fn main() {
             let json = serde_json::to_string_pretty(&world).unwrap();
             std::fs::write(output, json).unwrap();
         }
-        Command::ToYml {
+        Command::ToYaml {
             scene,
             output
         } => {
