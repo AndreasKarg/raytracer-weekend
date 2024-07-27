@@ -21,7 +21,7 @@ pub enum Scene {
     // SimpleTriangle,
     WavefrontCowObj,
     // WavefrontSuspensionObj,
-    // TexturedMonument,
+    TexturedMonument,
 }
 
 impl Scene {
@@ -39,7 +39,7 @@ impl Scene {
             // Scene::SimpleTriangle => simple_triangle,
             Scene::WavefrontCowObj => wavefront_cow_obj,
             // Scene::WavefrontSuspensionObj => wavefront_suspension_obj,
-            // Scene::TexturedMonument => textured_monument,
+            Scene::TexturedMonument => textured_monument,
         };
 
         generator(aspect_ratio, rng)
@@ -799,48 +799,48 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 //     World { geometry: world, cameras: vec![cam], background: Color::new_const(0.085, 0.1, 0.125) }
 // }
 //
-// pub fn textured_monument(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
-//     // World
-//     let monument = Box::new(Translation::new(
-//         load_wavefront_obj("models/monument_downscaled_polygon_reduced.obj", rng).unwrap(),
-//         Vec3::new(0.0, 0.0, -19.0),
-//     ));
-//
-//     let world: Vec<Box<dyn Hittable>> = vec![
-//         Box::new(XYRectangleDescriptor::new(
-//             -15.0,
-//             15.0,
-//             -17.0,
-//             17.0,
-//             33.0,
-//             Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(1.2, 1.0, 1.0))),
-//         )),
-//         monument,
-//     ];
-//
-//     // Camera
-//     let look_from = Point3::new(-5.0, -30.0, 25.0);
-//     let look_at = Point3::new(0.0, 0.0, 5.0);
-//     let v_up = Vec3::new(1.0, 0.0, 0.0);
-//     let distance_to_focus = 10.0;
-//     let aperture = 0.0;
-//     let vfow = 40.0;
-//     let time0 = 0.0;
-//     let time1 = 1.0;
-//
-//     let cam = Camera::new(
-//         look_from,
-//         look_at,
-//         v_up,
-//         vfow,
-//         aspect_ratio,
-//         aperture,
-//         distance_to_focus,
-//         time0,
-//         time1,
-//     );
-//
-//     World { geometry: world, cameras: vec![cam], background: Color::new_const(0.085, 0.1, 0.125) }
-// }
+pub fn textured_monument(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
+    // World
+    let monument = Box::new(TranslationDescriptor::new(
+        Box::new(WavefrontObjDescriptor::new(PathBuf::from("models/monument_downscaled_polygon_reduced.obj"))),
+        Vec3::new(0.0, 0.0, -19.0),
+    ));
+
+    let world: Vec<Box<dyn HittableDescriptor>> = vec![
+        Box::new(XYRectangleDescriptor::new(
+            -15.0,
+            15.0,
+            -17.0,
+            17.0,
+            33.0,
+            Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(1.2, 1.0, 1.0))),
+        )),
+        monument,
+    ];
+
+    // Camera
+    let look_from = Point3::new(-5.0, -30.0, 25.0);
+    let look_at = Point3::new(0.0, 0.0, 5.0);
+    let v_up = Vec3::new(1.0, 0.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = CameraDescriptor::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    World { geometry: world, cameras: vec![cam], background: Color::new_const(0.085, 0.1, 0.125) }
+}
 
 static DEFAULT_BACKGROUND: Color = Color::new_const(0.7, 0.8, 1.00);
