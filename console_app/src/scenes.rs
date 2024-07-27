@@ -19,7 +19,7 @@ pub enum Scene {
     // CornellBox,
     // SmokeyCornellBox,
     Book2FinalScene,
-    // AnimatedBook2FinalScene,
+    AnimatedBook2FinalScene,
     // SimpleTriangle,
     WavefrontCowObj,
     // WavefrontSuspensionObj,
@@ -37,7 +37,7 @@ impl Scene {
             // Scene::CornellBox => cornell_box,
             // Scene::SmokeyCornellBox => smokey_cornell_box,
             Scene::Book2FinalScene => book2_final_scene,
-            // Scene::AnimatedBook2FinalScene => animated_book2_final,
+            Scene::AnimatedBook2FinalScene => animated_book2_final,
             // Scene::SimpleTriangle => simple_triangle,
             Scene::WavefrontCowObj => wavefront_cow_obj,
             // Scene::WavefrontSuspensionObj => wavefront_suspension_obj,
@@ -606,54 +606,54 @@ pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 
     World { geometry: objects, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
 }
-//
-// pub fn animated_book2_final(
-//     aspect_ratio: f32,
-//     rng: &mut ThreadRng,
-// ) -> World {
-//     let base_scene = book2_final_scene(aspect_ratio, rng);
-//
-//     // Camera
-//     let look_at = Point3::new(278.0, 278.0, 278.0);
-//     let v_up = Vec3::new(0.0, 1.0, 0.0);
-//     let aperture = 1.0;
-//     let vfow = 40.0;
-//     let time0 = 0.0;
-//     let time1 = 1.0;
-//
-//     let len_s = 3.0;
-//     let fps = 10.0;
-//     let frames = fps * len_s;
-//
-//     let cameras: Vec<_> = (0..(frames as usize))
-//         .into_iter()
-//         .map(|frame| {
-//             let from_x = 478.0 - frame as f32 * (2.0 * 478.0) / frames;
-//             let from_y = 278.0;
-//             let from_z = -600.0;
-//
-//             let look_from = (from_x, from_y, from_z).into();
-//             let distance_to_focus = (look_at - look_from).length();
-//
-//            CameraDescriptor::new(
-//                 look_from,
-//                 look_at,
-//                 v_up,
-//                 vfow,
-//                 aspect_ratio,
-//                 aperture,
-//                 distance_to_focus,
-//                 time0,
-//                 time1,
-//             )
-//         })
-//         .collect();
-//
-//     let world: Vec<Box<dyn HittableDescriptor>> = vec![Box::new(BvhNode::new(base_scene.geometry, 0.0, 1.0, rng))];
-//
-//     World { geometry: world, cameras, background: base_scene.background }
-// }
-//
+
+pub fn animated_book2_final(
+    aspect_ratio: f32,
+    rng: &mut ThreadRng,
+) -> World {
+    let base_scene = book2_final_scene(aspect_ratio, rng);
+
+    // Camera
+    let look_at = Point3::new(278.0, 278.0, 278.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let aperture = 1.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let len_s = 3.0;
+    let fps = 10.0;
+    let frames = fps * len_s;
+
+    let cameras: Vec<_> = (0..(frames as usize))
+        .into_iter()
+        .map(|frame| {
+            let from_x = 478.0 - frame as f32 * (2.0 * 478.0) / frames;
+            let from_y = 278.0;
+            let from_z = -600.0;
+
+            let look_from = (from_x, from_y, from_z).into();
+            let distance_to_focus = (look_at - look_from).length();
+
+            CameraDescriptor::new(
+                look_from,
+                look_at,
+                v_up,
+                vfow,
+                aspect_ratio,
+                aperture,
+                distance_to_focus,
+                time0,
+                time1,
+            )
+        })
+        .collect();
+
+    let world: Vec<Box<dyn HittableDescriptor>> = vec![Box::new(BvhNodeDescriptor::new(base_scene.geometry, 0.0, 1.0))];
+
+    World { geometry: world, cameras, background: base_scene.background }
+}
+
 // pub fn simple_triangle(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     // World
 //     let checker = CheckerDescriptor::new(
