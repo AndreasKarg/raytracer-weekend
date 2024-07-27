@@ -13,7 +13,7 @@ use raytracer_weekend_saveload::texture::{CheckerDescriptor, ImageTextureDescrip
 pub enum Scene {
     JumpyBalls,
     TwoSpheres,
-    // TwoPerlinSpheres,
+    TwoPerlinSpheres,
     Earth,
     // SimpleLight,
     // CornellBox,
@@ -31,7 +31,7 @@ impl Scene {
         let generator = match self {
             Scene::JumpyBalls => jumpy_balls,
             Scene::TwoSpheres => two_spheres,
-            // Scene::TwoPerlinSpheres => two_perlin_spheres,
+            Scene::TwoPerlinSpheres => two_perlin_spheres,
             Scene::Earth => earth,
             // Scene::SimpleLight => simple_light,
             // Scene::CornellBox => cornell_box,
@@ -196,49 +196,49 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
 }
 
-// pub fn two_perlin_spheres(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
-//     // World
-//     let perlin_material = NoiseDescriptor::new(Perlin::new(rng), 4.0);
-//     let material_ground = LambertianDescriptor::new(perlin_material);
-//
-//     let world: Vec<Box<dyn HittableDescriptor>> = vec![
-//         Box::new(SphereDescriptor::new(
-//             Point3::new(0.0, -1000.0, 0.0),
-//             1000.0,
-//             Box::new(material_ground.clone()),
-//         )),
-//         Box::new(SphereDescriptor::new(
-//             Point3::new(0.0, 2.0, 0.0),
-//             2.0,
-//             Box::new(material_ground),
-//         )),
-//     ];
-//
-//     // Camera
-//     let look_from = Point3::new(13.0, 2.0, 3.0);
-//     let look_at = Point3::new(0.0, 0.0, 0.0);
-//     let v_up = Vec3::new(0.0, 1.0, 0.0);
-//     let distance_to_focus = 10.0;
-//     let aperture = 0.0;
-//     let vfow = 40.0;
-//     let time0 = 0.0;
-//     let time1 = 1.0;
-//
-//     let cam =CameraDescriptor::new(
-//         look_from,
-//         look_at,
-//         v_up,
-//         vfow,
-//         aspect_ratio,
-//         aperture,
-//         distance_to_focus,
-//         time0,
-//         time1,
-//     );
-//
-//     World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
-// }
-//
+pub fn two_perlin_spheres(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
+    // World
+    let perlin_material = Box::new(NoiseDescriptor::new(4.0));
+    let material_ground = LambertianDescriptor::new(perlin_material);
+
+    let world: Vec<Box<dyn HittableDescriptor>> = vec![
+        Box::new(SphereDescriptor::new(
+            Point3::new(0.0, -1000.0, 0.0),
+            1000.0,
+            Box::new(material_ground.clone()),
+        )),
+        Box::new(SphereDescriptor::new(
+            Point3::new(0.0, 2.0, 0.0),
+            2.0,
+            Box::new(material_ground),
+        )),
+    ];
+
+    // Camera
+    let look_from = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = CameraDescriptor::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
+}
+
 pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
     let earth_texture = Box::new(ImageTextureDescriptor::new(PathBuf::from("models/earthmap.jpg")));
