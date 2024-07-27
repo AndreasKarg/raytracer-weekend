@@ -1,11 +1,13 @@
 use std::path::PathBuf;
 use clap::Subcommand;
 use rand::prelude::*;
+use raytracer_weekend_lib::bvh::BvhNode;
+use raytracer_weekend_lib::hittable::volumes::ConstantMedium;
 use raytracer_weekend_lib::vec3::{Color, Point3, Vec3};
 use raytracer_weekend_saveload::{CameraDescriptor, World};
-use raytracer_weekend_saveload::hittable::{HittableDescriptor, MovingSphereDescriptor, SphereDescriptor, TranslationDescriptor, WavefrontObjDescriptor, XYRectangleDescriptor};
+use raytracer_weekend_saveload::hittable::{BvhNodeDescriptor, ConstantMediumDescriptor, CuboidDescriptor, HittableDescriptor, MovingSphereDescriptor, SphereDescriptor, TranslationDescriptor, WavefrontObjDescriptor, XYRectangleDescriptor, XZRectangleDescriptor, YRotationDescriptor};
 use raytracer_weekend_saveload::material::{DielectricDescriptor, DiffuseLightDescriptor, LambertianDescriptor, MaterialDescriptor, MetalDescriptor};
-use raytracer_weekend_saveload::texture::{CheckerDescriptor, ImageTextureDescriptor, SolidColorDescriptor};
+use raytracer_weekend_saveload::texture::{CheckerDescriptor, ImageTextureDescriptor, NoiseDescriptor, SolidColorDescriptor};
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum Scene {
@@ -16,7 +18,7 @@ pub enum Scene {
     // SimpleLight,
     // CornellBox,
     // SmokeyCornellBox,
-    // Book2FinalScene,
+    Book2FinalScene,
     // AnimatedBook2FinalScene,
     // SimpleTriangle,
     WavefrontCowObj,
@@ -34,7 +36,7 @@ impl Scene {
             // Scene::SimpleLight => simple_light,
             // Scene::CornellBox => cornell_box,
             // Scene::SmokeyCornellBox => smokey_cornell_box,
-            // Scene::Book2FinalScene => book2_final_scene,
+            Scene::Book2FinalScene => book2_final_scene,
             // Scene::AnimatedBook2FinalScene => animated_book2_final,
             // Scene::SimpleTriangle => simple_triangle,
             Scene::WavefrontCowObj => wavefront_cow_obj,
@@ -199,7 +201,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     let perlin_material = NoiseDescriptor::new(Perlin::new(rng), 4.0);
 //     let material_ground = LambertianDescriptor::new(perlin_material);
 //
-//     let world: Vec<Box<dyn Hittable>> = vec![
+//     let world: Vec<Box<dyn HittableDescriptor>> = vec![
 //         Box::new(SphereDescriptor::new(
 //             Point3::new(0.0, -1000.0, 0.0),
 //             1000.0,
@@ -222,7 +224,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     let time0 = 0.0;
 //     let time1 = 1.0;
 //
-//     let cam = Camera::new(
+//     let cam =CameraDescriptor::new(
 //         look_from,
 //         look_at,
 //         v_up,
@@ -282,7 +284,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     let perlin_material = NoiseDescriptor::new(Perlin::new(rng), 4.0);
 //     let material_ground = LambertianDescriptor::new(perlin_material);
 //
-//     let world: Vec<Box<dyn Hittable>> = vec![
+//     let world: Vec<Box<dyn HittableDescriptor>> = vec![
 //         Box::new(SphereDescriptor::new(
 //             Point3::new(0.0, -1000.0, 0.0),
 //             1000.0,
@@ -318,7 +320,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     let time0 = 0.0;
 //     let time1 = 1.0;
 //
-//     let cam = Camera::new(
+//     let cam =CameraDescriptor::new(
 //         look_from,
 //         look_at,
 //         v_up,
@@ -356,7 +358,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //         .rotate_y(-18.0)
 //         .translate(Vec3::new(130.0, 0.0, 65.0));
 //
-//     let world: Vec<Box<dyn Hittable>> = vec![
+//     let world: Vec<Box<dyn HittableDescriptor>> = vec![
 //         Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
 //         Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
 //         Box::new(XZRectangleDescriptor::new(213.0, 343.0, 227.0, 332.0, 554.0, light)),
@@ -384,7 +386,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     let time0 = 0.0;
 //     let time1 = 1.0;
 //
-//     let cam = Camera::new(
+//     let cam =CameraDescriptor::new(
 //         look_from,
 //         look_at,
 //         v_up,
@@ -425,7 +427,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     let box1 = ConstantMedium::new(box1, 0.005, SolidColorDescriptor::new_rgb(0.0, 0.0, 0.0));
 //     let box2 = ConstantMedium::new(box2, 0.005, SolidColorDescriptor::new_rgb(1.0, 1.0, 1.0));
 //
-//     let world: Vec<Box<dyn Hittable>> = vec![
+//     let world: Vec<Box<dyn HittableDescriptor>> = vec![
 //         Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
 //         Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
 //         Box::new(XZRectangleDescriptor::new(113.0, 443.0, 127.0, 432.0, 554.0, light)),
@@ -453,7 +455,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     let time0 = 0.0;
 //     let time1 = 1.0;
 //
-//     let cam = Camera::new(
+//     let cam =CameraDescriptor::new(
 //         look_from,
 //         look_at,
 //         v_up,
@@ -468,142 +470,142 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     World { geometry: world, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
 // }
 //
-// pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
-//     let mut boxes1: Vec<Box<dyn Hittable>> = Vec::new();
-//     let ground = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.48, 0.83, 0.53)));
-//
-//     let boxes_per_side = 20;
-//     for i in 0..boxes_per_side {
-//         for j in 0..boxes_per_side {
-//             let i = i as f32;
-//             let j = j as f32;
-//
-//             let w = 100.0;
-//             let x0 = -1000.0 + i * w;
-//             let z0 = -1000.0 + j * w;
-//             let y0 = 0.0;
-//             let x1 = x0 + w;
-//             let y1 = rng.gen_range(1.0..101.0);
-//             let z1 = z0 + w;
-//
-//             boxes1.push(Box::new(CuboidDescriptor::new(
-//                 Point3::new(x0, y0, z0),
-//                 Point3::new(x1, y1, z1),
-//                 ground.clone(),
-//             )));
-//         }
-//     }
-//
-//     let mut objects: Vec<Box<dyn Hittable>> = Vec::new();
-//
-//     objects.push(Box::new(BvhNode::new(boxes1, 0.0, 1.0, rng)));
-//
-//     let light = Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(7.0, 7.0, 7.0)));
-//     objects.push(Box::new(XZRectangleDescriptor::new(
-//         123.0, 423.0, 147.0, 412.0, 554.0, light,
-//     )));
-//
-//     let center1 = Point3::new(400.0, 400.0, 200.0);
-//     let center2 = center1 + Vec3::new(30.0, 0.0, 0.0);
-//     let moving_sphere_material = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.7, 0.3, 0.1)));
-//     objects.push(Box::new(MovingSphereDescriptor::new(
-//         center1,
-//         0.0,
-//         center2,
-//         1.0,
-//         50.0,
-//         moving_sphere_material,
-//     )));
-//
-//     objects.push(Box::new(SphereDescriptor::new(
-//         Point3::new(260.0, 150.0, 45.0),
-//         50.0,
-//         Box::new(DielectricDescriptor::new(1.5)),
-//     )));
-//     objects.push(Box::new(SphereDescriptor::new(
-//         Point3::new(0.0, 150.0, 145.0),
-//         50.0,
-//         Box::new(MetalDescriptor::new(Color::new(0.8, 0.8, 0.9), 1.0)),
-//     )));
-//
-//     let boundary = SphereDescriptor::new(
-//         Point3::new(360.0, 150.0, 145.0),
-//         70.0,
-//         Box::new(DielectricDescriptor::new(1.5)),
-//     );
-//     objects.push(Box::new(boundary.clone()));
-//     objects.push(Box::new(ConstantMedium::new(
-//         boundary,
-//         0.2,
-//         SolidColorDescriptor::new_rgb(0.2, 0.4, 0.9),
-//     )));
-//
-//     let boundary = SphereDescriptor::new(
-//         Point3::new(0.0, 0.0, 0.0),
-//         5000.0,
-//         Box::new(DielectricDescriptor::new(1.5)),
-//     );
-//     objects.push(Box::new(ConstantMedium::new(
-//         boundary,
-//         0.0001,
-//         SolidColorDescriptor::new_rgb(1.0, 1.0, 1.0),
-//     )));
-//
-//     let emat = Box::new(LambertianDescriptor::new(
-//         ImageTextureDescriptor::open("models/earthmap.jpg").unwrap(),
-//     ));
-//     objects.push(Box::new(SphereDescriptor::new(
-//         Point3::new(400.0, 200.0, 400.0),
-//         100.0,
-//         emat,
-//     )));
-//     let pertext = NoiseDescriptor::new(Perlin::new(rng), 0.1);
-//     objects.push(Box::new(SphereDescriptor::new(
-//         Point3::new(220.0, 280.0, 300.0),
-//         80.0,
-//         Box::new(LambertianDescriptor::new(pertext)),
-//     )));
-//
-//     let mut boxes2: Vec<Box<dyn Hittable>> = Vec::new();
-//     let white = Box::new(LambertianDescriptor::new(SolidColorDescriptor::new_rgb(0.73, 0.73, 0.73)));
-//     let ns = 1000;
-//     for _ in 0..ns {
-//         boxes2.push(Box::new(SphereDescriptor::new(
-//             Point3::random_min_max(rng, 0.0..165.0),
-//             10.0,
-//             white.clone(),
-//         )));
-//     }
-//
-//     objects.push(Box::new(Translation::new(
-//         YRotation::new(BvhNode::new(boxes2, 0.0, 1.0, rng), 15.0),
-//         Vec3::new(-100.0, 270.0, 395.0),
-//     )));
-//
-//     // Camera
-//     let look_from = Point3::new(478.0, 278.0, -600.0);
-//     let look_at = Point3::new(278.0, 278.0, 0.0);
-//     let v_up = Vec3::new(0.0, 1.0, 0.0);
-//     let distance_to_focus = (look_at - look_from).length();
-//     let aperture = 0.0;
-//     let vfow = 40.0;
-//     let time0 = 0.0;
-//     let time1 = 1.0;
-//
-//     let cam = Camera::new(
-//         look_from,
-//         look_at,
-//         v_up,
-//         vfow,
-//         aspect_ratio,
-//         aperture,
-//         distance_to_focus,
-//         time0,
-//         time1,
-//     );
-//
-//     World { geometry: objects, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
-// }
+pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
+    let mut boxes1: Vec<Box<dyn HittableDescriptor>> = Vec::new();
+    let ground = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.48, 0.83, 0.53)));
+
+    let boxes_per_side = 20;
+    for i in 0..boxes_per_side {
+        for j in 0..boxes_per_side {
+            let i = i as f32;
+            let j = j as f32;
+
+            let w = 100.0;
+            let x0 = -1000.0 + i * w;
+            let z0 = -1000.0 + j * w;
+            let y0 = 0.0;
+            let x1 = x0 + w;
+            let y1 = rng.gen_range(1.0..101.0);
+            let z1 = z0 + w;
+
+            boxes1.push(Box::new(CuboidDescriptor::new(
+                Point3::new(x0, y0, z0),
+                Point3::new(x1, y1, z1),
+                ground.clone(),
+            )));
+        }
+    }
+
+    let mut objects: Vec<Box<dyn HittableDescriptor>> = Vec::new();
+
+    objects.push(Box::new(BvhNodeDescriptor::new(boxes1, 0.0, 1.0)));
+
+    let light = Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(7.0, 7.0, 7.0)));
+    objects.push(Box::new(XZRectangleDescriptor::new(
+        123.0, 423.0, 147.0, 412.0, 554.0, light,
+    )));
+
+    let center1 = Point3::new(400.0, 400.0, 200.0);
+    let center2 = center1 + Vec3::new(30.0, 0.0, 0.0);
+    let moving_sphere_material = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.7, 0.3, 0.1)));
+    objects.push(Box::new(MovingSphereDescriptor::new(
+        center1,
+        0.0,
+        center2,
+        1.0,
+        50.0,
+        moving_sphere_material,
+    )));
+
+    objects.push(Box::new(SphereDescriptor::new(
+        Point3::new(260.0, 150.0, 45.0),
+        50.0,
+        Box::new(DielectricDescriptor::new(1.5)),
+    )));
+    objects.push(Box::new(SphereDescriptor::new(
+        Point3::new(0.0, 150.0, 145.0),
+        50.0,
+        Box::new(MetalDescriptor::new(Color::new(0.8, 0.8, 0.9), 1.0)),
+    )));
+
+    let boundary = Box::new(SphereDescriptor::new(
+        Point3::new(360.0, 150.0, 145.0),
+        70.0,
+        Box::new(DielectricDescriptor::new(1.5)),
+    ));
+    objects.push(boundary.clone());
+    objects.push(Box::new(ConstantMediumDescriptor::new(
+        boundary,
+        0.2,
+        SolidColorDescriptor::new_rgb(0.2, 0.4, 0.9),
+    )));
+
+    let boundary = Box::new(SphereDescriptor::new(
+        Point3::new(0.0, 0.0, 0.0),
+        5000.0,
+        Box::new(DielectricDescriptor::new(1.5)),
+    ));
+    objects.push(Box::new(ConstantMediumDescriptor::new(
+        boundary,
+        0.0001,
+        SolidColorDescriptor::new_rgb(1.0, 1.0, 1.0),
+    )));
+
+    let emat = Box::new(LambertianDescriptor::new(
+        Box::new(ImageTextureDescriptor::new(PathBuf::from("models/earthmap.jpg"))),
+    ));
+    objects.push(Box::new(SphereDescriptor::new(
+        Point3::new(400.0, 200.0, 400.0),
+        100.0,
+        emat,
+    )));
+    let pertext = Box::new(NoiseDescriptor::new(0.1));
+    objects.push(Box::new(SphereDescriptor::new(
+        Point3::new(220.0, 280.0, 300.0),
+        80.0,
+        Box::new(LambertianDescriptor::new(pertext)),
+    )));
+
+    let mut boxes2: Vec<Box<dyn HittableDescriptor>> = Vec::new();
+    let white = Box::new(LambertianDescriptor::new(SolidColorDescriptor::new_rgb(0.73, 0.73, 0.73)));
+    let ns = 1000;
+    for _ in 0..ns {
+        boxes2.push(Box::new(SphereDescriptor::new(
+            Point3::random_min_max(rng, 0.0..165.0),
+            10.0,
+            white.clone(),
+        )));
+    }
+
+    objects.push(Box::new(TranslationDescriptor::new(Box::new(
+        YRotationDescriptor::new(Box::new(BvhNodeDescriptor::new(boxes2, 0.0, 1.0)), 15.0)),
+                                                     Vec3::new(-100.0, 270.0, 395.0),
+    )));
+
+    // Camera
+    let look_from = Point3::new(478.0, 278.0, -600.0);
+    let look_at = Point3::new(278.0, 278.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = (look_at - look_from).length();
+    let aperture = 0.0;
+    let vfow = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+
+    let cam = CameraDescriptor::new(
+        look_from,
+        look_at,
+        v_up,
+        vfow,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        time0,
+        time1,
+    );
+
+    World { geometry: objects, cameras: vec![cam], background: Color::new(0.0, 0.0, 0.0) }
+}
 //
 // pub fn animated_book2_final(
 //     aspect_ratio: f32,
@@ -633,7 +635,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //             let look_from = (from_x, from_y, from_z).into();
 //             let distance_to_focus = (look_at - look_from).length();
 //
-//             Camera::new(
+//            CameraDescriptor::new(
 //                 look_from,
 //                 look_at,
 //                 v_up,
@@ -647,7 +649,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //         })
 //         .collect();
 //
-//     let world: Vec<Box<dyn Hittable>> = vec![Box::new(BvhNode::new(base_scene.geometry, 0.0, 1.0, rng))];
+//     let world: Vec<Box<dyn HittableDescriptor>> = vec![Box::new(BvhNode::new(base_scene.geometry, 0.0, 1.0, rng))];
 //
 //     World { geometry: world, cameras, background: base_scene.background }
 // }
@@ -661,7 +663,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     );
 //     let material_ground = LambertianDescriptor::new(checker);
 //
-//     let world: Vec<Box<dyn Hittable>> = vec![
+//     let world: Vec<Box<dyn HittableDescriptor>> = vec![
 //         Box::new(SphereDescriptor::new(
 //             Point3::new(0.0, -10.0, 0.0),
 //             10.0,
@@ -687,7 +689,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     let time0 = 0.0;
 //     let time1 = 1.0;
 //
-//     let cam = Camera::new(
+//     let cam =CameraDescriptor::new(
 //         look_from,
 //         look_at,
 //         v_up,
@@ -760,9 +762,9 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 //     // World
 //     let suspension = load_wavefront_obj("models/Normals_Try3.obj", rng).unwrap();
 //     let suspension =
-//         Box::new(Translation::new(suspension, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable>;
+//         Box::new(Translation::new(suspension, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn HittableDescriptor>;
 //
-//     let world: Vec<Box<dyn Hittable>> = vec![
+//     let world: Vec<Box<dyn HittableDescriptor>> = vec![
 //         Box::new(XYRectangleDescriptor::new(
 //             -5.0,
 //             5.0,
@@ -784,7 +786,7 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 //     let time0 = 0.0;
 //     let time1 = 1.0;
 //
-//     let cam = Camera::new(
+//     let cam =CameraDescriptor::new(
 //         look_from,
 //         look_at,
 //         v_up,

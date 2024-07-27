@@ -2,6 +2,7 @@ use derive_more::Constructor;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use dyn_clone::{clone_trait_object, DynClone};
+use raytracer_weekend_lib::ActiveRng;
 use raytracer_weekend_lib::light_source::DiffuseLight;
 use raytracer_weekend_lib::material::{Dielectric, Lambertian, Material, Metal};
 use raytracer_weekend_lib::texture::{SolidColor, Texture};
@@ -10,7 +11,7 @@ use crate::texture::{SolidColorDescriptor, TextureDescriptor};
 
 #[typetag::serde]
 pub trait MaterialDescriptor: Sync + Send + Debug + DynClone {
-    fn to_material(&self) -> Box<dyn Material>;
+    fn to_material(&self, rng: &mut ActiveRng) -> Box<dyn Material>;
 }
 clone_trait_object!(MaterialDescriptor);
 
@@ -27,8 +28,8 @@ impl LambertianDescriptor {
 
 #[typetag::serde(name = "Lambertian")]
 impl MaterialDescriptor for LambertianDescriptor {
-    fn to_material(&self) -> Box<dyn Material> {
-        Box::new(Lambertian::new(self.albedo.to_texture()))
+    fn to_material(&self, rng: &mut ActiveRng) -> Box<dyn Material> {
+        Box::new(Lambertian::new(self.albedo.to_texture(rng)))
     }
 }
 
@@ -40,7 +41,7 @@ pub struct MetalDescriptor {
 
 #[typetag::serde(name = "Metal")]
 impl MaterialDescriptor for MetalDescriptor {
-    fn to_material(&self) -> Box<dyn Material> {
+    fn to_material(&self, _: &mut ActiveRng) -> Box<dyn Material> {
         Box::new(Metal::new(self.albedo, self.fuzz))
     }
 }
@@ -52,7 +53,7 @@ pub struct DielectricDescriptor {
 
 #[typetag::serde(name = "Dielectric")]
 impl MaterialDescriptor for DielectricDescriptor {
-    fn to_material(&self) -> Box<dyn Material> {
+    fn to_material(&self, _: &mut ActiveRng) -> Box<dyn Material> {
         Box::new(Dielectric::new(self.ir))
     }
 }
@@ -64,7 +65,7 @@ pub struct DiffuseLightDescriptor {
 
 #[typetag::serde(name = "DiffuseLight")]
 impl MaterialDescriptor for DiffuseLightDescriptor {
-    fn to_material(&self) -> Box<dyn Material> {
-        Box::new(DiffuseLight::new(self.emit.to_texture()))
+    fn to_material(&self, rng: &mut ActiveRng) -> Box<dyn Material> {
+        Box::new(DiffuseLight::new(self.emit.to_texture(rng)))
     }
 }
