@@ -1,27 +1,10 @@
-use std::sync::Arc;
-
-use clap::{Parser, Subcommand};
+use clap::Subcommand;
 use rand::prelude::*;
-use raytracer_weekend_lib::{
-    bvh::BvhNode,
-    camera::Camera,
-    hittable::{
-        rectangular::{Cuboid, XYRectangle, XZRectangle, YZRectangle},
-        spherical::{MovingSphere, Sphere},
-        transformations::{Transformable, Translation, YRotation},
-        triangular::{load_wavefront_obj, Triangle},
-        volumes::ConstantMedium,
-        Hittable,
-    },
-    image_texture::ImageTexture,
-    light_source::DiffuseLight,
-    material::{Dielectric, Lambertian, Material, Metal},
-    perlin::Perlin,
-    texture::{Checker, Noise, SolidColor, UVDebug},
-    vec3::{Color, Point3, Vec3},
-};
-use raytracer_weekend_lib::vec3::GenericVec3;
-use raytracer_weekend_saveload::{CameraDescriptor, CheckerDescriptor, HittableDescriptor, LambertianDescriptor, SolidColorDescriptor, SphereDescriptor, World};
+use raytracer_weekend_lib::vec3::{Color, Point3, Vec3};
+use raytracer_weekend_saveload::{CameraDescriptor, World};
+use raytracer_weekend_saveload::hittable::{HittableDescriptor, SphereDescriptor};
+use raytracer_weekend_saveload::material::LambertianDescriptor;
+use raytracer_weekend_saveload::texture::{CheckerDescriptor, SolidColorDescriptor};
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum Scene {

@@ -1,13 +1,13 @@
 mod scenes;
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use clap::{Args, Parser, Subcommand};
 use image::{Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
 use rand::thread_rng;
 use rayon::prelude::*;
 use raytracer_weekend_lib::Raytracer;
-use raytracer_weekend_saveload::{HittableDescriptor, HittableDescriptorList};
+use raytracer_weekend_saveload::hittable::HittableDescriptorList;
 use scenes::Scene;
 
 const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
