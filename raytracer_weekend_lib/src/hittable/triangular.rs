@@ -1,5 +1,6 @@
 use alloc::sync::Arc;
 use core::ops::{Add, Mul};
+use std::path::Path;
 use iter_fixed::IntoIteratorFixed;
 use itertools::{Itertools, MinMaxResult};
 #[cfg(feature = "no_std")]
@@ -239,7 +240,7 @@ fn parse_individual_object(
 
 #[cfg(feature = "std")]
 pub fn load_wavefront_obj(
-    path: &str,
+    path: &Path,
     rng: &mut ActiveRng,
 ) -> Result<Box<dyn Hittable>, Box<dyn std::error::Error>> {
     let obj_file = fs::read_to_string(path)?;
@@ -260,7 +261,7 @@ pub fn load_wavefront_obj(
 }
 
 #[cfg(feature = "std")]
-fn path_to_file_in_same_folder(path: &str, filename: &str) -> String {
+fn path_to_file_in_same_folder(path: &Path, filename: &str) -> String {
     let mut base_path = fs::canonicalize(path).unwrap();
     // TODO: Sort out println
     // println!("{}", base_path.display());
@@ -296,7 +297,7 @@ fn load_wavefront_mtl(
 }
 
 #[cfg(feature = "std")]
-fn parse_material(obj_material: &mtl::Material, mtl_path: &str) -> Arc<dyn Material> {
+fn parse_material(obj_material: &mtl::Material, mtl_path: &Path) -> Arc<dyn Material> {
     if obj_material.illumination != Illumination::AmbientDiffuse {
         panic!()
     }

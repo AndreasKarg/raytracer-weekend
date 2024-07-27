@@ -6,6 +6,7 @@ use std::fmt::Debug;
 use std::path::PathBuf;
 use dyn_clone::{clone_trait_object, DynClone};
 use raytracer_weekend_lib::image_texture::ImageTexture;
+use raytracer_weekend_lib::light_source::DiffuseLight;
 
 #[typetag::serde]
 pub trait TextureDescriptor: Sync + Send + Debug + DynClone {

@@ -32,7 +32,7 @@ use vec3::Color;
 const MAX_DEPTH: usize = 50;
 
 #[cfg(feature = "std")]
-type ActiveRng = ThreadRng;
+pub type ActiveRng = ThreadRng;
 
 #[cfg(not(feature = "std"))]
 type ActiveRng = SmallRng;

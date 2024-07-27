@@ -72,7 +72,7 @@ fn run_render(world: World, args: RenderArgs) {
             "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}",
         ));
 
-    let geometry = world.geometry.to_hittables();
+    let geometry = world.geometry.to_hittables(&mut thread_rng());
 
     for (frame_no, cam) in cameras.iter().progress_with(overall_progress).enumerate() {
         let cam = cam.to_camera();
