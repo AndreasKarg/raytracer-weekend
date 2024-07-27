@@ -7,9 +7,9 @@ use raytracer_weekend_lib::hittable::Hittable;
 use raytracer_weekend_lib::hittable::spherical::Sphere;
 use raytracer_weekend_lib::material::{Lambertian, Material};
 use raytracer_weekend_lib::texture::Texture;
-use raytracer_weekend_lib::vec3::{Color, Point3};
+use raytracer_weekend_lib::vec3::{Color, Point3, Vec3};
 
-#[typetag::serde(tag = "type")]
+#[typetag::serde]
 pub trait HittableDescriptor: Sync + Send + Debug + DynClone {
     fn to_hittable(&self) -> Box<dyn Hittable>;
 }
@@ -26,13 +26,13 @@ impl HittableDescriptorList for Vec<Box<dyn HittableDescriptor>>
     }
 }
 
-#[typetag::serde(tag = "type")]
+#[typetag::serde]
 pub trait MaterialDescriptor: Sync + Send + Debug + DynClone {
     fn to_material(&self) -> Box<dyn Material>;
 }
 clone_trait_object!(MaterialDescriptor);
 
-#[typetag::serde(tag = "type")]
+#[typetag::serde]
 pub trait TextureDescriptor: Sync + Send + Debug + DynClone {
     fn to_texture(&self) -> Box<dyn Texture>;
 }
@@ -41,7 +41,7 @@ clone_trait_object!(TextureDescriptor);
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct World {
     pub geometry: Vec<Box<dyn HittableDescriptor>>,
-    pub cameras: Vec<Camera>,
+    pub cameras: Vec<CameraDescriptor>,
     pub background: Color,
 }
 
@@ -68,7 +68,7 @@ pub struct LambertianDescriptor {
     albedo: Box<dyn TextureDescriptor>,
 }
 
-#[typetag::serde]
+#[typetag::serde(name = "Lambertian")]
 impl MaterialDescriptor for LambertianDescriptor {
     fn to_material(&self) -> Box<dyn Material> {
         Box::new(Lambertian::new(self.albedo.to_texture()))
@@ -86,7 +86,7 @@ impl SolidColorDescriptor {
     }
 }
 
-#[typetag::serde]
+#[typetag::serde(name = "SolidColor")]
 impl TextureDescriptor for SolidColorDescriptor {
     fn to_texture(&self) -> Box<dyn Texture> {
         Box::new(raytracer_weekend_lib::texture::SolidColor::new(self.color))
@@ -100,7 +100,7 @@ pub struct CheckerDescriptor {
     frequency: f32,
 }
 
-#[typetag::serde]
+#[typetag::serde(name = "Checker")]
 impl TextureDescriptor for CheckerDescriptor {
     fn to_texture(&self) -> Box<dyn Texture> {
         Box::new(raytracer_weekend_lib::texture::Checker::new(
@@ -108,5 +108,34 @@ impl TextureDescriptor for CheckerDescriptor {
             self.odd.to_texture(),
             self.frequency,
         ))
+    }
+}
+
+#[derive(Debug, Clone, Constructor, Serialize, Deserialize)]
+pub struct CameraDescriptor {
+    look_from: Point3,
+    look_at: Point3,
+    up_vector: Vec3,
+    vertical_field_of_view: f32,
+    aspect_ratio: f32,
+    aperture: f32,
+    focus_dist: f32,
+    time0: f32,
+    time1: f32,
+}
+
+impl CameraDescriptor {
+    pub fn to_camera(&self) -> Camera {
+        Camera::new(
+            self.look_from,
+            self.look_at,
+            self.up_vector,
+            self.vertical_field_of_view,
+            self.aspect_ratio,
+            self.aperture,
+            self.focus_dist,
+            self.time0,
+            self.time1,
+        )
     }
 }

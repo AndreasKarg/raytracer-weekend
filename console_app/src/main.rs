@@ -1,5 +1,6 @@
 mod scenes;
 
+use std::path::{Path, PathBuf};
 use clap::{Args, Parser, Subcommand};
 use image::{Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
@@ -23,6 +24,16 @@ struct MainArgs {
 #[derive(Debug, Subcommand)]
 enum Command {
     Render(RenderArgs),
+    ToJson {
+        #[command(subcommand)]
+        scene: Scene,
+        output: PathBuf,
+    },
+    ToYml {
+        #[command(subcommand)]
+        scene: Scene,
+        output: PathBuf,
+    },
 }
 
 #[derive(Debug, Args)]
@@ -59,6 +70,7 @@ fn run_render(args: RenderArgs) {
     let geometry = world.geometry.to_hittables();
 
     for (frame_no, cam) in cameras.iter().progress_with(overall_progress).enumerate() {
+        let cam = cam.to_camera();
         let raytracer = Raytracer::new(
             &geometry,
             &cam,
@@ -112,5 +124,21 @@ fn main() {
     let args: MainArgs = MainArgs::parse();
     match args.command {
         Command::Render(render_args) => run_render(render_args),
+        Command::ToJson {
+            scene,
+            output
+        } => {
+            let world = scene.generate(16.0 / 9.0, &mut thread_rng());
+            let json = serde_json::to_string_pretty(&world).unwrap();
+            std::fs::write(output, json).unwrap();
+        }
+        Command::ToYml {
+            scene,
+            output
+        } => {
+            let world = scene.generate(16.0 / 9.0, &mut thread_rng());
+            let yml = serde_yaml::to_string(&world).unwrap();
+            std::fs::write(output, yml).unwrap();
+        }
     }
 }

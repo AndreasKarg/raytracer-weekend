@@ -8,7 +8,6 @@ use super::{
 };
 
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Camera {
     origin: Point3,
     lower_left_corner: Point3,

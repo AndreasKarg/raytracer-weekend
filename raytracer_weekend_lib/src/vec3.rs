@@ -13,12 +13,33 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct GenericVec3<T>
 where
     T: Num + Copy,
 {
     e: [T; 3],
+}
+
+#[cfg(feature = "serde")]
+impl<T: Num + Copy + Serialize> Serialize for GenericVec3<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.e.serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T: Num + Copy + Deserialize<'de>> Deserialize<'de> for GenericVec3<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        Ok(GenericVec3 {
+            e: <[T; 3]>::deserialize(deserializer)?,
+        })
+    }
 }
 
 impl<T: Num + Copy> GenericVec3<T> {
@@ -236,7 +257,7 @@ impl<T: Num + Copy + AddAssign> AddAssign for GenericVec3<T> {
 
 impl<T, U> Mul<U> for GenericVec3<T>
 where
-    T: Num + Copy + Mul<U, Output = T>,
+    T: Num + Copy + Mul<U, Output=T>,
     U: Num + Copy,
     <T as Mul<U>>::Output: Num + Copy,
 {
@@ -303,7 +324,7 @@ impl<T: DivAssign + Num + Copy> DivAssign<T> for GenericVec3<T> {
     }
 }
 
-impl<T: Neg<Output = T> + Num + Copy> Neg for GenericVec3<T> {
+impl<T: Neg<Output=T> + Num + Copy> Neg for GenericVec3<T> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -311,7 +332,7 @@ impl<T: Neg<Output = T> + Num + Copy> Neg for GenericVec3<T> {
     }
 }
 
-impl<T: BitAnd<U, Output = T> + Num + Copy, U: Copy> BitAnd<U> for GenericVec3<T> {
+impl<T: BitAnd<U, Output=T> + Num + Copy, U: Copy> BitAnd<U> for GenericVec3<T> {
     type Output = Self;
 
     fn bitand(self, rhs: U) -> Self::Output {

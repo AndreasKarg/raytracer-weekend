@@ -20,9 +20,10 @@ use raytracer_weekend_lib::{
     texture::{Checker, Noise, SolidColor, UVDebug},
     vec3::{Color, Point3, Vec3},
 };
-use raytracer_weekend_saveload::{CheckerDescriptor, HittableDescriptor, LambertianDescriptor, SolidColorDescriptor, SphereDescriptor, World};
+use raytracer_weekend_lib::vec3::GenericVec3;
+use raytracer_weekend_saveload::{CameraDescriptor, CheckerDescriptor, HittableDescriptor, LambertianDescriptor, SolidColorDescriptor, SphereDescriptor, World};
 
-#[derive(Debug, Subcommand)]
+#[derive(Debug, Clone, Subcommand)]
 pub enum Scene {
     // JumpyBalls,
     TwoSpheres,
@@ -194,7 +195,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     let time0 = 0.0;
     let time1 = 1.0;
 
-    let cam = Camera::new(
+    let cam = CameraDescriptor::new(
         look_from,
         look_at,
         v_up,
