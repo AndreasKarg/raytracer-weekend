@@ -8,6 +8,7 @@ use rand::thread_rng;
 use rayon::prelude::*;
 use raytracer_weekend_lib::Raytracer;
 use raytracer_weekend_saveload::hittable::HittableDescriptorList;
+use raytracer_weekend_saveload::World;
 use scenes::Scene;
 
 const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -23,7 +24,17 @@ struct MainArgs {
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    Render(RenderArgs),
+    RenderCompiled {
+        #[command(subcommand)]
+        scene: Scene,
+        #[command(flatten)]
+        render_args: RenderArgs,
+    },
+    RenderFile {
+        #[command(flatten)]
+        render_args: RenderArgs,
+        scene_description: PathBuf,
+    },
     ToJson {
         #[command(subcommand)]
         scene: Scene,
@@ -36,10 +47,8 @@ enum Command {
     },
 }
 
-#[derive(Debug, Args)]
+#[derive(Debug, Clone, Args)]
 struct RenderArgs {
-    #[clap(subcommand)]
-    scene: Scene,
     #[clap(long, short, default_value = "400")]
     width: u32,
     #[clap(long, short, default_value = "1.7777778")]
@@ -48,18 +57,13 @@ struct RenderArgs {
     samples_per_pixel: u32,
 }
 
-fn run_render(args: RenderArgs) {
+fn run_render(world: World, args: RenderArgs) {
     let image_width = args.width;
     let aspect_ratio = args.aspect_ratio;
     let image_height = (image_width as f64 / aspect_ratio).round() as u32;
     let samples_per_pixel = args.samples_per_pixel;
 
     let pixel_count = (image_width * image_height) as u64;
-
-    let world = args.scene.generate(
-        (image_width as f32) / (image_height as f32),
-        &mut thread_rng(),
-    );
 
     let cameras = world.cameras;
     let overall_progress = ProgressBar::new(cameras.len() as u64)
@@ -123,7 +127,31 @@ fn run_render(args: RenderArgs) {
 fn main() {
     let args: MainArgs = MainArgs::parse();
     match args.command {
-        Command::Render(render_args) => run_render(render_args),
+        Command::RenderCompiled { render_args, scene } => {
+            let image_width = render_args.width;
+            let aspect_ratio = render_args.aspect_ratio;
+            let image_height = (image_width as f64 / aspect_ratio).round() as u32;
+
+            let world = scene.generate(
+                (render_args.width as f32) / (image_height as f32),
+                &mut thread_rng(),
+            );
+            run_render(world, render_args)
+        }
+        Command::RenderFile { render_args, scene_description } => {
+            let world = match scene_description.extension().unwrap().to_str().unwrap() {
+                "json" => {
+                    let json = std::fs::read_to_string(scene_description).unwrap();
+                    serde_json::from_str(&json).unwrap()
+                }
+                "yml" | "yaml" => {
+                    let yml = std::fs::read_to_string(scene_description).unwrap();
+                    serde_yaml::from_str(&yml).unwrap()
+                }
+                _ => panic!("Unknown file type"),
+            };
+            run_render(world, render_args)
+        }
         Command::ToJson {
             scene,
             output
