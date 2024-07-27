@@ -4,6 +4,7 @@ use dyn_clone::{clone_trait_object, DynClone};
 use derive_more::Constructor;
 use raytracer_weekend_lib::hittable::spherical::Sphere;
 use serde::{Deserialize, Serialize};
+use raytracer_weekend_lib::material::Material;
 use raytracer_weekend_lib::vec3::Point3;
 use crate::material::MaterialDescriptor;
 
@@ -36,6 +37,30 @@ impl HittableDescriptor for SphereDescriptor {
     fn to_hittable(&self) -> Box<dyn Hittable> {
         Box::new(Sphere::new(
             self.center,
+            self.radius,
+            self.material.to_material(),
+        ))
+    }
+}
+
+#[derive(Debug, Clone, Constructor, Serialize, Deserialize)]
+pub struct MovingSphereDescriptor {
+    center0: Point3,
+    time0: f32,
+    center1: Point3,
+    time1: f32,
+    radius: f32,
+    material: Box<dyn MaterialDescriptor>,
+}
+
+#[typetag::serde(name = "MovingSphere")]
+impl HittableDescriptor for MovingSphereDescriptor {
+    fn to_hittable(&self) -> Box<dyn Hittable> {
+        Box::new(raytracer_weekend_lib::hittable::spherical::MovingSphere::new(
+            self.center0,
+            self.time0,
+            self.center1,
+            self.time1,
             self.radius,
             self.material.to_material(),
         ))

@@ -2,13 +2,13 @@ use clap::Subcommand;
 use rand::prelude::*;
 use raytracer_weekend_lib::vec3::{Color, Point3, Vec3};
 use raytracer_weekend_saveload::{CameraDescriptor, World};
-use raytracer_weekend_saveload::hittable::{HittableDescriptor, SphereDescriptor};
-use raytracer_weekend_saveload::material::LambertianDescriptor;
+use raytracer_weekend_saveload::hittable::{HittableDescriptor, MovingSphereDescriptor, SphereDescriptor};
+use raytracer_weekend_saveload::material::{DielectricDescriptor, LambertianDescriptor, MaterialDescriptor, MetalDescriptor};
 use raytracer_weekend_saveload::texture::{CheckerDescriptor, SolidColorDescriptor};
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum Scene {
-    // JumpyBalls,
+    JumpyBalls,
     TwoSpheres,
     // TwoPerlinSpheres,
     // Earth,
@@ -26,7 +26,7 @@ pub enum Scene {
 impl Scene {
     pub fn generate(&self, aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         let generator = match self {
-            // Scene::JumpyBalls => jumpy_balls,
+            Scene::JumpyBalls => jumpy_balls,
             Scene::TwoSpheres => two_spheres,
             // Scene::TwoPerlinSpheres => two_perlin_spheres,
             // Scene::Earth => earth,
@@ -45,106 +45,106 @@ impl Scene {
     }
 }
 
-// pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
-//     let checker = Checker::new(
-//         SolidColor::new_rgb(0.2, 0.3, 0.1),
-//         SolidColor::new_rgb(0.9, 0.9, 0.9),
-//         10.0,
-//     );
-//     let material_ground = Lambertian::new(checker);
-//     let lambertian = Lambertian::new_solid_color(Color::new(0.4, 0.2, 0.1));
-//     let glass = Dielectric::new(1.5);
-//     let metal = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
-//
-//     let mut world: Vec<Box<dyn Hittable>> = vec![
-//         Box::new(Sphere::new(
-//             Point3::new(0.0, -1000.0, 0.0),
-//             1000.0,
-//             Box::new(material_ground),
-//         )),
-//         Box::new(Sphere::new(
-//             Point3::new(-4.0, 0.2, 0.1),
-//             1.0,
-//             Box::new(lambertian),
-//         )),
-//         Box::new(Sphere::new(
-//             Point3::new(0.0, 1.0, 0.0),
-//             1.0,
-//             Box::new(glass.clone()),
-//         )),
-//         Box::new(Sphere::new(
-//             Point3::new(0.0, 1.0, 0.0),
-//             -0.95,
-//             Box::new(glass),
-//         )),
-//         Box::new(Sphere::new(
-//             Point3::new(4.0, 1.0, 0.0),
-//             1.0,
-//             Box::new(metal),
-//         )),
-//     ];
-//
-//     for a in -11..11 {
-//         for b in -11..11 {
-//             let a = a as f32;
-//             let b = b as f32;
-//
-//             let center = Point3::new(a + 0.9 * rng.gen::<f32>(), 0.2, b + 0.9 * rng.gen::<f32>());
-//
-//             if (center - Point3::new(4.0, 0.2, 0.0)).length() <= 0.9 {
-//                 continue;
-//             }
-//
-//             let sphere_material: Box<dyn Material>;
-//
-//             let choose_mat: f64 = rng.gen();
-//             if choose_mat < 0.8 {
-//                 let albedo = Color::random(rng) * Color::random(rng);
-//                 sphere_material = Box::new(Lambertian::new_solid_color(albedo));
-//             } else if choose_mat < 0.95 {
-//                 let albedo = Color::random_min_max(rng, 0.5..1.0);
-//                 let fuzz = rng.gen_range(0.0..0.5);
-//                 sphere_material = Box::new(Metal::new(albedo, fuzz));
-//             } else {
-//                 sphere_material = Box::new(Dielectric::new(1.5));
-//             }
-//
-//             let center2 = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
-//
-//             let sphere = Box::new(MovingSphere::new(
-//                 center,
-//                 0.0,
-//                 center2,
-//                 1.0,
-//                 0.2,
-//                 sphere_material,
-//             ));
-//
-//             world.push(sphere);
-//         }
-//     }
-//
-//     // Camera
-//     let look_from = Point3::new(13.0, 2.0, 3.0);
-//     let look_at = Point3::new(0.0, 0.0, 0.0);
-//     let v_up = Vec3::new(0.0, 1.0, 0.0);
-//     let distance_to_focus = 10.0;
-//     let aperture = 0.1;
-//
-//     let cam = Camera::new(
-//         look_from,
-//         look_at,
-//         v_up,
-//         20.0,
-//         aspect_ratio,
-//         aperture,
-//         distance_to_focus,
-//         0.0,
-//         1.0,
-//     );
-//
-//     World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
-// }
+pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
+    let checker = Box::new(CheckerDescriptor::new(
+        SolidColorDescriptor::new_rgb(0.2, 0.3, 0.1),
+        SolidColorDescriptor::new_rgb(0.9, 0.9, 0.9),
+        10.0,
+    ));
+    let material_ground = LambertianDescriptor::new(checker);
+    let lambertian = LambertianDescriptor::new_solid_color(Color::new(0.4, 0.2, 0.1));
+    let glass = DielectricDescriptor::new(1.5);
+    let metal = MetalDescriptor::new(Color::new(0.7, 0.6, 0.5), 0.0);
+
+    let mut world: Vec<Box<dyn HittableDescriptor>> = vec![
+        Box::new(SphereDescriptor::new(
+            Point3::new(0.0, -1000.0, 0.0),
+            1000.0,
+            Box::new(material_ground),
+        )),
+        Box::new(SphereDescriptor::new(
+            Point3::new(-4.0, 0.2, 0.1),
+            1.0,
+            Box::new(lambertian),
+        )),
+        Box::new(SphereDescriptor::new(
+            Point3::new(0.0, 1.0, 0.0),
+            1.0,
+            Box::new(glass.clone()),
+        )),
+        Box::new(SphereDescriptor::new(
+            Point3::new(0.0, 1.0, 0.0),
+            -0.95,
+            Box::new(glass),
+        )),
+        Box::new(SphereDescriptor::new(
+            Point3::new(4.0, 1.0, 0.0),
+            1.0,
+            Box::new(metal),
+        )),
+    ];
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let a = a as f32;
+            let b = b as f32;
+
+            let center = Point3::new(a + 0.9 * rng.gen::<f32>(), 0.2, b + 0.9 * rng.gen::<f32>());
+
+            if (center - Point3::new(4.0, 0.2, 0.0)).length() <= 0.9 {
+                continue;
+            }
+
+            let sphere_material: Box<dyn MaterialDescriptor>;
+
+            let choose_mat: f64 = rng.gen();
+            if choose_mat < 0.8 {
+                let albedo = Color::random(rng) * Color::random(rng);
+                sphere_material = Box::new(LambertianDescriptor::new_solid_color(albedo));
+            } else if choose_mat < 0.95 {
+                let albedo = Color::random_min_max(rng, 0.5..1.0);
+                let fuzz = rng.gen_range(0.0..0.5);
+                sphere_material = Box::new(MetalDescriptor::new(albedo, fuzz));
+            } else {
+                sphere_material = Box::new(DielectricDescriptor::new(1.5));
+            }
+
+            let center2 = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
+
+            let sphere = Box::new(MovingSphereDescriptor::new(
+                center,
+                0.0,
+                center2,
+                1.0,
+                0.2,
+                sphere_material,
+            ));
+
+            world.push(sphere);
+        }
+    }
+
+    // Camera
+    let look_from = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let v_up = Vec3::new(0.0, 1.0, 0.0);
+    let distance_to_focus = 10.0;
+    let aperture = 0.1;
+
+    let cam = CameraDescriptor::new(
+        look_from,
+        look_at,
+        v_up,
+        20.0,
+        aspect_ratio,
+        aperture,
+        distance_to_focus,
+        0.0,
+        1.0,
+    );
+
+    World { geometry: world, cameras: vec![cam], background: DEFAULT_BACKGROUND }
+}
 
 pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
@@ -195,16 +195,16 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 
 // pub fn two_perlin_spheres(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 //     // World
-//     let perlin_material = Noise::new(Perlin::new(rng), 4.0);
-//     let material_ground = Lambertian::new(perlin_material);
+//     let perlin_material = NoiseDescriptor::new(Perlin::new(rng), 4.0);
+//     let material_ground = LambertianDescriptor::new(perlin_material);
 //
 //     let world: Vec<Box<dyn Hittable>> = vec![
-//         Box::new(Sphere::new(
+//         Box::new(SphereDescriptor::new(
 //             Point3::new(0.0, -1000.0, 0.0),
 //             1000.0,
 //             Box::new(material_ground.clone()),
 //         )),
-//         Box::new(Sphere::new(
+//         Box::new(SphereDescriptor::new(
 //             Point3::new(0.0, 2.0, 0.0),
 //             2.0,
 //             Box::new(material_ground),
@@ -238,10 +238,10 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //
 // pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     // World
-//     let earth_texture = ImageTexture::open("models/earthmap.jpg").unwrap();
-//     let earth_surface = Lambertian::new(earth_texture);
+//     let earth_texture = ImageTextureDescriptor::open("models/earthmap.jpg").unwrap();
+//     let earth_surface = LambertianDescriptor::new(earth_texture);
 //
-//     let world: Vec<Box<dyn Hittable>> = vec![Box::new(Sphere::new(
+//     let world: Vec<Box<dyn Hittable>> = vec![Box::new(SphereDescriptor::new(
 //         Point3::new(0.0, 0.0, 0.0),
 //         2.0,
 //         Box::new(earth_surface),
@@ -274,25 +274,25 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //
 // pub fn simple_light(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 //     // World
-//     let earth_texture = ImageTexture::open("models/earthmap.jpg").unwrap();
-//     let earth_surface = DiffuseLight::new(earth_texture);
-//     // let earth_surface = DiffuseLight::new(SolidColor::new_rgb(4.0, 4.0, 4.0));
+//     let earth_texture = ImageTextureDescriptor::open("models/earthmap.jpg").unwrap();
+//     let earth_surface = DiffuseLightDescriptor::new(earth_texture);
+//     // let earth_surface = DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(4.0, 4.0, 4.0));
 //
-//     let perlin_material = Noise::new(Perlin::new(rng), 4.0);
-//     let material_ground = Lambertian::new(perlin_material);
+//     let perlin_material = NoiseDescriptor::new(Perlin::new(rng), 4.0);
+//     let material_ground = LambertianDescriptor::new(perlin_material);
 //
 //     let world: Vec<Box<dyn Hittable>> = vec![
-//         Box::new(Sphere::new(
+//         Box::new(SphereDescriptor::new(
 //             Point3::new(0.0, -1000.0, 0.0),
 //             1000.0,
 //             Box::new(material_ground.clone()),
 //         )),
-//         Box::new(Sphere::new(
+//         Box::new(SphereDescriptor::new(
 //             Point3::new(0.0, 2.0, 0.0),
 //             2.0,
 //             Box::new(material_ground),
 //         )),
-//         Box::new(XYRectangle::new(
+//         Box::new(XYRectangleDescriptor::new(
 //             3.0,
 //             5.0,
 //             1.0,
@@ -300,7 +300,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //             -2.0,
 //             Box::new(earth_surface.clone()),
 //         )),
-//         Box::new(Sphere::new(
+//         Box::new(SphereDescriptor::new(
 //             Point3::new(0.0, 6.0, 0.0),
 //             2.0,
 //             Box::new(earth_surface),
@@ -334,12 +334,12 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //
 // pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     // World
-//     let red = Box::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
-//     let white = Box::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));
-//     let green = Box::new(Lambertian::new_solid_color(Color::new(0.12, 0.45, 0.15)));
-//     let light = Box::new(DiffuseLight::new(SolidColor::new_rgb(15.0, 15.0, 15.0)));
+//     let red = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.65, 0.05, 0.05)));
+//     let white = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.73, 0.73, 0.73)));
+//     let green = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.12, 0.45, 0.15)));
+//     let light = Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(15.0, 15.0, 15.0)));
 //
-//     let box1 = Cuboid::new(
+//     let box1 = CuboidDescriptor::new(
 //         Point3::new(0.0, 0.0, 0.0),
 //         Point3::new(165.0, 330.0, 165.0),
 //         white.clone(),
@@ -347,7 +347,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //         .rotate_y(15.0)
 //         .translate(Vec3::new(265.0, 0.0, 295.0));
 //
-//     let box2 = Cuboid::new(
+//     let box2 = CuboidDescriptor::new(
 //         Point3::new(0.0, 0.0, 0.0),
 //         Point3::new(165.0, 165.0, 165.0),
 //         white.clone(),
@@ -356,11 +356,11 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //         .translate(Vec3::new(130.0, 0.0, 65.0));
 //
 //     let world: Vec<Box<dyn Hittable>> = vec![
-//         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
-//         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
-//         Box::new(XZRectangle::new(213.0, 343.0, 227.0, 332.0, 554.0, light)),
-//         Box::new(XZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, white.clone())),
-//         Box::new(XZRectangle::new(
+//         Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
+//         Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
+//         Box::new(XZRectangleDescriptor::new(213.0, 343.0, 227.0, 332.0, 554.0, light)),
+//         Box::new(XZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, white.clone())),
+//         Box::new(XZRectangleDescriptor::new(
 //             0.0,
 //             555.0,
 //             0.0,
@@ -368,7 +368,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //             555.0,
 //             white.clone(),
 //         )),
-//         Box::new(XYRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, white)),
+//         Box::new(XYRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, white)),
 //         Box::new(box1),
 //         Box::new(box2),
 //     ];
@@ -400,12 +400,12 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //
 // pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     // World
-//     let red = Box::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
-//     let white = Box::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));
-//     let green = Box::new(Lambertian::new_solid_color(Color::new(0.12, 0.45, 0.15)));
-//     let light = Box::new(DiffuseLight::new(SolidColor::new_rgb(7.0, 7.0, 7.0)));
+//     let red = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.65, 0.05, 0.05)));
+//     let white = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.73, 0.73, 0.73)));
+//     let green = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.12, 0.45, 0.15)));
+//     let light = Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(7.0, 7.0, 7.0)));
 //
-//     let box1 = Cuboid::new(
+//     let box1 = CuboidDescriptor::new(
 //         Point3::new(0.0, 0.0, 0.0),
 //         Point3::new(165.0, 330.0, 165.0),
 //         white.clone(),
@@ -413,7 +413,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //         .rotate_y(15.0)
 //         .translate(Vec3::new(265.0, 0.0, 295.0));
 //
-//     let box2 = Cuboid::new(
+//     let box2 = CuboidDescriptor::new(
 //         Point3::new(0.0, 0.0, 0.0),
 //         Point3::new(165.0, 165.0, 165.0),
 //         white.clone(),
@@ -421,15 +421,15 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //         .rotate_y(-18.0)
 //         .translate(Vec3::new(130.0, 0.0, 65.0));
 //
-//     let box1 = ConstantMedium::new(box1, 0.005, SolidColor::new_rgb(0.0, 0.0, 0.0));
-//     let box2 = ConstantMedium::new(box2, 0.005, SolidColor::new_rgb(1.0, 1.0, 1.0));
+//     let box1 = ConstantMedium::new(box1, 0.005, SolidColorDescriptor::new_rgb(0.0, 0.0, 0.0));
+//     let box2 = ConstantMedium::new(box2, 0.005, SolidColorDescriptor::new_rgb(1.0, 1.0, 1.0));
 //
 //     let world: Vec<Box<dyn Hittable>> = vec![
-//         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
-//         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
-//         Box::new(XZRectangle::new(113.0, 443.0, 127.0, 432.0, 554.0, light)),
-//         Box::new(XZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, white.clone())),
-//         Box::new(XZRectangle::new(
+//         Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
+//         Box::new(YZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
+//         Box::new(XZRectangleDescriptor::new(113.0, 443.0, 127.0, 432.0, 554.0, light)),
+//         Box::new(XZRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 0.0, white.clone())),
+//         Box::new(XZRectangleDescriptor::new(
 //             0.0,
 //             555.0,
 //             0.0,
@@ -437,7 +437,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //             555.0,
 //             white.clone(),
 //         )),
-//         Box::new(XYRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, white)),
+//         Box::new(XYRectangleDescriptor::new(0.0, 555.0, 0.0, 555.0, 555.0, white)),
 //         Box::new(box1),
 //         Box::new(box2),
 //     ];
@@ -469,7 +469,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //
 // pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 //     let mut boxes1: Vec<Box<dyn Hittable>> = Vec::new();
-//     let ground = Box::new(Lambertian::new_solid_color(Color::new(0.48, 0.83, 0.53)));
+//     let ground = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.48, 0.83, 0.53)));
 //
 //     let boxes_per_side = 20;
 //     for i in 0..boxes_per_side {
@@ -485,7 +485,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //             let y1 = rng.gen_range(1.0..101.0);
 //             let z1 = z0 + w;
 //
-//             boxes1.push(Box::new(Cuboid::new(
+//             boxes1.push(Box::new(CuboidDescriptor::new(
 //                 Point3::new(x0, y0, z0),
 //                 Point3::new(x1, y1, z1),
 //                 ground.clone(),
@@ -497,15 +497,15 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //
 //     objects.push(Box::new(BvhNode::new(boxes1, 0.0, 1.0, rng)));
 //
-//     let light = Box::new(DiffuseLight::new(SolidColor::new_rgb(7.0, 7.0, 7.0)));
-//     objects.push(Box::new(XZRectangle::new(
+//     let light = Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(7.0, 7.0, 7.0)));
+//     objects.push(Box::new(XZRectangleDescriptor::new(
 //         123.0, 423.0, 147.0, 412.0, 554.0, light,
 //     )));
 //
 //     let center1 = Point3::new(400.0, 400.0, 200.0);
 //     let center2 = center1 + Vec3::new(30.0, 0.0, 0.0);
-//     let moving_sphere_material = Box::new(Lambertian::new_solid_color(Color::new(0.7, 0.3, 0.1)));
-//     objects.push(Box::new(MovingSphere::new(
+//     let moving_sphere_material = Box::new(LambertianDescriptor::new_solid_color(Color::new(0.7, 0.3, 0.1)));
+//     objects.push(Box::new(MovingSphereDescriptor::new(
 //         center1,
 //         0.0,
 //         center2,
@@ -514,60 +514,60 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //         moving_sphere_material,
 //     )));
 //
-//     objects.push(Box::new(Sphere::new(
+//     objects.push(Box::new(SphereDescriptor::new(
 //         Point3::new(260.0, 150.0, 45.0),
 //         50.0,
-//         Box::new(Dielectric::new(1.5)),
+//         Box::new(DielectricDescriptor::new(1.5)),
 //     )));
-//     objects.push(Box::new(Sphere::new(
+//     objects.push(Box::new(SphereDescriptor::new(
 //         Point3::new(0.0, 150.0, 145.0),
 //         50.0,
-//         Box::new(Metal::new(Color::new(0.8, 0.8, 0.9), 1.0)),
+//         Box::new(MetalDescriptor::new(Color::new(0.8, 0.8, 0.9), 1.0)),
 //     )));
 //
-//     let boundary = Sphere::new(
+//     let boundary = SphereDescriptor::new(
 //         Point3::new(360.0, 150.0, 145.0),
 //         70.0,
-//         Box::new(Dielectric::new(1.5)),
+//         Box::new(DielectricDescriptor::new(1.5)),
 //     );
 //     objects.push(Box::new(boundary.clone()));
 //     objects.push(Box::new(ConstantMedium::new(
 //         boundary,
 //         0.2,
-//         SolidColor::new_rgb(0.2, 0.4, 0.9),
+//         SolidColorDescriptor::new_rgb(0.2, 0.4, 0.9),
 //     )));
 //
-//     let boundary = Sphere::new(
+//     let boundary = SphereDescriptor::new(
 //         Point3::new(0.0, 0.0, 0.0),
 //         5000.0,
-//         Box::new(Dielectric::new(1.5)),
+//         Box::new(DielectricDescriptor::new(1.5)),
 //     );
 //     objects.push(Box::new(ConstantMedium::new(
 //         boundary,
 //         0.0001,
-//         SolidColor::new_rgb(1.0, 1.0, 1.0),
+//         SolidColorDescriptor::new_rgb(1.0, 1.0, 1.0),
 //     )));
 //
-//     let emat = Box::new(Lambertian::new(
-//         ImageTexture::open("models/earthmap.jpg").unwrap(),
+//     let emat = Box::new(LambertianDescriptor::new(
+//         ImageTextureDescriptor::open("models/earthmap.jpg").unwrap(),
 //     ));
-//     objects.push(Box::new(Sphere::new(
+//     objects.push(Box::new(SphereDescriptor::new(
 //         Point3::new(400.0, 200.0, 400.0),
 //         100.0,
 //         emat,
 //     )));
-//     let pertext = Noise::new(Perlin::new(rng), 0.1);
-//     objects.push(Box::new(Sphere::new(
+//     let pertext = NoiseDescriptor::new(Perlin::new(rng), 0.1);
+//     objects.push(Box::new(SphereDescriptor::new(
 //         Point3::new(220.0, 280.0, 300.0),
 //         80.0,
-//         Box::new(Lambertian::new(pertext)),
+//         Box::new(LambertianDescriptor::new(pertext)),
 //     )));
 //
 //     let mut boxes2: Vec<Box<dyn Hittable>> = Vec::new();
-//     let white = Box::new(Lambertian::new(SolidColor::new_rgb(0.73, 0.73, 0.73)));
+//     let white = Box::new(LambertianDescriptor::new(SolidColorDescriptor::new_rgb(0.73, 0.73, 0.73)));
 //     let ns = 1000;
 //     for _ in 0..ns {
-//         boxes2.push(Box::new(Sphere::new(
+//         boxes2.push(Box::new(SphereDescriptor::new(
 //             Point3::random_min_max(rng, 0.0..165.0),
 //             10.0,
 //             white.clone(),
@@ -653,15 +653,15 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //
 // pub fn simple_triangle(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     // World
-//     let checker = Checker::new(
-//         SolidColor::new_rgb(0.2, 0.3, 0.1),
-//         SolidColor::new_rgb(0.9, 0.9, 0.9),
+//     let checker = CheckerDescriptor::new(
+//         SolidColorDescriptor::new_rgb(0.2, 0.3, 0.1),
+//         SolidColorDescriptor::new_rgb(0.9, 0.9, 0.9),
 //         10.0,
 //     );
-//     let material_ground = Lambertian::new(checker);
+//     let material_ground = LambertianDescriptor::new(checker);
 //
 //     let world: Vec<Box<dyn Hittable>> = vec![
-//         Box::new(Sphere::new(
+//         Box::new(SphereDescriptor::new(
 //             Point3::new(0.0, -10.0, 0.0),
 //             10.0,
 //             Box::new(material_ground),
@@ -672,7 +672,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //                 Point3::new(0.0, 7.0, 0.0),
 //                 Point3::new(5.0, 0.0, -5.0),
 //             ],
-//             Arc::new(Lambertian::new(UVDebug::new())),
+//             Arc::new(LambertianDescriptor::new(UVDebug::new())),
 //         )),
 //     ];
 //
@@ -703,29 +703,29 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //
 // pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 //     // World
-//     let checker = Checker::new(
-//         SolidColor::new_rgb(0.2, 0.3, 0.1),
-//         SolidColor::new_rgb(0.9, 0.9, 0.9),
+//     let checker = CheckerDescriptor::new(
+//         SolidColorDescriptor::new_rgb(0.2, 0.3, 0.1),
+//         SolidColorDescriptor::new_rgb(0.9, 0.9, 0.9),
 //         10.0,
 //     );
-//     let material_ground = Lambertian::new(checker);
+//     let material_ground = LambertianDescriptor::new(checker);
 //
 //     let cow = load_wavefront_obj("models/cow-nonormals.obj", rng).unwrap();
 //     let cow = Box::new(Translation::new(cow, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable>;
 //
 //     let world: Vec<Box<dyn Hittable>> = vec![
-//         Box::new(Sphere::new(
+//         Box::new(SphereDescriptor::new(
 //             Point3::new(0.0, -10.6, 0.0),
 //             10.0,
 //             Box::new(material_ground),
 //         )),
-//         Box::new(XYRectangle::new(
+//         Box::new(XYRectangleDescriptor::new(
 //             1.0,
 //             5.0,
 //             1.0,
 //             7.0,
 //             5.0,
-//             Box::new(DiffuseLight::new(SolidColor::new_rgb(1.4, 1.3, 1.3))),
+//             Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(1.4, 1.3, 1.3))),
 //         )),
 //         cow,
 //     ];
@@ -762,13 +762,13 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //         Box::new(Translation::new(suspension, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable>;
 //
 //     let world: Vec<Box<dyn Hittable>> = vec![
-//         Box::new(XYRectangle::new(
+//         Box::new(XYRectangleDescriptor::new(
 //             -5.0,
 //             5.0,
 //             -7.0,
 //             7.0,
 //             1.0,
-//             Box::new(DiffuseLight::new(SolidColor::new_rgb(1.2, 1.0, 1.0))),
+//             Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(1.2, 1.0, 1.0))),
 //         )),
 //         suspension,
 //     ];
@@ -806,13 +806,13 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 //     ));
 //
 //     let world: Vec<Box<dyn Hittable>> = vec![
-//         Box::new(XYRectangle::new(
+//         Box::new(XYRectangleDescriptor::new(
 //             -15.0,
 //             15.0,
 //             -17.0,
 //             17.0,
 //             33.0,
-//             Box::new(DiffuseLight::new(SolidColor::new_rgb(1.2, 1.0, 1.0))),
+//             Box::new(DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(1.2, 1.0, 1.0))),
 //         )),
 //         monument,
 //     ];
