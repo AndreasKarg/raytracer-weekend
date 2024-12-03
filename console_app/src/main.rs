@@ -1,6 +1,6 @@
 mod scenes;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use clap::{Args, Parser, Subcommand};
 use image::{Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
@@ -58,7 +58,7 @@ struct RenderArgs {
     samples_per_pixel: u32,
 }
 
-fn run_render(world: World, args: RenderArgs) {
+fn run_render(world: World, args: RenderArgs, base_path: &Path) {
     let image_width = args.width;
     let aspect_ratio = args.aspect_ratio;
     let image_height = (image_width as f64 / aspect_ratio).round() as u32;
@@ -72,7 +72,7 @@ fn run_render(world: World, args: RenderArgs) {
             "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}",
         ));
 
-    let geometry = world.geometry.to_hittables(&mut thread_rng());
+    let geometry = world.geometry.to_hittables(&mut thread_rng(), base_path);
 
     for (frame_no, cam) in cameras.iter().progress_with(overall_progress).enumerate() {
         let cam = cam.to_camera();
@@ -137,9 +137,13 @@ fn main() {
                 (render_args.width as f32) / (image_height as f32),
                 &mut thread_rng(),
             );
-            run_render(world, render_args)
+
+            let base_path = std::env::current_dir().unwrap();
+
+            run_render(world, render_args, &base_path)
         }
         Command::RenderFile { render_args, scene_description } => {
+            let base_path = scene_description.parent().unwrap().to_path_buf();
             let world = match scene_description.extension().unwrap().to_str().unwrap() {
                 "json" => {
                     let json = std::fs::read_to_string(scene_description).unwrap();
@@ -151,7 +155,8 @@ fn main() {
                 }
                 _ => panic!("Unknown file type"),
             };
-            run_render(world, render_args)
+
+            run_render(world, render_args, &base_path)
         }
         Command::ToJson {
             scene,

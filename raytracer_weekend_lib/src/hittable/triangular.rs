@@ -266,7 +266,7 @@ pub fn load_wavefront_obj(
 fn path_to_file_in_same_folder(path: &Path, filename: &str) -> String {
     let mut base_path = fs::canonicalize(path).unwrap();
     // TODO: Sort out println
-    // println!("{}", base_path.display());
+    // println!("{}", base_path.displayit ());
     base_path.pop();
     base_path.push(filename);
 
