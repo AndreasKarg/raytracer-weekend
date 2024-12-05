@@ -2,6 +2,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
+extern crate core;
 
 mod aabb;
 pub mod bvh;
@@ -14,8 +15,9 @@ pub mod perlin;
 mod ray;
 pub mod texture;
 pub mod vec3;
+mod rng;
 
-use alloc::{boxed::Box, vec::Vec};
+use alloc::boxed::Box;
 
 use camera::Camera;
 use derive_more::Constructor;
@@ -24,18 +26,16 @@ use itertools::iproduct;
 use rand::prelude::*;
 use ray::Ray;
 #[cfg(feature = "rayon")]
-use rayon::prelude::*;
+use {
+    rayon::prelude::*,
+    alloc::vec::Vec
+};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use vec3::Color;
+use crate::rng::TypedRng;
 
 const MAX_DEPTH: usize = 50;
-
-#[cfg(feature = "std")]
-pub type ActiveRng = ThreadRng;
-
-#[cfg(not(feature = "std"))]
-type ActiveRng = SmallRng;
 
 #[derive(Constructor)]
 pub struct Raytracer<'a> {
@@ -54,14 +54,14 @@ pub trait RenderIterator = ParallelIterator<Item=Pixel>;
 pub trait RenderIterator = Iterator<Item=Pixel>;
 
 impl<'a> Raytracer<'a> {
-    pub fn render(&self) -> impl RenderIterator + '_ {
+    pub fn render<R: TypedRng + 'a>(&self, rng_constructor: fn() -> R) -> impl RenderIterator + '_ {
         let pixel_range = iproduct!((0..self.image_height).rev(), 0..self.image_width);
 
         #[cfg(feature = "rayon")]
         {
             let pixel_range: Vec<_> = pixel_range.collect();
             pixel_range.into_par_iter().map(move |(j, i)| {
-                let mut rng = thread_rng();
+                let mut rng = rng_constructor();
                 self.sample_pixel(j, i, &mut rng)
             })
         }
@@ -75,14 +75,14 @@ impl<'a> Raytracer<'a> {
         }
     }
 
-    fn sample_pixel(&self, pixel_row: u32, pixel_column: u32, rng: &mut ActiveRng) -> Pixel {
+    fn sample_pixel(&self, pixel_row: u32, pixel_column: u32, rng: &mut dyn TypedRng) -> Pixel {
         let image_width = self.image_width;
         let image_height = self.image_height;
 
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
         for _ in 0..self.samples_per_pixel {
-            let u = (pixel_column as f32 + rng.gen::<f32>()) / ((image_width - 1) as f32);
-            let v = (pixel_row as f32 + rng.gen::<f32>()) / ((image_height - 1) as f32);
+            let u = (pixel_column as f32 + rng.random_f32()) / ((image_width - 1) as f32);
+            let v = (pixel_row as f32 + rng.random_f32()) / ((image_height - 1) as f32);
             let r = self.cam.get_ray(u, v, rng);
             pixel_color += self.sample_ray(&r, rng, MAX_DEPTH);
         }
@@ -94,7 +94,7 @@ impl<'a> Raytracer<'a> {
         }
     }
 
-    fn sample_ray(&self, r: &Ray, rng: &mut ActiveRng, depth: usize) -> Color {
+    fn sample_ray(&self, r: &Ray, rng: &mut dyn TypedRng, depth: usize) -> Color {
         if depth == 0 {
             return Color::new(0.0, 0.0, 0.0);
         }

@@ -2,7 +2,7 @@ use alloc::{boxed::Box, vec::Vec};
 use core::fmt::Debug;
 
 use derive_more::Constructor;
-
+use crate::rng::TypedRng;
 use super::{
     aabb::Aabb,
     material::Material,
@@ -10,7 +10,6 @@ use super::{
     texture::Point2d,
     vec3::{Point3, Vec3},
 };
-use crate::ActiveRng;
 
 pub mod rectangular;
 pub mod spherical;
@@ -49,12 +48,12 @@ impl<'a> HitRecord<'a> {
 }
 
 pub trait Hittable: Sync + Send + Debug {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord>;
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut dyn TypedRng) -> Option<HitRecord>;
     fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb>;
 }
 
 impl Hittable for [Box<dyn Hittable>] {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut dyn TypedRng) -> Option<HitRecord> {
         let mut closest_so_far = t_max;
         let mut rec = None;
 
@@ -88,7 +87,7 @@ impl Hittable for [Box<dyn Hittable>] {
 }
 
 impl Hittable for Vec<Box<dyn Hittable>> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut dyn TypedRng) -> Option<HitRecord> {
         self.as_slice().hit(r, t_min, t_max, rng)
     }
 
@@ -98,7 +97,7 @@ impl Hittable for Vec<Box<dyn Hittable>> {
 }
 
 impl Hittable for &[Box<dyn Hittable>] {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut dyn TypedRng) -> Option<HitRecord> {
         (*self).hit(r, t_min, t_max, rng)
     }
 
@@ -108,7 +107,7 @@ impl Hittable for &[Box<dyn Hittable>] {
 }
 
 impl Hittable for Box<dyn Hittable> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut dyn TypedRng) -> Option<HitRecord> {
         self.as_ref().hit(r, t_min, t_max, rng)
     }
 

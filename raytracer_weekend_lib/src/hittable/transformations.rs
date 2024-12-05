@@ -9,8 +9,8 @@ use crate::{
     hittable::{HitRecord, Hittable},
     ray::Ray,
     vec3::{Point3, Vec3},
-    ActiveRng,
 };
+use crate::rng::TypedRng;
 
 #[derive(Debug, Constructor)]
 pub struct Translation<T: Hittable> {
@@ -19,7 +19,7 @@ pub struct Translation<T: Hittable> {
 }
 
 impl<T: Hittable> Hittable for Translation<T> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut dyn TypedRng) -> Option<HitRecord> {
         let translated_ray = Ray::new(r.origin() - self.offset, r.direction(), r.time());
 
         let hit = self.inner.hit(&translated_ray, t_min, t_max, rng)?;
@@ -84,10 +84,11 @@ impl<T: Hittable> YRotation<T> {
                     let j = j as f32;
                     let k = k as f32;
 
-                    let ijk: Vec3 = (i, j, k).into();
-                    let one: Vec3 = (1.0, 1.0, 1.0).into();
+                    // TODO: Bring these back??
+                    // let ijk: Vec3 = (i, j, k).into();
+                    // let one: Vec3 = (1.0, 1.0, 1.0).into();
 
-                    let xyz = ijk * bbox.max() + (one - ijk) * bbox.min();
+                    // let xyz = ijk * bbox.max() + (one - ijk) * bbox.min();
 
                     let x = i * bbox.max().x() + (1.0 - i) * bbox.min().x();
                     let y = j * bbox.max().y() + (1.0 - j) * bbox.min().y();
@@ -111,7 +112,7 @@ impl<T: Hittable> YRotation<T> {
 }
 
 impl<T: Hittable> Hittable for YRotation<T> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut dyn TypedRng) -> Option<HitRecord> {
         let sin_theta = self.sin_theta;
         let cos_theta = self.cos_theta;
 

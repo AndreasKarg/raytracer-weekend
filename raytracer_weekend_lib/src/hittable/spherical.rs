@@ -12,8 +12,8 @@ use crate::{
     ray::Ray,
     texture::Point2d,
     vec3::{Point3, Vec3},
-    ActiveRng,
 };
+use crate::rng::TypedRng;
 
 fn hit_sphere<'a>(
     ray: &Ray,
@@ -84,7 +84,7 @@ pub struct Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut dyn TypedRng) -> Option<HitRecord> {
         hit_sphere(
             ray,
             t_min,
@@ -124,7 +124,7 @@ impl MovingSphere {
 }
 
 impl Hittable for MovingSphere {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut dyn TypedRng) -> Option<HitRecord> {
         let center_at_time = self.center_at_time(ray.time());
 
         hit_sphere(

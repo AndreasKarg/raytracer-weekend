@@ -2,6 +2,7 @@ use core::{
     fmt::Debug,
     ops::{Add, Mul},
 };
+use alloc::boxed::Box;
 
 use derive_more::Constructor;
 use dyn_clone::{clone_trait_object, DynClone};

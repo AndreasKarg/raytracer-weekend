@@ -2873,7 +2873,7 @@ dependencies = [
  "itertools 0.13.0",
  "micromath",
  "num-traits",
- "rand 0.9.0-alpha.1",
+ "rand 0.8.5",
  "rayon",
  "serde",
  "wavefront_obj",

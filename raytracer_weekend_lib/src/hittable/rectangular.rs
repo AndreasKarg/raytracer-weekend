@@ -9,9 +9,9 @@ use crate::{
     material::Material,
     ray::Ray,
     texture::Point2d,
-    vec3::{Point3, Vec3},
-    ActiveRng,
+    vec3::{Point3, Vec3}
 };
+use crate::rng::TypedRng;
 
 #[derive(Debug, Constructor)]
 pub struct XYRectangle {
@@ -24,7 +24,7 @@ pub struct XYRectangle {
 }
 
 impl Hittable for XYRectangle {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut dyn TypedRng) -> Option<HitRecord> {
         let x0 = self.x0;
         let y0 = self.y0;
         let x1 = self.x1;
@@ -46,14 +46,14 @@ impl Hittable for XYRectangle {
         // let t = t;
         let outward_normal = Vec3::new(0.0, 0.0, 1.0);
         let p = r.at(t);
-        return Some(HitRecord::new_with_face_normal(
+        Some(HitRecord::new_with_face_normal(
             p,
             t,
             Point2d { u, v },
             self.material.as_ref(),
             r,
             outward_normal,
-        ));
+        ))
     }
 
     fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
@@ -75,7 +75,7 @@ pub struct XZRectangle {
 }
 
 impl Hittable for XZRectangle {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut dyn TypedRng) -> Option<HitRecord> {
         let x0 = self.x0;
         let z0 = self.z0;
         let x1 = self.x1;
@@ -97,14 +97,14 @@ impl Hittable for XZRectangle {
         // let t = t;
         let outward_normal = Vec3::new(0.0, 1.0, 0.0);
         let p = r.at(t);
-        return Some(HitRecord::new_with_face_normal(
+        Some(HitRecord::new_with_face_normal(
             p,
             t,
             Point2d { u, v },
             self.material.as_ref(),
             r,
             outward_normal,
-        ));
+        ))
     }
 
     fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
@@ -126,7 +126,7 @@ pub struct YZRectangle {
 }
 
 impl Hittable for YZRectangle {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut dyn TypedRng) -> Option<HitRecord> {
         let y0 = self.y0;
         let z0 = self.z0;
         let y1 = self.y1;
@@ -148,14 +148,14 @@ impl Hittable for YZRectangle {
         // let t = t;
         let outward_normal = Vec3::new(1.0, 0.0, 0.0);
         let p = r.at(t);
-        return Some(HitRecord::new_with_face_normal(
+        Some(HitRecord::new_with_face_normal(
             p,
             t,
             Point2d { u, v },
             self.material.as_ref(),
             r,
             outward_normal,
-        ));
+        ))
     }
 
     fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
@@ -235,7 +235,7 @@ impl Cuboid {
 }
 
 impl Hittable for Cuboid {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut dyn TypedRng) -> Option<HitRecord> {
         self.sides.hit(r, t_min, t_max, rng)
     }
 

@@ -5,10 +5,10 @@ use core::{
     },
 };
 
+use crate::rng::TypedRng;
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
 use num_traits::Num;
-use rand::Rng;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -107,19 +107,19 @@ impl GenericVec3<f32> {
         *self / self.length()
     }
 
-    pub fn random(rng: &mut impl Rng) -> Self {
+    pub fn random(rng: &mut dyn TypedRng) -> Self {
         Self::random_min_max(rng, 0.0..1.0)
     }
 
-    pub fn random_min_max(rng: &mut impl Rng, range: Range<f32>) -> Self {
+    pub fn random_min_max(rng: &mut dyn TypedRng, range: Range<f32>) -> Self {
         Self::new(
-            rng.gen_range(range.clone()),
-            rng.gen_range(range.clone()),
-            rng.gen_range(range),
+            rng.random_range_f32(range.clone()),
+            rng.random_range_f32(range.clone()),
+            rng.random_range_f32(range),
         )
     }
 
-    pub fn random_in_unit_sphere(rng: &mut impl Rng) -> Self {
+    pub fn random_in_unit_sphere(rng: &mut dyn TypedRng) -> Self {
         loop {
             let p = Self::random_min_max(rng, -1.0..1.0);
             if p.length_squared() < 1.0 {
@@ -128,11 +128,11 @@ impl GenericVec3<f32> {
         }
     }
 
-    pub fn random_unit_vector(rng: &mut impl Rng) -> Self {
+    pub fn random_unit_vector(rng: &mut dyn TypedRng) -> Self {
         Self::random_in_unit_sphere(rng).unit_vector()
     }
 
-    pub fn random_in_hemisphere(normal: &Vec3, rng: &mut impl Rng) -> Self {
+    pub fn random_in_hemisphere(normal: &Vec3, rng: &mut dyn TypedRng) -> Self {
         let in_unit_sphere = Self::random_in_unit_sphere(rng);
         if in_unit_sphere.dot(normal) > 0.0 {
             // In the same hemisphere as the normal
@@ -142,9 +142,9 @@ impl GenericVec3<f32> {
         }
     }
 
-    pub fn random_in_unit_disk(rng: &mut impl Rng) -> Self {
+    pub fn random_in_unit_disk(rng: &mut dyn TypedRng) -> Self {
         loop {
-            let p = Self::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0.0);
+            let p = Self::new(rng.random_range_f32(-1.0..1.0), rng.random_range_f32(-1.0..1.0), 0.0);
             if p.length_squared() < 1.0 {
                 return p;
             }

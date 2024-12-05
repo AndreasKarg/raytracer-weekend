@@ -2,17 +2,16 @@ use derive_more::Constructor;
 use dyn_clone::{clone_trait_object, DynClone};
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
-use rand::Rng;
 
 use super::{
     hittable::HitRecord,
     ray::Ray,
     vec3::{Color, Vec3},
 };
+use crate::rng::TypedRng;
 use crate::{
     texture::{Point2d, SolidColor, Texture},
     vec3::Point3,
-    ActiveRng,
 };
 
 pub struct Scatter {
@@ -21,7 +20,7 @@ pub struct Scatter {
 }
 
 pub trait Material: core::fmt::Debug + Sync + Send + DynClone {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter>;
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut dyn TypedRng) -> Option<Scatter>;
     fn emitted(&self, uv: Point2d, p: &Point3) -> Color;
 }
 
@@ -39,7 +38,7 @@ impl Lambertian<SolidColor> {
 }
 
 impl<T: Texture + Clone> Material for Lambertian<T> {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut dyn TypedRng) -> Option<Scatter> {
         let mut scatter_direction = rec.normal + Vec3::random_unit_vector(rng);
 
         if scatter_direction.is_near_zero() {
@@ -75,7 +74,7 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut dyn TypedRng) -> Option<Scatter> {
         let reflected = r_in.direction().unit_vector().reflect(&rec.normal);
         let scattered_ray = Ray::new(
             rec.p,
@@ -113,7 +112,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut dyn TypedRng) -> Option<Scatter> {
         let ir = self.ir;
 
         let attenuation = Color::new(1.0, 1.0, 1.0);
@@ -126,7 +125,7 @@ impl Material for Dielectric {
         let cannot_refract = (refraction_ratio * sin_theta) > 1.0;
 
         let direction = if cannot_refract
-            || Self::reflectance(cos_theta, refraction_ratio) > rng.gen::<f32>()
+            || Self::reflectance(cos_theta, refraction_ratio) > rng.random_f32()
         {
             unit_direction.reflect(&rec.normal)
         } else {
@@ -152,7 +151,7 @@ pub struct Isotropic<T: Texture + Clone> {
 }
 
 impl<T: Texture + Clone> Material for Isotropic<T> {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut dyn TypedRng) -> Option<Scatter> {
         let attenuation = self.albedo.value(rec.texture_uv, &rec.p);
         let scattered_ray = Ray::new(rec.p, Vec3::random_in_unit_sphere(rng), r_in.time());
 

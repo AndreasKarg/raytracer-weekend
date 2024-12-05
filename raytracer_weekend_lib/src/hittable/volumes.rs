@@ -2,8 +2,8 @@ use core::fmt::Debug;
 
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
-use rand::Rng;
 
+use crate::rng::TypedRng;
 use crate::{
     aabb::Aabb,
     hittable::{HitRecord, Hittable},
@@ -11,7 +11,6 @@ use crate::{
     ray::Ray,
     texture::{Point2d, Texture},
     vec3::Vec3,
-    ActiveRng,
 };
 
 #[derive(Debug)]
@@ -35,7 +34,7 @@ impl<H: Hittable, T: Texture + Clone> ConstantMedium<H, T> {
 }
 
 impl<H: Hittable, T: Texture + Clone> Hittable for ConstantMedium<H, T> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut dyn TypedRng) -> Option<HitRecord> {
         let rec1 = self
             .boundary
             .hit(r, f32::NEG_INFINITY, f32::INFINITY, rng)?;
@@ -55,7 +54,7 @@ impl<H: Hittable, T: Texture + Clone> Hittable for ConstantMedium<H, T> {
 
         let ray_length = r.direction().length();
         let distance_inside_boundary = (rec2_t - rec1_t) * ray_length;
-        let hit_distance = self.neg_inv_density * rng.gen::<f32>().log10();
+        let hit_distance = self.neg_inv_density * rng.random_f32().log10();
 
         if hit_distance > distance_inside_boundary {
             return None;

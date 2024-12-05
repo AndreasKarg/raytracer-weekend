@@ -1,6 +1,5 @@
 use alloc::sync::Arc;
 use core::ops::{Add, Mul};
-use std::path::Path;
 
 use iter_fixed::IntoIteratorFixed;
 use itertools::{Itertools, MinMaxResult};
@@ -9,29 +8,27 @@ use micromath::F32Ext;
 
 #[cfg(feature = "std")]
 use {
-    std::collections::HashMap,
     std::fs,
-    wavefront_obj::{
-        mtl,
-        mtl::Illumination,
-        obj,
-        obj::{Geometry, Normal, Object, Primitive, TVertex, Vertex},
-    },
+    std::path::Path,
 };
 
+#[cfg(feature = "wavefront_obj")]
+use wavefront_obj::{
+    mtl,
+    mtl::Illumination,
+    obj,
+    obj::{Geometry, Normal, Object, Primitive, TVertex, Vertex},
+};
+
+use crate::rng::TypedRng;
 use crate::{
     aabb::Aabb,
-    ActiveRng,
-    bvh::BvhNode,
     hittable::{HitRecord, Hittable},
-    light_source::DiffuseLight,
-    material::{Lambertian, Material},
+    material::Material,
     ray::Ray,
-    texture::{Point2d, SolidColor},
+    texture::Point2d,
     vec3::{Point3, Vec3},
 };
-#[cfg(feature = "std")]
-use crate::image_texture::ImageTexture;
 
 #[derive(Debug, Clone)]
 pub struct Triangle {
@@ -62,7 +59,8 @@ impl Triangle {
             Point2d { u: 1.0, v: 0.0 },
             Point2d { u: 0.0, v: 1.0 },
         ];
-        let texture_uv = texture_uv.into_iter_fixed()
+        let texture_uv = texture_uv
+            .into_iter_fixed()
             .zip(default_uv)
             .map(|(param, default)| param.unwrap_or(default))
             .collect();
@@ -79,7 +77,7 @@ impl Triangle {
         Self::new(vertices, [None, None, None], [None, None, None], material)
     }
 
-    fn min_max(nums: impl Iterator<Item=f32>) -> (f32, f32) {
+    fn min_max(nums: impl Iterator<Item = f32>) -> (f32, f32) {
         let mut min_max = match nums.minmax() {
             MinMaxResult::NoElements => {
                 panic!()
@@ -97,7 +95,7 @@ impl Triangle {
 }
 
 impl Hittable for Triangle {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut dyn TypedRng) -> Option<HitRecord> {
         let vertex_a = self.vertices[0];
         let vertex_b = self.vertices[1];
         let vertex_c = self.vertices[2];
@@ -169,14 +167,14 @@ impl From<TVertex> for Point2d {
     }
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "wavefront_obj")]
 fn parse_geometry<'a>(
     geometry: &'a Geometry,
     vertices: &'a [Vertex],
     normals: &'a [Normal],
     texture_vertices: &'a [TVertex],
     materials: &Option<HashMap<String, Arc<dyn Material>>>,
-) -> impl Iterator<Item=Box<dyn Hittable>> + 'a {
+) -> impl Iterator<Item = Box<dyn Hittable>> + 'a {
     let material = if let Some(mat_name) = geometry.material_name.as_ref() {
         let mat_lib = materials.as_ref().unwrap();
         mat_lib[mat_name].clone()
@@ -220,7 +218,7 @@ fn parse_geometry<'a>(
     })
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "wavefront_obj")]
 fn parse_individual_object(
     object: &Object,
     materials: &Option<HashMap<String, Arc<dyn Material>>>,
@@ -240,7 +238,7 @@ fn parse_individual_object(
         .collect()
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "wavefront_obj")]
 pub fn load_wavefront_obj(
     path: &Path,
     rng: &mut ActiveRng,
@@ -277,7 +275,7 @@ fn path_to_file_in_same_folder(path: &Path, filename: &str) -> String {
     path
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "wavefront_obj")]
 fn load_wavefront_mtl(
     path: String,
 ) -> Result<HashMap<String, Arc<dyn Material>>, Box<dyn std::error::Error>> {
@@ -298,7 +296,7 @@ fn load_wavefront_mtl(
     Ok(materials)
 }
 
-#[cfg(feature = "std")]
+#[cfg(feature = "wavefront_obj")]
 fn parse_material(obj_material: &mtl::Material, mtl_path: &Path) -> Arc<dyn Material> {
     if obj_material.illumination != Illumination::AmbientDiffuse {
         panic!()
@@ -317,8 +315,8 @@ fn parse_material(obj_material: &mtl::Material, mtl_path: &Path) -> Arc<dyn Mate
 impl Triangle {
     fn interpolate_barycentric<T>(u: f32, v: f32, interpolatee: &[T; 3]) -> T
     where
-        f32: Mul<T, Output=T>,
-        T: Add<Output=T> + Clone,
+        f32: Mul<T, Output = T>,
+        T: Add<Output = T> + Clone,
     {
         (1.0 - u - v) * interpolatee[0].clone()
             + u * interpolatee[1].clone()

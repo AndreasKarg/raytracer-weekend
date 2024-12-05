@@ -1,11 +1,10 @@
-#[cfg(feature = "no_std")]
-use micromath::F32Ext;
-use rand::Rng;
-
 use super::{
     ray::Ray,
     vec3::{Point3, Vec3},
 };
+use crate::rng::TypedRng;
+#[cfg(feature = "no_std")]
+use micromath::F32Ext;
 
 #[derive(Debug, Clone)]
 pub struct Camera {
@@ -64,13 +63,13 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, s: f32, t: f32, rng: &mut impl Rng) -> Ray {
+    pub fn get_ray(&self, s: f32, t: f32, rng: &mut dyn TypedRng) -> Ray {
         let rd = self.lens_radius * Vec3::random_in_unit_disk(rng);
         let offset = self.u * rd.x() + self.v * rd.y();
         Ray::new(
             self.origin + offset,
             self.lower_left_corner + s * self.horizontal + t * self.vertical - self.origin - offset,
-            rng.gen_range(self.time0..self.time1),
+            rng.random_range_f32(self.time0..self.time1),
         )
     }
 }

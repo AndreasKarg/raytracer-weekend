@@ -6,7 +6,8 @@ use core::{cmp::Ordering, fmt::Debug};
 use rand::prelude::Rng;
 
 use super::{aabb::Aabb, hittable::Hittable};
-use crate::{hittable::HitRecord, ray::Ray, ActiveRng};
+use crate::{hittable::HitRecord, ray::Ray};
+use crate::rng::TypedRng;
 
 #[derive(Debug)]
 pub struct BvhNode {
@@ -98,7 +99,7 @@ impl BvhNode {
 }
 
 impl Hittable for BvhNode {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord<'_>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut dyn TypedRng) -> Option<HitRecord<'_>> {
         if !self.bounding_box.hit(r, t_min, t_max) {
             return None;
         };
