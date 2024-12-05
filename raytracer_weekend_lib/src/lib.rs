@@ -75,7 +75,7 @@ impl<'a> Raytracer<'a> {
         }
     }
 
-    fn sample_pixel(&self, pixel_row: u32, pixel_column: u32, rng: &mut dyn TypedRng) -> Pixel {
+    pub fn sample_pixel(&self, pixel_row: u32, pixel_column: u32, rng: &mut dyn TypedRng) -> Pixel {
         let image_width = self.image_width;
         let image_height = self.image_height;
 
