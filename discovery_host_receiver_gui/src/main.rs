@@ -1,5 +1,3 @@
-#![feature(let_else)]
-
 use std::{cell::Cell, io::Read, time::Duration};
 
 use dioxus::{

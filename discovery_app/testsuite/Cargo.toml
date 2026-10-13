@@ -3,7 +3,7 @@
 authors = ["Andreas Karg <clonkman.alternative@gmail.com>"]
 name = "testsuite"
 publish = false
-edition = "2021"
+edition = "2024"
 version = "0.1.0"
 
 [lib]

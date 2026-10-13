@@ -1,6 +1,5 @@
 #![no_main]
 #![no_std]
-#![feature(alloc_error_handler)]
 
 extern crate alloc;
 
@@ -222,8 +221,3 @@ fn setup_usart2() -> (Tx<USART2>, Rx<USART2>) {
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
-
-#[alloc_error_handler]
-fn my_example_handler(layout: core::alloc::Layout) -> ! {
-    panic!("memory allocation of {} bytes failed", layout.size())
-}

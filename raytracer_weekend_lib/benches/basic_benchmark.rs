@@ -21,7 +21,7 @@ use raytracer_weekend_lib::{
 };
 
 pub fn book2_final_scene(
-    aspect_ratio: f64,
+    aspect_ratio: f32,
     rng: &mut impl Rng,
 ) -> (Vec<Box<dyn Hittable>>, Camera, Color) {
     let mut boxes1: Vec<Box<dyn Hittable>> = Vec::new();
@@ -30,15 +30,15 @@ pub fn book2_final_scene(
     let boxes_per_side = 20;
     for i in 0..boxes_per_side {
         for j in 0..boxes_per_side {
-            let i = i as f64;
-            let j = j as f64;
+            let i = i as f32;
+            let j = j as f32;
 
             let w = 100.0;
-            let x0 = -1000.0 + i * w;
-            let z0 = -1000.0 + j * w;
+            let x0 = -1000.0f32 + i * w;
+            let z0 = -1000.0f32 + j * w;
             let y0 = 0.0;
             let x1 = x0 + w;
-            let y1 = rng.gen_range(1.0..101.0);
+            let y1 = rng.random_range(1.0..101.0);
             let z1 = z0 + w;
 
             boxes1.push(Box::new(Cuboid::new(

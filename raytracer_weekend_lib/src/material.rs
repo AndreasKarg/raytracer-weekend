@@ -2,7 +2,7 @@ use derive_more::Constructor;
 use dyn_clone::{clone_trait_object, DynClone};
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
-use rand::Rng;
+use rand::{Rng, RngExt};
 
 use super::{
     hittable::HitRecord,
@@ -126,7 +126,7 @@ impl Material for Dielectric {
         let cannot_refract = (refraction_ratio * sin_theta) > 1.0;
 
         let direction = if cannot_refract
-            || Self::reflectance(cos_theta, refraction_ratio) > rng.gen::<f32>()
+            || Self::reflectance(cos_theta, refraction_ratio) > rng.random::<f32>()
         {
             unit_direction.reflect(&rec.normal)
         } else {

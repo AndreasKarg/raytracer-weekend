@@ -2,7 +2,7 @@ use alloc::{boxed::Box, vec::Vec};
 use core::{cmp::Ordering, fmt::Debug};
 
 use rand::prelude::Rng;
-
+use rand::RngExt;
 use super::{aabb::Aabb, hittable::Hittable};
 use crate::{hittable::HitRecord, ray::Ray, ActiveRng};
 
@@ -20,9 +20,9 @@ impl BvhNode {
         mut src_objects: Vec<Box<dyn Hittable>>,
         time0: f32,
         time1: f32,
-        rng: &mut impl Rng,
+        rng: &mut impl RngExt,
     ) -> Self {
-        let axis = rng.gen_range(0..=2);
+        let axis = rng.random_range(0..=2);
 
         let comparator = match axis {
             0 => Self::box_x_compare,

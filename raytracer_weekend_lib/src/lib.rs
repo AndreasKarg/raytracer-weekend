@@ -1,4 +1,3 @@
-#![feature(trait_alias)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 extern crate alloc;
@@ -47,26 +46,32 @@ pub struct Raytracer<'a> {
     samples_per_pixel: u32,
 }
 
-#[cfg(feature = "rayon")]
-pub trait RenderIterator = ParallelIterator<Item=Pixel>;
+#[cfg(feature = "std")]
+pub trait RenderIterator: ParallelIterator<Item=Pixel> {}
 
-#[cfg(not(feature = "rayon"))]
-pub trait RenderIterator = Iterator<Item=Pixel>;
+#[cfg(feature = "std")]
+impl<I: ParallelIterator<Item=Pixel>> RenderIterator for I {}
+
+#[cfg(not(feature = "std"))]
+pub trait RenderIterator: Iterator<Item=Pixel> {}
+
+#[cfg(not(feature = "std"))]
+impl<I: Iterator<Item=Pixel>> RenderIterator for I {}
 
 impl<'a> Raytracer<'a> {
     pub fn render(&self) -> impl RenderIterator + '_ {
         let pixel_range = iproduct!((0..self.image_height).rev(), 0..self.image_width);
 
-        #[cfg(feature = "rayon")]
+        #[cfg(feature = "std")]
         {
             let pixel_range: Vec<_> = pixel_range.collect();
             pixel_range.into_par_iter().map(move |(j, i)| {
-                let mut rng = thread_rng();
+                let mut rng = rand::rng();
                 self.sample_pixel(j, i, &mut rng)
             })
         }
 
-        #[cfg(not(feature = "rayon"))]
+        #[cfg(not(feature = "std"))]
         {
             let mut rng = SmallRng::seed_from_u64(0xb234e6fea3886a1e);
             pixel_range
@@ -81,8 +86,8 @@ impl<'a> Raytracer<'a> {
 
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
         for _ in 0..self.samples_per_pixel {
-            let u = (pixel_column as f32 + rng.gen::<f32>()) / ((image_width - 1) as f32);
-            let v = (pixel_row as f32 + rng.gen::<f32>()) / ((image_height - 1) as f32);
+            let u = (pixel_column as f32 + rng.random::<f32>()) / ((image_width - 1) as f32);
+            let v = (pixel_row as f32 + rng.random::<f32>()) / ((image_height - 1) as f32);
             let r = self.cam.get_ray(u, v, rng);
             pixel_color += self.sample_ray(&r, rng, MAX_DEPTH);
         }

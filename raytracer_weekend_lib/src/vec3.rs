@@ -8,7 +8,7 @@ use core::{
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
 use num_traits::Num;
-use rand::Rng;
+use rand::{Rng, RngExt};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -90,11 +90,11 @@ impl GenericVec3<f32> {
         Self::random_min_max(rng, 0.0..1.0)
     }
 
-    pub fn random_min_max(rng: &mut impl Rng, range: Range<f32>) -> Self {
+    pub fn random_min_max(rng: &mut impl RngExt, range: Range<f32>) -> Self {
         Self::new(
-            rng.gen_range(range.clone()),
-            rng.gen_range(range.clone()),
-            rng.gen_range(range),
+            rng.random_range(range.clone()),
+            rng.random_range(range.clone()),
+            rng.random_range(range),
         )
     }
 
@@ -123,7 +123,7 @@ impl GenericVec3<f32> {
 
     pub fn random_in_unit_disk(rng: &mut impl Rng) -> Self {
         loop {
-            let p = Self::new(rng.gen_range(-1.0..1.0), rng.gen_range(-1.0..1.0), 0.0);
+            let p = Self::new(rng.random_range(-1.0..1.0), rng.random_range(-1.0..1.0), 0.0);
             if p.length_squared() < 1.0 {
                 return p;
             }

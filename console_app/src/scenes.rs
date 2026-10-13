@@ -104,7 +104,7 @@ pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
             let a = a as f32;
             let b = b as f32;
 
-            let center = Point3::new(a + 0.9 * rng.gen::<f32>(), 0.2, b + 0.9 * rng.gen::<f32>());
+            let center = Point3::new(a + 0.9 * rng.random::<f32>(), 0.2, b + 0.9 * rng.random::<f32>());
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() <= 0.9 {
                 continue;
@@ -112,19 +112,19 @@ pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 
             let sphere_material: Box<dyn Material>;
 
-            let choose_mat: f64 = rng.gen();
+            let choose_mat: f64 = rng.random();
             if choose_mat < 0.8 {
                 let albedo = Color::random(rng) * Color::random(rng);
                 sphere_material = Box::new(Lambertian::new_solid_color(albedo));
             } else if choose_mat < 0.95 {
                 let albedo = Color::random_min_max(rng, 0.5..1.0);
-                let fuzz = rng.gen_range(0.0..0.5);
+                let fuzz = rng.random_range(0.0..0.5);
                 sphere_material = Box::new(Metal::new(albedo, fuzz));
             } else {
                 sphere_material = Box::new(Dielectric::new(1.5));
             }
 
-            let center2 = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
+            let center2 = center + Vec3::new(0.0, rng.random_range(0.0..0.5), 0.0);
 
             let sphere = Box::new(MovingSphere::new(
                 center,
@@ -497,7 +497,7 @@ pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
             let z0 = -1000.0 + j * w;
             let y0 = 0.0;
             let x1 = x0 + w;
-            let y1 = rng.gen_range(1.0..101.0);
+            let y1 = rng.random_range(1.0..101.0);
             let z1 = z0 + w;
 
             boxes1.push(Box::new(Cuboid::new(

@@ -1,6 +1,5 @@
 #![no_main]
 #![no_std]
-#![feature(alloc_error_handler)]
 
 use discovery_app as _; // global logger + panicking-behavior + memory layout
 
@@ -104,7 +103,7 @@ fn main() -> ! {
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 
-#[alloc_error_handler]
-fn oom(_: Layout) -> ! {
-    defmt::panic!()
-}
+// #[alloc_error_handler]
+// fn oom(_: Layout) -> ! {
+//     defmt::panic!()
+// }

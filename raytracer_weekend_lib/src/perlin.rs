@@ -42,7 +42,7 @@ impl Perlin {
 
     fn permute(p: &mut [usize; POINT_COUNT], n: usize, rng: &mut impl Rng) {
         for i in (1..n).rev() {
-            let target = rng.gen_range(0..i);
+            let target = rng.random_range(0..i);
             p.swap(i, target);
         }
     }

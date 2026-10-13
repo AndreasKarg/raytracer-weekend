@@ -2,7 +2,7 @@ use core::fmt::Debug;
 
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
-use rand::Rng;
+use rand::{Rng, RngExt};
 
 use crate::{
     aabb::Aabb,
@@ -55,7 +55,7 @@ impl<H: Hittable, T: Texture> Hittable for ConstantMedium<H, T> {
 
         let ray_length = r.direction().length();
         let distance_inside_boundary = (rec2_t - rec1_t) * ray_length;
-        let hit_distance = self.neg_inv_density * rng.gen::<f32>().log10();
+        let hit_distance = self.neg_inv_density * rng.random::<f32>().log10();
 
         if hit_distance > distance_inside_boundary {
             return None;

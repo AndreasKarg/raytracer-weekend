@@ -1,5 +1,3 @@
-#![feature(let_else)]
-
 use std::{io::Read, time::Duration};
 
 use image::Rgb;
