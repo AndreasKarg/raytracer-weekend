@@ -1,8 +1,7 @@
 use alloc::boxed::Box;
 use core::fmt::Debug;
-
-use derive_more::Constructor;
-
+use derive_new::new;
+use rand::Rng;
 use crate::{
     aabb::Aabb,
     hittable::{HitRecord, Hittable},
@@ -10,21 +9,20 @@ use crate::{
     ray::Ray,
     texture::Point2d,
     vec3::{Point3, Vec3},
-    ActiveRng,
 };
 
-#[derive(Debug, Constructor)]
-pub struct XYRectangle {
+#[derive(Debug, new)]
+pub struct XYRectangle<R: Rng + ?Sized> {
     x0: f32,
     x1: f32,
     y0: f32,
     y1: f32,
     k: f32,
-    material: Box<dyn Material>,
+    material: Box<dyn Material<R>>,
 }
 
-impl Hittable for XYRectangle {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
+impl<R: Rng + ?Sized> Hittable<R> for XYRectangle<R> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
         let x0 = self.x0;
         let y0 = self.y0;
         let x1 = self.x1;
@@ -64,18 +62,18 @@ impl Hittable for XYRectangle {
     }
 }
 
-#[derive(Debug, Constructor)]
-pub struct XZRectangle {
+#[derive(Debug, new)]
+pub struct XZRectangle<R: Rng + ?Sized> {
     x0: f32,
     x1: f32,
     z0: f32,
     z1: f32,
     k: f32,
-    material: Box<dyn Material>,
+    material: Box<dyn Material<R>>,
 }
 
-impl Hittable for XZRectangle {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
+impl<R: Rng + ?Sized> Hittable<R> for XZRectangle<R> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
         let x0 = self.x0;
         let z0 = self.z0;
         let x1 = self.x1;
@@ -115,18 +113,18 @@ impl Hittable for XZRectangle {
     }
 }
 
-#[derive(Debug, Constructor)]
-pub struct YZRectangle {
+#[derive(Debug, new)]
+pub struct YZRectangle<R: Rng + ?Sized> {
     y0: f32,
     y1: f32,
     z0: f32,
     z1: f32,
     k: f32,
-    material: Box<dyn Material>,
+    material: Box<dyn Material<R>>,
 }
 
-impl Hittable for YZRectangle {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
+impl<R: Rng + ?Sized> Hittable<R> for YZRectangle<R> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
         let y0 = self.y0;
         let z0 = self.z0;
         let y1 = self.y1;
@@ -167,15 +165,15 @@ impl Hittable for YZRectangle {
 }
 
 #[derive(Debug)]
-pub struct Cuboid {
+pub struct Cuboid<R: Rng + ?Sized> {
     box_min: Point3,
     box_max: Point3,
-    sides: [Box<dyn Hittable>; 6],
+    sides: [Box<dyn Hittable<R>>; 6],
 }
 
-impl Cuboid {
-    pub fn new(p0: Point3, p1: Point3, material: Box<dyn Material>) -> Self {
-        let sides: [Box<dyn Hittable>; 6] = [
+impl<R: Rng + ?Sized> Cuboid<R> {
+    pub fn new(p0: Point3, p1: Point3, material: Box<dyn Material<R>>) -> Self {
+        let sides: [Box<dyn Hittable<R>>; 6] = [
             Box::new(XYRectangle::new(
                 p0.x(),
                 p1.x(),
@@ -234,8 +232,8 @@ impl Cuboid {
     }
 }
 
-impl Hittable for Cuboid {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
+impl<R: Rng + ?Sized> Hittable<R> for Cuboid<R> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
         self.sides.hit(r, t_min, t_max, rng)
     }
 

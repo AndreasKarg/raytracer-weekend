@@ -1,10 +1,9 @@
 use alloc::boxed::Box;
 use core::f32::consts::PI;
 
-use derive_more::Constructor;
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
-
+use rand::Rng;
 use crate::{
     aabb::Aabb,
     hittable::{HitRecord, Hittable},
@@ -12,7 +11,6 @@ use crate::{
     ray::Ray,
     texture::Point2d,
     vec3::{Point3, Vec3},
-    ActiveRng,
 };
 
 fn hit_sphere<'a>(
@@ -83,8 +81,8 @@ pub struct Sphere {
     material: Box<dyn Material>,
 }
 
-impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
+impl<R: Rng + ?Sized> Hittable<R> for Sphere {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord> {
         hit_sphere(
             ray,
             t_min,
@@ -123,8 +121,8 @@ impl MovingSphere {
     }
 }
 
-impl Hittable for MovingSphere {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
+impl<R: Rng + ?Sized> Hittable<R> for MovingSphere {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord> {
         let center_at_time = self.center_at_time(ray.time());
 
         hit_sphere(

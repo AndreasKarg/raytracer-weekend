@@ -2,21 +2,21 @@ use alloc::{boxed::Box, vec::Vec};
 use core::{cmp::Ordering, fmt::Debug};
 
 use super::{aabb::Aabb, hittable::Hittable};
-use crate::{ActiveRng, hittable::HitRecord, ray::Ray};
-use rand::RngExt;
+use crate::{hittable::HitRecord, ray::Ray};
+use rand::{Rng, RngExt};
 
 ///! An implementation of a Boundary Volume Hierarchy thingamajig.
 
 #[derive(Debug)]
-pub struct BvhNode {
-    left: Box<dyn Hittable>,
-    right: Option<Box<dyn Hittable>>,
+pub struct BvhNode<R: Rng + ?Sized> {
+    left: Box<dyn Hittable<R>>,
+    right: Option<Box<dyn Hittable<R>>>,
     bounding_box: Aabb,
 }
 
-impl BvhNode {
+impl<R: Rng + ?Sized> BvhNode<R> {
     pub fn new(
-        mut src_objects: Vec<Box<dyn Hittable>>,
+        mut src_objects: Vec<Box<dyn Hittable<R>>>,
         time0: f32,
         time1: f32,
         rng: &mut impl RngExt,
@@ -72,19 +72,19 @@ impl BvhNode {
         }
     }
 
-    fn box_x_compare(a: &dyn Hittable, b: &dyn Hittable) -> Ordering {
+    fn box_x_compare(a: &dyn Hittable<R>, b: &dyn Hittable<R>) -> Ordering {
         Self::box_compare(a, b, 0)
     }
 
-    fn box_y_compare(a: &dyn Hittable, b: &dyn Hittable) -> Ordering {
+    fn box_y_compare(a: &dyn Hittable<R>, b: &dyn Hittable<R>) -> Ordering {
         Self::box_compare(a, b, 1)
     }
 
-    fn box_z_compare(a: &dyn Hittable, b: &dyn Hittable) -> Ordering {
+    fn box_z_compare(a: &dyn Hittable<R>, b: &dyn Hittable<R>) -> Ordering {
         Self::box_compare(a, b, 2)
     }
 
-    fn box_compare(a: &dyn Hittable, b: &dyn Hittable, axis: usize) -> Ordering {
+    fn box_compare(a: &dyn Hittable<R>, b: &dyn Hittable<R>, axis: usize) -> Ordering {
         let box_a = a
             .bounding_box(0.0, 0.0)
             .expect("No bounding box in bvh_node constructor.");
@@ -96,8 +96,8 @@ impl BvhNode {
     }
 }
 
-impl Hittable for BvhNode {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord<'_>> {
+impl<R: Rng + ?Sized> Hittable<R> for BvhNode<R> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut impl RngExt) -> Option<HitRecord<'_>> {
         if !self.bounding_box.hit(r, t_min, t_max) {
             return None;
         };

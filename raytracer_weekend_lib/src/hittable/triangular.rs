@@ -4,6 +4,7 @@ use iter_fixed::IntoIteratorFixed;
 use itertools::{Itertools, MinMaxResult};
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
+use rand::Rng;
 #[cfg(feature = "std")]
 use {
     std::collections::HashMap,
@@ -20,30 +21,27 @@ use {
 use crate::image_texture::ImageTexture;
 use crate::{
     aabb::Aabb,
-    bvh::BvhNode,
     hittable::{HitRecord, Hittable},
-    light_source::DiffuseLight,
-    material::{Lambertian, Material},
+    material::Material,
     ray::Ray,
-    texture::{Checker, Point2d, SolidColor},
-    vec3::{Color, Point3, Vec3},
-    ActiveRng,
+    texture::Point2d,
+    vec3::{Point3, Vec3},
 };
 
 #[derive(Debug, Clone)]
-pub struct Triangle {
+pub struct Triangle<R: Rng + ?Sized> {
     vertices: [Point3; 3],
     normals: [Vec3; 3],
     texture_uv: [Point2d; 3],
-    material: Arc<dyn Material>,
+    material: Arc<dyn Material<R>>,
 }
 
-impl Triangle {
+impl<R: Rng + ?Sized> Triangle<R> {
     pub fn new(
         vertices: [Point3; 3],
         normals: [Option<Vec3>; 3],
         texture_uv: [Option<Point2d>; 3],
-        material: Arc<dyn Material>,
+        material: Arc<dyn Material<R>>,
     ) -> Self {
         let vertex_a = vertices[0];
         let vertex_b = vertices[1];
@@ -72,7 +70,7 @@ impl Triangle {
         }
     }
 
-    pub fn new_flat_shaded(vertices: [Point3; 3], material: Arc<dyn Material>) -> Self {
+    pub fn new_flat_shaded(vertices: [Point3; 3], material: Arc<dyn Material<R>>) -> Self {
         Self::new(vertices, [None, None, None], [None, None, None], material)
     }
 
@@ -93,8 +91,8 @@ impl Triangle {
     }
 }
 
-impl Hittable for Triangle {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut ActiveRng) -> Option<HitRecord> {
+impl<R: Rng + ?Sized> Hittable<R> for Triangle<R> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord> {
         let vertex_a = self.vertices[0];
         let vertex_b = self.vertices[1];
         let vertex_c = self.vertices[2];
@@ -240,7 +238,7 @@ fn parse_individual_object(
 #[cfg(feature = "std")]
 pub fn load_wavefront_obj(
     path: &str,
-    rng: &mut ActiveRng,
+    rng: &mut R,
 ) -> Result<Box<dyn Hittable>, Box<dyn std::error::Error>> {
     let obj_file = fs::read_to_string(path)?;
     let object_set = obj::parse(obj_file)?;

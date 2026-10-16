@@ -540,15 +540,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "core-error"
-version = "0.0.1-rc4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7851bcb61e74ebcf5f2f1f1ee119f647c03fec697768bbcc86c26654fd21f977"
-dependencies = [
- "version_check",
-]
-
-[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -916,19 +907,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "derive_more"
-version = "1.0.0"
+name = "derive-new"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
-dependencies = [
- "derive_more-impl",
-]
-
-[[package]]
-name = "derive_more-impl"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
+checksum = "2cdc8d50f426189eef89dac62fabfa0abb27d5cc008f25bf4156a0203325becc"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3144,9 +3126,8 @@ dependencies = [
 name = "raytracer_weekend_lib"
 version = "0.1.0"
 dependencies = [
- "core-error",
  "criterion",
- "derive_more",
+ "derive-new",
  "dyn-clone",
  "image 0.25.8",
  "iter_fixed",

@@ -14,14 +14,12 @@ mod ray;
 pub mod texture;
 pub mod vec3;
 
-use alloc::{boxed::Box, vec::Vec};
-
+use alloc::boxed::Box;
 use camera::Camera;
-use derive_more::Constructor;
+use derive_new::new;
 use hittable::Hittable;
 use itertools::iproduct;
 use rand::prelude::*;
-use rayon::iter::plumbing::UnindexedConsumer;
 use ray::Ray;
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
@@ -31,15 +29,9 @@ use vec3::Color;
 
 const MAX_DEPTH: usize = 50;
 
-#[cfg(feature = "std")]
-type ActiveRng = ThreadRng;
-
-#[cfg(not(feature = "std"))]
-type ActiveRng = SmallRng;
-
-#[derive(Constructor)]
-pub struct Raytracer<'a> {
-    world: &'a [Box<dyn Hittable>],
+#[derive(new)]
+pub struct Raytracer<'a, R: Rng + ?Sized> {
+    world: &'a [Box<dyn Hittable<R>>],
     cam: &'a Camera,
     background: Color,
     image_width: u32,
@@ -47,33 +39,31 @@ pub struct Raytracer<'a> {
     samples_per_pixel: u32,
 }
 
-impl<'a> Raytracer<'a> {
-    pub fn render(&self) -> impl Iterator<Item = Pixel> + '_ {
+impl<'a, R: Rng + ?Sized> Raytracer<'a, R> {
+    pub fn render(&self, mut rng: impl 'a + RngExt) -> impl Iterator<Item = Pixel> + '_ {
         let pixel_range = self.pixel_range();
-
-        let mut rng = SmallRng::seed_from_u64(0xb234e6fea3886a1e);
         pixel_range
             .into_iter()
             .map(move |(j, i)| self.sample_pixel(j, i, &mut rng))
 
     }
 
-    #[cfg(feature = "std")]
-    pub fn render_parallel(&self) -> impl ParallelIterator<Item = Pixel> + '_ {
-        let pixel_range = self.pixel_range();
-
-        let pixel_range: Vec<_> = pixel_range.collect();
-        pixel_range.into_par_iter().map(move |(j, i)| {
-            let mut rng = rand::rng();
-            self.sample_pixel(j, i, &mut rng)
-        })
-    }
+    // #[cfg(feature = "std")]
+    // pub fn render_parallel<R: Rng + ?Sized>(&self, rng: R) -> impl ParallelIterator<Item = Pixel> + '_ {
+    //     let pixel_range = self.pixel_range();
+    //
+    //     let pixel_range: Vec<_> = pixel_range.collect();
+    //     pixel_range.into_par_iter().map(move |(j, i)| {
+    //         let mut rng = rand::rng();
+    //         self.sample_pixel(j, i, &mut rng)
+    //     })
+    // }
 
     fn pixel_range(&self) -> impl Iterator<Item = (u32, u32)> {
         iproduct!((0..self.image_height).rev(), 0..self.image_width)
     }
 
-    fn sample_pixel(&self, pixel_row: u32, pixel_column: u32, rng: &mut ActiveRng) -> Pixel {
+    fn sample_pixel(&self, pixel_row: u32, pixel_column: u32, rng: &mut R) -> Pixel {
         let image_width = self.image_width;
         let image_height = self.image_height;
 
@@ -92,7 +82,7 @@ impl<'a> Raytracer<'a> {
         }
     }
 
-    fn sample_ray(&self, r: &Ray, rng: &mut ActiveRng, depth: usize) -> Color {
+    fn sample_ray(&self, r: &Ray, rng: &mut R, depth: usize) -> Color {
         if depth == 0 {
             return Color::new(0.0, 0.0, 0.0);
         }

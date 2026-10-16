@@ -1,5 +1,5 @@
 use core::fmt::Debug;
-
+use core::marker::{PhantomData, PhantomPinned};
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
 use rand::{Rng, RngExt};
@@ -11,17 +11,17 @@ use crate::{
     ray::Ray,
     texture::{Point2d, Texture},
     vec3::Vec3,
-    ActiveRng,
 };
 
-#[derive(Debug)]
-pub struct ConstantMedium<H: Hittable, T: Texture> {
+// #[derive(Debug)]
+pub struct ConstantMedium<R: Rng + ?Sized, H: Hittable<R>, T: Texture> {
     boundary: H,
     phase_function: Isotropic<T>,
     neg_inv_density: f32,
+    _rng: PhantomData<R>,
 }
 
-impl<H: Hittable, T: Texture> ConstantMedium<H, T> {
+impl<R: Rng + ?Sized, H: Hittable<R>, T: Texture> ConstantMedium<R, H, T> {
     pub fn new(boundary: H, density: f32, texture: T) -> Self {
         let neg_inv_density = -1.0 / density;
         let phase_function = Isotropic::new(texture);
@@ -30,12 +30,13 @@ impl<H: Hittable, T: Texture> ConstantMedium<H, T> {
             boundary,
             phase_function,
             neg_inv_density,
+            _rng: PhantomData
         }
     }
 }
 
-impl<H: Hittable, T: Texture> Hittable for ConstantMedium<H, T> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
+impl<R: Rng + ?Sized, H: Hittable<R>, T: Texture> Hittable<R> for ConstantMedium<R, H, T> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord> {
         let rec1 = self
             .boundary
             .hit(r, f32::NEG_INFINITY, f32::INFINITY, rng)?;
