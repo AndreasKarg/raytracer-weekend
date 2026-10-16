@@ -1,10 +1,9 @@
 use alloc::{boxed::Box, vec::Vec};
 use core::{cmp::Ordering, fmt::Debug};
 
-use rand::prelude::Rng;
-use rand::RngExt;
 use super::{aabb::Aabb, hittable::Hittable};
-use crate::{hittable::HitRecord, ray::Ray, ActiveRng};
+use crate::{ActiveRng, hittable::HitRecord, ray::Ray};
+use rand::RngExt;
 
 ///! An implementation of a Boundary Volume Hierarchy thingamajig.
 

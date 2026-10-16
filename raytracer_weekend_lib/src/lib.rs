@@ -21,6 +21,7 @@ use derive_more::Constructor;
 use hittable::Hittable;
 use itertools::iproduct;
 use rand::prelude::*;
+use rayon::iter::plumbing::UnindexedConsumer;
 use ray::Ray;
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
@@ -46,38 +47,30 @@ pub struct Raytracer<'a> {
     samples_per_pixel: u32,
 }
 
-#[cfg(feature = "std")]
-pub trait RenderIterator: ParallelIterator<Item=Pixel> {}
-
-#[cfg(feature = "std")]
-impl<I: ParallelIterator<Item=Pixel>> RenderIterator for I {}
-
-#[cfg(not(feature = "std"))]
-pub trait RenderIterator: Iterator<Item=Pixel> {}
-
-#[cfg(not(feature = "std"))]
-impl<I: Iterator<Item=Pixel>> RenderIterator for I {}
-
 impl<'a> Raytracer<'a> {
-    pub fn render(&self) -> impl RenderIterator + '_ {
-        let pixel_range = iproduct!((0..self.image_height).rev(), 0..self.image_width);
+    pub fn render(&self) -> impl Iterator<Item = Pixel> + '_ {
+        let pixel_range = self.pixel_range();
 
-        #[cfg(feature = "std")]
-        {
-            let pixel_range: Vec<_> = pixel_range.collect();
-            pixel_range.into_par_iter().map(move |(j, i)| {
-                let mut rng = rand::rng();
-                self.sample_pixel(j, i, &mut rng)
-            })
-        }
+        let mut rng = SmallRng::seed_from_u64(0xb234e6fea3886a1e);
+        pixel_range
+            .into_iter()
+            .map(move |(j, i)| self.sample_pixel(j, i, &mut rng))
 
-        #[cfg(not(feature = "std"))]
-        {
-            let mut rng = SmallRng::seed_from_u64(0xb234e6fea3886a1e);
-            pixel_range
-                .into_iter()
-                .map(move |(j, i)| self.sample_pixel(j, i, &mut rng))
-        }
+    }
+
+    #[cfg(feature = "std")]
+    pub fn render_parallel(&self) -> impl ParallelIterator<Item = Pixel> + '_ {
+        let pixel_range = self.pixel_range();
+
+        let pixel_range: Vec<_> = pixel_range.collect();
+        pixel_range.into_par_iter().map(move |(j, i)| {
+            let mut rng = rand::rng();
+            self.sample_pixel(j, i, &mut rng)
+        })
+    }
+
+    fn pixel_range(&self) -> impl Iterator<Item = (u32, u32)> {
+        iproduct!((0..self.image_height).rev(), 0..self.image_width)
     }
 
     fn sample_pixel(&self, pixel_row: u32, pixel_column: u32, rng: &mut ActiveRng) -> Pixel {
