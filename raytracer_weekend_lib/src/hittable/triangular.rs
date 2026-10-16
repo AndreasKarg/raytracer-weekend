@@ -1,4 +1,5 @@
 use alloc::sync::Arc;
+use core::fmt::Debug;
 use core::ops::{Add, Mul};
 use iter_fixed::IntoIteratorFixed;
 use itertools::{Itertools, MinMaxResult};
@@ -22,21 +23,24 @@ use crate::image_texture::ImageTexture;
 use crate::{
     aabb::Aabb,
     hittable::{HitRecord, Hittable},
+    light_source::DiffuseLight,
     material::Material,
     ray::Ray,
-    texture::Point2d,
+    texture::{Point2d, SolidColor},
     vec3::{Point3, Vec3},
 };
+use crate::bvh::BvhNode;
+use crate::material::Lambertian;
 
 #[derive(Debug, Clone)]
-pub struct Triangle<R: Rng + ?Sized> {
+pub struct Triangle<R: Rng + Debug + ?Sized> {
     vertices: [Point3; 3],
     normals: [Vec3; 3],
     texture_uv: [Point2d; 3],
     material: Arc<dyn Material<R>>,
 }
 
-impl<R: Rng + ?Sized> Triangle<R> {
+impl<R: Rng + Debug + ?Sized> Triangle<R> {
     pub fn new(
         vertices: [Point3; 3],
         normals: [Option<Vec3>; 3],
@@ -57,7 +61,8 @@ impl<R: Rng + ?Sized> Triangle<R> {
             Point2d { u: 1.0, v: 0.0 },
             Point2d { u: 0.0, v: 1.0 },
         ];
-        let texture_uv = texture_uv.into_iter_fixed()
+        let texture_uv = texture_uv
+            .into_iter_fixed()
             .zip(default_uv)
             .map(|(param, default)| param.unwrap_or(default))
             .collect();
@@ -74,7 +79,7 @@ impl<R: Rng + ?Sized> Triangle<R> {
         Self::new(vertices, [None, None, None], [None, None, None], material)
     }
 
-    fn min_max(nums: impl Iterator<Item=f32>) -> (f32, f32) {
+    fn min_max(nums: impl Iterator<Item = f32>) -> (f32, f32) {
         let mut min_max = match nums.minmax() {
             MinMaxResult::NoElements => {
                 panic!()
@@ -91,8 +96,8 @@ impl<R: Rng + ?Sized> Triangle<R> {
     }
 }
 
-impl<R: Rng + ?Sized> Hittable<R> for Triangle<R> {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord> {
+impl<R: Rng + Debug + ?Sized> Hittable<R> for Triangle<R> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
         let vertex_a = self.vertices[0];
         let vertex_b = self.vertices[1];
         let vertex_c = self.vertices[2];
@@ -165,13 +170,13 @@ impl From<TVertex> for Point2d {
 }
 
 #[cfg(feature = "std")]
-fn parse_geometry<'a>(
+fn parse_geometry<'a, R: 'a + Rng + Debug + ?Sized>(
     geometry: &'a Geometry,
     vertices: &'a [Vertex],
     normals: &'a [Normal],
     texture_vertices: &'a [TVertex],
-    materials: &Option<HashMap<String, Arc<dyn Material>>>,
-) -> impl Iterator<Item=Box<dyn Hittable>> + 'a {
+    materials: &Option<HashMap<String, Arc<dyn Material<R>>>>,
+) -> impl Iterator<Item = Box<dyn Hittable<R>>> + 'a {
     let material = if let Some(mat_name) = geometry.material_name.as_ref() {
         let mat_lib = materials.as_ref().unwrap();
         mat_lib[mat_name].clone()
@@ -209,17 +214,17 @@ fn parse_geometry<'a>(
                     [normal_1, normal_2, normal_3],
                     [texture_uv_1, texture_uv_2, texture_uv_3],
                     material.clone(),
-                )) as Box<dyn Hittable>
+                )) as Box<dyn Hittable<R>>
             }
         }
     })
 }
 
 #[cfg(feature = "std")]
-fn parse_individual_object(
+fn parse_individual_object<R: Rng + Debug + ?Sized>(
     object: &Object,
-    materials: &Option<HashMap<String, Arc<dyn Material>>>,
-) -> Vec<Box<dyn Hittable>> {
+    materials: &Option<HashMap<String, Arc<dyn Material<R>>>>,
+) -> Vec<Box<dyn Hittable<R>>> {
     object
         .geometry
         .iter()
@@ -236,10 +241,10 @@ fn parse_individual_object(
 }
 
 #[cfg(feature = "std")]
-pub fn load_wavefront_obj(
+pub fn load_wavefront_obj<R: Rng + Debug + ?Sized>(
     path: &str,
     rng: &mut R,
-) -> Result<Box<dyn Hittable>, Box<dyn std::error::Error>> {
+) -> Result<Box<dyn Hittable<R>>, Box<dyn std::error::Error>> {
     let obj_file = fs::read_to_string(path)?;
     let object_set = obj::parse(obj_file)?;
     let materials = object_set
@@ -248,7 +253,7 @@ pub fn load_wavefront_obj(
         .map(|filename| path_to_file_in_same_folder(path, filename))
         .map(load_wavefront_mtl)
         .transpose()?;
-    let triangles: Vec<Box<dyn Hittable>> = object_set
+    let triangles: Vec<Box<dyn Hittable<R>>> = object_set
         .objects
         .iter()
         .flat_map(|obj| parse_individual_object(obj, &materials))
@@ -273,9 +278,9 @@ fn path_to_file_in_same_folder(path: &str, filename: &str) -> String {
 }
 
 #[cfg(feature = "std")]
-fn load_wavefront_mtl(
+fn load_wavefront_mtl<R: Rng + Debug + ?Sized>(
     path: String,
-) -> Result<HashMap<String, Arc<dyn Material>>, Box<dyn std::error::Error>> {
+) -> Result<HashMap<String, Arc<dyn Material<R>>>, Box<dyn std::error::Error>> {
     let mtl_file = fs::read_to_string(path.clone())?;
     let material_set = mtl::parse(mtl_file)?;
 
@@ -294,7 +299,7 @@ fn load_wavefront_mtl(
 }
 
 #[cfg(feature = "std")]
-fn parse_material(obj_material: &mtl::Material, mtl_path: &str) -> Arc<dyn Material> {
+fn parse_material<R: Rng + Debug + ?Sized>(obj_material: &mtl::Material, mtl_path: &str) -> Arc<dyn Material<R>> {
     if obj_material.illumination != Illumination::AmbientDiffuse {
         panic!()
     }
@@ -309,11 +314,11 @@ fn parse_material(obj_material: &mtl::Material, mtl_path: &str) -> Arc<dyn Mater
     Arc::new(Lambertian::new(texture))
 }
 
-impl Triangle {
+impl<R: Rng + Debug + ?Sized> Triangle<R> {
     fn interpolate_barycentric<T>(u: f32, v: f32, interpolatee: &[T; 3]) -> T
     where
-        f32: Mul<T, Output=T>,
-        T: Add<Output=T> + Clone,
+        f32: Mul<T, Output = T>,
+        T: Add<Output = T> + Clone,
     {
         (1.0 - u - v) * interpolatee[0].clone()
             + u * interpolatee[1].clone()

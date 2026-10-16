@@ -1,6 +1,7 @@
 use alloc::boxed::Box;
 use core::f32::consts::PI;
-
+use core::fmt::Debug;
+use derive_new::new;
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
 use rand::Rng;
@@ -13,14 +14,14 @@ use crate::{
     vec3::{Point3, Vec3},
 };
 
-fn hit_sphere<'a>(
+fn hit_sphere<'a, R: Rng + Debug + ?Sized>(
     ray: &Ray,
     t_min: f32,
     t_max: f32,
     center: Vec3,
     radius: f32,
-    material: &'a (dyn Material + 'a),
-) -> Option<HitRecord<'a>> {
+    material: &'a (dyn Material<R> + 'a),
+) -> Option<HitRecord<'a, R>> {
     let origin_to_center = ray.origin() - center;
     let a = ray.direction().length_squared();
     let half_b = origin_to_center.dot(&ray.direction());
@@ -74,15 +75,15 @@ fn get_sphere_uv(p: &Point3) -> Point2d {
     Point2d { u, v }
 }
 
-#[derive(Constructor, Debug, Clone)]
-pub struct Sphere {
+#[derive(Debug, Clone, new)]
+pub struct Sphere<R: Rng + Debug + ?Sized> {
     center: Point3,
     radius: f32,
-    material: Box<dyn Material>,
+    material: Box<dyn Material<R>>,
 }
 
-impl<R: Rng + ?Sized> Hittable<R> for Sphere {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord> {
+impl<R: Rng + Debug + ?Sized> Hittable<R> for Sphere<R> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
         hit_sphere(
             ray,
             t_min,
@@ -101,17 +102,17 @@ impl<R: Rng + ?Sized> Hittable<R> for Sphere {
     }
 }
 
-#[derive(Constructor, Debug)]
-pub struct MovingSphere {
+#[derive(Debug, new)]
+pub struct MovingSphere<R: Rng + Debug + ?Sized> {
     center0: Point3,
     time0: f32,
     center1: Point3,
     time1: f32,
     radius: f32,
-    material: Box<dyn Material>,
+    material: Box<dyn Material<R>>,
 }
 
-impl MovingSphere {
+impl<R: Rng + Debug + ?Sized> MovingSphere<R> {
     fn center_at_time(&self, time: f32) -> Point3 {
         let center0 = self.center0;
         let time0 = self.time0;
@@ -121,8 +122,8 @@ impl MovingSphere {
     }
 }
 
-impl<R: Rng + ?Sized> Hittable<R> for MovingSphere {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord> {
+impl<R: Rng + Debug + ?Sized> Hittable<R> for MovingSphere<R> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
         let center_at_time = self.center_at_time(ray.time());
 
         hit_sphere(

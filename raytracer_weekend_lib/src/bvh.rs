@@ -8,18 +8,18 @@ use rand::{Rng, RngExt};
 ///! An implementation of a Boundary Volume Hierarchy thingamajig.
 
 #[derive(Debug)]
-pub struct BvhNode<R: Rng + ?Sized> {
+pub struct BvhNode<R: Rng + Debug + ?Sized> {
     left: Box<dyn Hittable<R>>,
     right: Option<Box<dyn Hittable<R>>>,
     bounding_box: Aabb,
 }
 
-impl<R: Rng + ?Sized> BvhNode<R> {
+impl<R: Rng + Debug + ?Sized> BvhNode<R> {
     pub fn new(
         mut src_objects: Vec<Box<dyn Hittable<R>>>,
         time0: f32,
         time1: f32,
-        rng: &mut impl RngExt,
+        rng: &mut R,
     ) -> Self {
         let axis = rng.random_range(0..=2);
 
@@ -96,8 +96,8 @@ impl<R: Rng + ?Sized> BvhNode<R> {
     }
 }
 
-impl<R: Rng + ?Sized> Hittable<R> for BvhNode<R> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut impl RngExt) -> Option<HitRecord<'_>> {
+impl<R: Rng + Debug + ?Sized> Hittable<R> for BvhNode<R> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
         if !self.bounding_box.hit(r, t_min, t_max) {
             return None;
         };

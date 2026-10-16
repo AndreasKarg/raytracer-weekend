@@ -15,6 +15,7 @@ pub mod texture;
 pub mod vec3;
 
 use alloc::boxed::Box;
+use core::fmt::Debug;
 use camera::Camera;
 use derive_new::new;
 use hittable::Hittable;
@@ -30,7 +31,7 @@ use vec3::Color;
 const MAX_DEPTH: usize = 50;
 
 #[derive(new)]
-pub struct Raytracer<'a, R: Rng + ?Sized> {
+pub struct Raytracer<'a, R: Rng + Debug + ?Sized> {
     world: &'a [Box<dyn Hittable<R>>],
     cam: &'a Camera,
     background: Color,
@@ -39,8 +40,8 @@ pub struct Raytracer<'a, R: Rng + ?Sized> {
     samples_per_pixel: u32,
 }
 
-impl<'a, R: Rng + ?Sized> Raytracer<'a, R> {
-    pub fn render(&self, mut rng: impl 'a + RngExt) -> impl Iterator<Item = Pixel> + '_ {
+impl<'a, R: Rng + Debug + ?Sized> Raytracer<'a, R> {
+    pub fn render(&self, mut rng: &'a mut R) -> impl Iterator<Item = Pixel> + 'a {
         let pixel_range = self.pixel_range();
         pixel_range
             .into_iter()
@@ -49,7 +50,7 @@ impl<'a, R: Rng + ?Sized> Raytracer<'a, R> {
     }
 
     // #[cfg(feature = "std")]
-    // pub fn render_parallel<R: Rng + ?Sized>(&self, rng: R) -> impl ParallelIterator<Item = Pixel> + '_ {
+    // pub fn render_parallel<R: Rng + Debug + ?Sized>(&self, rng: R) -> impl ParallelIterator<Item = Pixel> + '_ {
     //     let pixel_range = self.pixel_range();
     //
     //     let pixel_range: Vec<_> = pixel_range.collect();

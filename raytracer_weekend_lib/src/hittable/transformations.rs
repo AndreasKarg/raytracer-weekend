@@ -13,15 +13,15 @@ use crate::{
 };
 
 #[derive(Debug, new)]
-pub struct Translation<R: Rng + ?Sized, T: Hittable<R>> {
+pub struct Translation<R: Rng + Debug + ?Sized, T: Hittable<R>> {
     inner: T,
     offset: Vec3,
     #[new(default)]
     _rng: PhantomData<fn() -> R>,
 }
 
-impl<R: Rng + ?Sized, T: Hittable<R>> Hittable<R> for Translation<R, T> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord> {
+impl<R: Rng + Debug + ?Sized, T: Hittable<R>> Hittable<R> for Translation<R, T> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
         let translated_ray = Ray::new(r.origin() - self.offset, r.direction(), r.time());
 
         let hit = self.inner.hit(&translated_ray, t_min, t_max, rng)?;
@@ -49,7 +49,7 @@ impl<R: Rng + ?Sized, T: Hittable<R>> Hittable<R> for Translation<R, T> {
 }
 
 #[derive(Debug)]
-pub struct YRotation<R: Rng + ?Sized, T: Hittable<R>> {
+pub struct YRotation<R: Rng + Debug + ?Sized, T: Hittable<R>> {
     inner: T,
     sin_theta: f32,
     cos_theta: f32,
@@ -57,7 +57,7 @@ pub struct YRotation<R: Rng + ?Sized, T: Hittable<R>> {
     _rng: PhantomData<fn() -> R>,
 }
 
-impl<R: Rng + ?Sized, T: Hittable<R>> YRotation<R, T> {
+impl<R: Rng + Debug + ?Sized, T: Hittable<R>> YRotation<R, T> {
     pub fn new(inner: T, angle_degrees: f32) -> Self {
         let angle_radians = angle_degrees.to_radians();
 
@@ -114,8 +114,8 @@ impl<R: Rng + ?Sized, T: Hittable<R>> YRotation<R, T> {
     }
 }
 
-impl<R: Rng + ?Sized, T: Hittable<R>> Hittable<R> for YRotation<R, T> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord> {
+impl<R: Rng + Debug + ?Sized, T: Hittable<R>> Hittable<R> for YRotation<R, T> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
         let sin_theta = self.sin_theta;
         let cos_theta = self.cos_theta;
 
@@ -155,14 +155,14 @@ impl<R: Rng + ?Sized, T: Hittable<R>> Hittable<R> for YRotation<R, T> {
     }
 }
 
-pub trait Transformable<R: Rng + ?Sized> {
+pub trait Transformable<R: Rng + Debug + ?Sized> {
     type Inner: Hittable<R>;
 
     fn rotate_y(self, angle_degrees: f32) -> YRotation<R, Self::Inner>;
     fn translate(self, offset: Vec3) -> Translation<R, Self::Inner>;
 }
 
-impl<R: Rng + ?Sized, T: Hittable<R>> Transformable<R> for T {
+impl<R: Rng + Debug + ?Sized, T: Hittable<R>> Transformable<R> for T {
     type Inner = T;
 
     fn rotate_y(self, angle_degrees: f32) -> YRotation<R, Self::Inner> {
