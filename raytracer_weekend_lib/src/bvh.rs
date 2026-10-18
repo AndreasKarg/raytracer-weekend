@@ -1,7 +1,7 @@
 use super::{aabb::Aabb, hittable::Hittable};
 use crate::{hittable::HitRecord, ray::Ray};
 use alloc::{boxed::Box, vec::Vec};
-use core::{cmp::Ordering, fmt::Debug};
+use core::cmp::Ordering;
 use derive_where::derive_where;
 use rand::{Rng, RngExt};
 
@@ -97,7 +97,7 @@ impl<R: Rng + ?Sized + 'static> BvhNode<R> {
 }
 
 impl<R: Rng + ?Sized> Hittable<R> for BvhNode<R> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<'_, R>> {
         if !self.bounding_box.hit(r, t_min, t_max) {
             return None;
         };

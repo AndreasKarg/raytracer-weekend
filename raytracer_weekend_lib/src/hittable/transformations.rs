@@ -1,4 +1,3 @@
-use core::fmt::Debug;
 use core::marker::PhantomData;
 use derive_new::new;
 use derive_where::derive_where;
@@ -23,7 +22,7 @@ pub struct Translation<R: Rng + ?Sized, T: Hittable<R>> {
 }
 
 impl<R: Rng + ?Sized, T: Hittable<R>> Hittable<R> for Translation<R, T> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<'_, R>> {
         let translated_ray = Ray::new(r.origin() - self.offset, r.direction(), r.time());
 
         let hit = self.inner.hit(&translated_ray, t_min, t_max, rng)?;
@@ -93,7 +92,7 @@ impl<R: Rng + ?Sized, T: Hittable<R>> YRotation<R, T> {
                     let ijk: Vec3 = (i, j, k).into();
                     let one: Vec3 = (1.0, 1.0, 1.0).into();
 
-                    let xyz = ijk * bbox.max() + (one - ijk) * bbox.min();
+                    let _xyz = ijk * bbox.max() + (one - ijk) * bbox.min();
 
                     let x = i * bbox.max().x() + (1.0 - i) * bbox.min().x();
                     let y = j * bbox.max().y() + (1.0 - j) * bbox.min().y();
@@ -117,7 +116,7 @@ impl<R: Rng + ?Sized, T: Hittable<R>> YRotation<R, T> {
 }
 
 impl<R: Rng + ?Sized, T: Hittable<R>> Hittable<R> for YRotation<R, T> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<'_, R>> {
         let sin_theta = self.sin_theta;
         let cos_theta = self.cos_theta;
 

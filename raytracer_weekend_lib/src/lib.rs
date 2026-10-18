@@ -45,7 +45,7 @@ impl<'a, R: Rng + ?Sized + 'static> Raytracer<'a, R> {
         let pixel_range = self.pixel_range();
         pixel_range
             .into_iter()
-            .map(move |(j, i)| self.sample_pixel(j, i, &mut rng))
+            .map(move |(j, i)| self.sample_pixel(j, i, rng))
     }
 
     // #[cfg(feature = "std")]

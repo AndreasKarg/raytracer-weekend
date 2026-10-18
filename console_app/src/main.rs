@@ -47,7 +47,7 @@ fn main() {
     for (frame_no, cam) in cams.iter().progress_with(overall_progress).enumerate() {
         let raytracer = Raytracer::new(
             &world,
-            &cam,
+            cam,
             background,
             image_width,
             image_height,
@@ -64,7 +64,7 @@ fn main() {
             .progress_with(frame_progress)
             .collect();
 
-        let mut image = RgbImage::new(image_width as u32, image_height as u32);
+        let mut image = RgbImage::new(image_width, image_height);
 
         image
             .pixels_mut()

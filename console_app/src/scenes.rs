@@ -114,19 +114,19 @@ pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
                 continue;
             }
 
-            let sphere_material: Box<dyn Material<ThreadRng>>;
+            
 
             let choose_mat: f64 = rng.random();
-            if choose_mat < 0.8 {
+            let sphere_material: Box<dyn Material<ThreadRng>> = if choose_mat < 0.8 {
                 let albedo = Color::random(rng) * Color::random(rng);
-                sphere_material = Box::new(Lambertian::new_solid_color(albedo));
+                Box::new(Lambertian::new_solid_color(albedo))
             } else if choose_mat < 0.95 {
                 let albedo = Color::random_min_max(rng, 0.5..1.0);
                 let fuzz = rng.random_range(0.0..0.5);
-                sphere_material = Box::new(Metal::new(albedo, fuzz));
+                Box::new(Metal::new(albedo, fuzz))
             } else {
-                sphere_material = Box::new(Dielectric::new(1.5));
-            }
+                Box::new(Dielectric::new(1.5))
+            };
 
             let center2 = center + Vec3::new(0.0, rng.random_range(0.0..0.5), 0.0);
 

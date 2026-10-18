@@ -5,13 +5,13 @@ use dioxus::{
     prelude::*,
 };
 use image::Rgb;
-use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
+use indicatif::{ProgressBar, ProgressStyle};
 use postcard::from_bytes_cobs;
 use raytracer_weekend_lib::{Pixel, ProgressMessage};
 use tokio_serial::{ClearBuffer, SerialPort};
 
 fn main() {
-    let (sender, receiver) = unbounded();
+    let (_sender, receiver) = unbounded();
 
     let serial_port = tokio_serial::new("COM12", 115_200)
         .timeout(Duration::from_millis(1000000))

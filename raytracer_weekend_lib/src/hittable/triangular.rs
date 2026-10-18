@@ -1,5 +1,4 @@
 use alloc::sync::Arc;
-use core::fmt::Debug;
 use core::ops::{Add, Mul};
 use derive_where::derive_where;
 use iter_fixed::IntoIteratorFixed;
@@ -98,7 +97,7 @@ impl<'a, R: Rng + ?Sized> Triangle<'a, R> {
 }
 
 impl<'a, R: Rng + ?Sized> Hittable<R> for Triangle<'a, R> {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<'_, R>> {
         let vertex_a = self.vertices[0];
         let vertex_b = self.vertices[1];
         let vertex_c = self.vertices[2];

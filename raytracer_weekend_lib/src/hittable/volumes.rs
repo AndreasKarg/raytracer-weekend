@@ -1,4 +1,3 @@
-use core::fmt::Debug;
 use core::marker::PhantomData;
 use derive_where::derive_where;
 #[cfg(feature = "no_std")]
@@ -37,7 +36,7 @@ impl<R: Rng + ?Sized, H: Hittable<R>, T: Texture> ConstantMedium<R, H, T> {
 }
 
 impl<R: Rng + ?Sized, H: Hittable<R>, T: Texture> Hittable<R> for ConstantMedium<R, H, T> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<'_, R>> {
         let rec1 = self
             .boundary
             .hit(r, f32::NEG_INFINITY, f32::INFINITY, rng)?;

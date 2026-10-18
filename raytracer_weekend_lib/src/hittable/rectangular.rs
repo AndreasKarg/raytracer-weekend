@@ -8,7 +8,6 @@ use crate::{
 };
 use alloc::boxed::Box;
 use alloc::sync::Arc;
-use core::fmt::Debug;
 use derive_new::new;
 use derive_where::derive_where;
 use rand::Rng;
@@ -25,7 +24,7 @@ pub struct XYRectangle<R: Rng + ?Sized> {
 }
 
 impl<R: Rng + ?Sized> Hittable<R> for XYRectangle<R> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<'_, R>> {
         let x0 = self.x0;
         let y0 = self.y0;
         let x1 = self.x1;
@@ -47,14 +46,14 @@ impl<R: Rng + ?Sized> Hittable<R> for XYRectangle<R> {
         let t = t;
         let outward_normal = Vec3::new(0.0, 0.0, 1.0);
         let p = r.at(t);
-        return Some(HitRecord::new_with_face_normal(
+        Some(HitRecord::new_with_face_normal(
             p,
             t,
             Point2d { u, v },
             self.material.as_ref(),
             r,
             outward_normal,
-        ));
+        ))
     }
 
     fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
@@ -77,7 +76,7 @@ pub struct XZRectangle<R: Rng + ?Sized> {
 }
 
 impl<R: Rng + ?Sized> Hittable<R> for XZRectangle<R> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<'_, R>> {
         let x0 = self.x0;
         let z0 = self.z0;
         let x1 = self.x1;
@@ -99,14 +98,14 @@ impl<R: Rng + ?Sized> Hittable<R> for XZRectangle<R> {
         let t = t;
         let outward_normal = Vec3::new(0.0, 1.0, 0.0);
         let p = r.at(t);
-        return Some(HitRecord::new_with_face_normal(
+        Some(HitRecord::new_with_face_normal(
             p,
             t,
             Point2d { u, v },
             self.material.as_ref(),
             r,
             outward_normal,
-        ));
+        ))
     }
 
     fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
@@ -129,7 +128,7 @@ pub struct YZRectangle<R: Rng + ?Sized> {
 }
 
 impl<R: Rng + ?Sized> Hittable<R> for YZRectangle<R> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<'_, R>> {
         let y0 = self.y0;
         let z0 = self.z0;
         let y1 = self.y1;
@@ -151,14 +150,14 @@ impl<R: Rng + ?Sized> Hittable<R> for YZRectangle<R> {
         let t = t;
         let outward_normal = Vec3::new(1.0, 0.0, 0.0);
         let p = r.at(t);
-        return Some(HitRecord::new_with_face_normal(
+        Some(HitRecord::new_with_face_normal(
             p,
             t,
             Point2d { u, v },
             self.material.as_ref(),
             r,
             outward_normal,
-        ));
+        ))
     }
 
     fn bounding_box(&self, _time0: f32, _time1: f32) -> Option<Aabb> {
@@ -238,7 +237,7 @@ impl<R: Rng + ?Sized + 'static> Cuboid<R> {
 }
 
 impl<R: Rng + ?Sized> Hittable<R> for Cuboid<R> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<'_, R>> {
         self.sides.hit(r, t_min, t_max, rng)
     }
 

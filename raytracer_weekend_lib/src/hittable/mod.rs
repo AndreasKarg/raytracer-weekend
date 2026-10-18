@@ -8,7 +8,7 @@ use super::{
 use alloc::{boxed::Box, vec::Vec};
 use core::fmt::Debug;
 use derive_new::new;
-use rand::{Rng, RngExt};
+use rand::Rng;
 
 pub mod rectangular;
 pub mod spherical;
@@ -47,12 +47,12 @@ impl<'a, R: Rng + ?Sized> HitRecord<'a, R> {
 }
 
 pub trait Hittable<R: Rng + ?Sized>: Debug + Sync + Send {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>>;
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<'_, R>>;
     fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb>;
 }
 
 impl<R: Rng + ?Sized> Hittable<R> for [Box<dyn Hittable<R>>] {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<'_, R>> {
         let mut closest_so_far = t_max;
         let mut rec = None;
 
@@ -86,7 +86,7 @@ impl<R: Rng + ?Sized> Hittable<R> for [Box<dyn Hittable<R>>] {
 }
 
 impl<R: Rng + ?Sized> Hittable<R> for Vec<Box<dyn Hittable<R>>> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<'_, R>> {
         self.as_slice().hit(r, t_min, t_max, rng)
     }
 
@@ -96,7 +96,7 @@ impl<R: Rng + ?Sized> Hittable<R> for Vec<Box<dyn Hittable<R>>> {
 }
 
 impl<R: Rng + ?Sized> Hittable<R> for &[Box<dyn Hittable<R>>] {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<'_, R>> {
         (*self).hit(r, t_min, t_max, rng)
     }
 
@@ -106,7 +106,7 @@ impl<R: Rng + ?Sized> Hittable<R> for &[Box<dyn Hittable<R>>] {
 }
 
 impl<R: Rng + ?Sized> Hittable<R> for Box<dyn Hittable<R>> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<'_, R>> {
         self.as_ref().hit(r, t_min, t_max, rng)
     }
 

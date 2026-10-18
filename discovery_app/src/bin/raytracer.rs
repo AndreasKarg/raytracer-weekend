@@ -4,29 +4,23 @@
 extern crate alloc;
 
 use alloc::{boxed::Box, sync::Arc, vec, vec::Vec};
-use core::alloc::Layout;
 
 use alloc_cortex_m::CortexMHeap;
 use discovery_app as _;
-use heapless;
-use postcard::{to_vec, to_vec_cobs};
-use rand::{Rng, SeedableRng, prelude::SmallRng};
+use postcard::to_vec_cobs;
+use rand::{SeedableRng, prelude::SmallRng};
 use raytracer_weekend_lib::{
     ProgressMessage, Raytracer,
-    bvh::BvhNode,
     camera::Camera,
     hittable::{
         Hittable,
         rectangular::{Cuboid, XYRectangle, XZRectangle, YZRectangle},
-        spherical::{MovingSphere, Sphere},
-        transformations::{Transformable, Translation, YRotation},
-        triangular::Triangle,
+        transformations::Transformable,
         volumes::ConstantMedium,
     },
     light_source::DiffuseLight,
-    material::{Dielectric, Lambertian, Material, Metal},
-    perlin::Perlin,
-    texture::{Checker, Noise, SolidColor, UVDebug},
+    material::Lambertian,
+    texture::SolidColor,
     vec3::{Color, Point3, Vec3},
 };
 use stm32l4xx_hal::{
@@ -74,10 +68,10 @@ fn main() -> ! {
     let (world, cams, background) = cornell_box(aspect_ratio, &mut rng);
     defmt::info!("World created.");
 
-    for (frame_no, cam) in cams.iter().enumerate() {
+    for (_frame_no, cam) in cams.iter().enumerate() {
         let raytracer = Raytracer::new(
             &world,
-            &cam,
+            cam,
             background,
             image_width,
             image_height,
@@ -117,7 +111,7 @@ fn main() -> ! {
 type World = (Vec<Box<dyn Hittable<SmallRng>>>, Vec<Camera>, Color);
 static DEFAULT_BACKGROUND: Color = Color::new_const(0.7, 0.8, 1.00);
 
-pub fn cornell_box(aspect_ratio: f32, rng: &mut SmallRng) -> World {
+pub fn cornell_box(aspect_ratio: f32, _rng: &mut SmallRng) -> World {
     // World
     let red = Arc::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
     let white = Arc::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));

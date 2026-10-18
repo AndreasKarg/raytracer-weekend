@@ -8,7 +8,6 @@ use crate::{
 };
 use alloc::boxed::Box;
 use core::f32::consts::PI;
-use core::fmt::Debug;
 use derive_new::new;
 use derive_where::derive_where;
 #[cfg(feature = "no_std")]
@@ -85,7 +84,7 @@ pub struct Sphere<R: Rng + ?Sized> {
 }
 
 impl<R: Rng + ?Sized> Hittable<R> for Sphere<R> {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<'_, R>> {
         hit_sphere(
             ray,
             t_min,
@@ -126,7 +125,7 @@ impl<R: Rng + ?Sized> MovingSphere<R> {
 }
 
 impl<R: Rng + ?Sized> Hittable<R> for MovingSphere<R> {
-    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<'_, R>> {
         let center_at_time = self.center_at_time(ray.time());
 
         hit_sphere(
