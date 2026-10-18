@@ -8,6 +8,7 @@ use crate::{
 };
 use alloc::boxed::Box;
 use core::f32::consts::PI;
+use std::sync::Arc;
 use derive_new::new;
 use derive_where::derive_where;
 #[cfg(feature = "no_std")]
@@ -80,7 +81,7 @@ fn get_sphere_uv(p: &Point3) -> Point2d {
 pub struct Sphere<R: Rng + ?Sized> {
     center: Point3,
     radius: f32,
-    material: Box<dyn Material<R>>,
+    material: Arc<dyn Material<R>>,
 }
 
 impl<R: Rng + ?Sized> Hittable<R> for Sphere<R> {
@@ -111,7 +112,7 @@ pub struct MovingSphere<R: Rng + ?Sized> {
     center1: Point3,
     time1: f32,
     radius: f32,
-    material: Box<dyn Material<R>>,
+    material: Arc<dyn Material<R>>,
 }
 
 impl<R: Rng + ?Sized> MovingSphere<R> {

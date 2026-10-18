@@ -10,6 +10,7 @@ use rand::Rng;
 use {
     std::collections::HashMap,
     std::fs,
+    std::path::Path,
     wavefront_obj::{
         mtl,
         mtl::Illumination,
@@ -242,7 +243,7 @@ fn parse_individual_object<R: Rng + ?Sized + 'static>(
 
 #[cfg(feature = "std")]
 pub fn load_wavefront_obj<'a, R: Rng + ?Sized + 'static>(
-    path: &str,
+    path: &Path,
     rng: &mut R,
 ) -> Result<Box<dyn Hittable<R>>, Box<dyn std::error::Error>> {
     let obj_file = fs::read_to_string(path)?;
@@ -263,10 +264,10 @@ pub fn load_wavefront_obj<'a, R: Rng + ?Sized + 'static>(
 }
 
 #[cfg(feature = "std")]
-fn path_to_file_in_same_folder(path: &str, filename: &str) -> String {
+fn path_to_file_in_same_folder(path: &Path, filename: &str) -> String {
     let mut base_path = fs::canonicalize(path).unwrap();
     // TODO: Sort out println
-    // println!("{}", base_path.display());
+    // println!("{}", base_path.displayit ());
     base_path.pop();
     base_path.push(filename);
 
@@ -301,7 +302,7 @@ fn load_wavefront_mtl<R: Rng + ?Sized>(
 #[cfg(feature = "std")]
 fn parse_material<R: Rng + ?Sized>(
     obj_material: &mtl::Material,
-    mtl_path: &str,
+    mtl_path: &Path,
 ) -> Arc<dyn Material<R>> {
     if obj_material.illumination != Illumination::AmbientDiffuse {
         panic!()

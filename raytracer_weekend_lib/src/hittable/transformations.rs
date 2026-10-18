@@ -3,8 +3,7 @@ use derive_new::new;
 use derive_where::derive_where;
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
-use rand::prelude::Rng;
-
+use rand::Rng;
 use crate::{
     aabb::Aabb,
     hittable::{HitRecord, Hittable},

@@ -1,11 +1,14 @@
 mod scenes;
 
-use clap::Parser;
+use clap::{Args, Parser, Subcommand};
 use image::{Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
 use rayon::prelude::*;
 use raytracer_weekend_lib::Raytracer;
+use raytracer_weekend_saveload::hittable::HittableDescriptorList;
+use raytracer_weekend_saveload::World;
 use scenes::Scene;
+use std::path::{Path, PathBuf};
 
 const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -13,9 +16,39 @@ const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 /// My raytracer, based on the book series on the interwebs.
 #[derive(Parser)]
 #[clap(version = CRATE_VERSION, author = CRATE_AUTHOR)]
-struct Opts {
-    #[clap(subcommand)]
-    scene: Scene,
+struct MainArgs {
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(Debug, Subcommand)]
+enum Command {
+    RenderCompiled {
+        #[command(subcommand)]
+        scene: Scene,
+        #[command(flatten)]
+        render_args: RenderArgs,
+    },
+    RenderFile {
+        #[command(flatten)]
+        render_args: RenderArgs,
+        scene_description: PathBuf,
+    },
+    ToJson {
+        #[command(subcommand)]
+        scene: Scene,
+        output: PathBuf,
+    },
+    #[clap(alias = "to-yml")]
+    ToYaml {
+        #[command(subcommand)]
+        scene: Scene,
+        output: PathBuf,
+    },
+}
+
+#[derive(Debug, Clone, Args)]
+struct RenderArgs {
     #[clap(long, short, default_value = "400")]
     width: u32,
     #[clap(long, short, default_value = "1.7777778")]
@@ -24,31 +57,28 @@ struct Opts {
     samples_per_pixel: u32,
 }
 
-fn main() {
-    let opts: Opts = Opts::parse();
-
-    let image_width = opts.width;
-    let aspect_ratio = opts.aspect_ratio;
+fn run_render(world: World, args: RenderArgs, base_path: &Path) {
+    let image_width = args.width;
+    let aspect_ratio = args.aspect_ratio;
     let image_height = (image_width as f64 / aspect_ratio).round() as u32;
-    let samples_per_pixel = opts.samples_per_pixel;
+    let samples_per_pixel = args.samples_per_pixel;
 
     let pixel_count = (image_width * image_height) as u64;
 
-    let (world, cams, background) = opts.scene.generate(
-        (image_width as f32) / (image_height as f32),
-        &mut rand::rng(),
-    );
-
+    let cameras = world.cameras;
     let overall_progress_style = ProgressStyle::default_bar()
         .template("[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}")
         .unwrap();
-    let overall_progress = ProgressBar::new(cams.len() as u64).with_style(overall_progress_style);
+    let overall_progress = ProgressBar::new(cameras.len() as u64).with_style(overall_progress_style);
 
-    for (frame_no, cam) in cams.iter().progress_with(overall_progress).enumerate() {
+    let geometry = world.geometry.to_hittables(&mut rand::rng(), base_path);
+
+    for (frame_no, cam) in cameras.iter().progress_with(overall_progress).enumerate() {
+        let cam = cam.to_camera();
         let raytracer = Raytracer::new(
-            &world,
-            cam,
-            background,
+            &geometry,
+            &cam,
+            world.background,
             image_width,
             image_height,
             samples_per_pixel,
@@ -93,5 +123,54 @@ fn main() {
         image
             .save(&format!("render/image_{:04}.png", frame_no))
             .unwrap();
+    }
+}
+
+fn main() {
+    let args: MainArgs = MainArgs::parse();
+    match args.command {
+        Command::RenderCompiled { render_args, scene } => {
+            let image_width = render_args.width;
+            let aspect_ratio = render_args.aspect_ratio;
+            let image_height = (image_width as f64 / aspect_ratio).round() as u32;
+
+            let world = scene.generate(
+                (render_args.width as f32) / (image_height as f32),
+                &mut rand::rng(),
+            );
+
+            let base_path = std::env::current_dir().unwrap();
+
+            run_render(world, render_args, &base_path)
+        }
+        Command::RenderFile {
+            render_args,
+            scene_description,
+        } => {
+            let base_path = scene_description.parent().unwrap().to_path_buf();
+            let world = match scene_description.extension().unwrap().to_str().unwrap() {
+                "json" => {
+                    let json = std::fs::read_to_string(scene_description).unwrap();
+                    serde_json::from_str(&json).unwrap()
+                }
+                "yml" | "yaml" => {
+                    let yml = std::fs::read_to_string(scene_description).unwrap();
+                    serde_yaml::from_str(&yml).unwrap()
+                }
+                _ => panic!("Unknown file type"),
+            };
+
+            run_render(world, render_args, &base_path)
+        }
+        Command::ToJson { scene, output } => {
+            let world = scene.generate(16.0 / 9.0, &mut rand::rng());
+            let json = serde_json::to_string_pretty(&world).unwrap();
+            std::fs::write(output, json).unwrap();
+        }
+        Command::ToYaml { scene, output } => {
+            let world = scene.generate(16.0 / 9.0, &mut rand::rng());
+            let yml = serde_yaml::to_string(&world).unwrap();
+            std::fs::write(output, yml).unwrap();
+        }
     }
 }

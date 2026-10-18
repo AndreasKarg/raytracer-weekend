@@ -3,6 +3,7 @@ use core::{
     ops::{Add, Mul},
 };
 use derive_new::new;
+use dyn_clone::{clone_trait_object, DynClone};
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
 
@@ -10,6 +11,7 @@ use super::vec3::{Color, Vec3};
 use crate::perlin::Perlin;
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Point2d {
     pub u: f32,
     pub v: f32,
@@ -37,8 +39,16 @@ impl Add for Point2d {
     }
 }
 
-pub trait Texture: Debug + Send + Sync + Clone {
+pub trait Texture: Debug + Send + Sync + DynClone {
     fn value(&self, uv: Point2d, p: &Vec3) -> Color;
+}
+
+clone_trait_object!(Texture);
+
+impl Texture for Box<dyn Texture> {
+    fn value(&self, uv: Point2d, p: &Vec3) -> Color {
+        self.as_ref().value(uv, p)
+    }
 }
 
 #[derive(Debug, Clone, new)]
@@ -65,7 +75,7 @@ pub struct Checker<E: Texture, O: Texture> {
     frequency: f32,
 }
 
-impl<E: Texture, O: Texture> Texture for Checker<E, O> {
+impl<E: Texture + Clone, O: Texture + Clone> Texture for Checker<E, O> {
     fn value(&self, uv: Point2d, p: &Vec3) -> Color {
         let sines = (self.frequency * p.x()).sin()
             * (self.frequency * p.y()).sin()
