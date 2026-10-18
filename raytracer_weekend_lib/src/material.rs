@@ -1,9 +1,9 @@
 use core::fmt::Debug;
 use derive_new::new;
 use dyn_clone::{DynClone, clone_trait_object};
+use rand::{Rng, RngExt};
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
-use rand::{Rng, RngExt};
 
 use super::{
     hittable::HitRecord,

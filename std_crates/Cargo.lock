@@ -2849,7 +2849,6 @@ dependencies = [
  "itertools 0.13.0",
  "num-traits",
  "rand 0.10.3",
- "rayon",
  "serde",
  "wavefront_obj",
 ]

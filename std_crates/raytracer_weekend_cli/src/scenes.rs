@@ -1,7 +1,5 @@
 use clap::Subcommand;
 use rand::prelude::*;
-use std::path::PathBuf;
-use std::sync::Arc;
 use raytracer_weekend_lib::vec3::{Color, Point3, Vec3};
 use raytracer_weekend_saveload::hittable::{
     BvhNodeDescriptor, ConstantMediumDescriptor, CuboidDescriptor, HittableDescriptor,
@@ -18,6 +16,7 @@ use raytracer_weekend_saveload::texture::{
     UVDebugDescriptor,
 };
 use raytracer_weekend_saveload::{CameraDescriptor, World};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum Scene {

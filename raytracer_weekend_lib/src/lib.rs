@@ -20,7 +20,7 @@ use core::fmt::Debug;
 use derive_new::new;
 use hittable::Hittable;
 use itertools::iproduct;
-use rand::prelude::*;
+use rand::{Rng, RngExt};
 use ray::Ray;
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;

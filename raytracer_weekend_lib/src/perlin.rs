@@ -1,7 +1,7 @@
 use core::fmt::Debug;
+use rand::{Rng, RngExt};
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
-use rand::prelude::*;
 
 use crate::vec3::{CopyIndex, GenericVec3, Point3, Vec3};
 const POINT_COUNT: usize = 256;
