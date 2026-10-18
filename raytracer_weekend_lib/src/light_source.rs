@@ -1,12 +1,12 @@
 use derive_more::Constructor;
 
 use crate::{
-    ActiveRng,
     hittable::HitRecord,
     material::{Material, Scatter},
     ray::Ray,
     texture::{Point2d, Texture},
     vec3::{Color, Point3},
+    ActiveRng,
 };
 
 #[derive(Constructor, Debug, Clone)]

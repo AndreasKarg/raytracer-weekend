@@ -1,6 +1,5 @@
 mod scenes;
 
-use std::path::{Path, PathBuf};
 use clap::{Args, Parser, Subcommand};
 use image::{Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
@@ -10,6 +9,7 @@ use raytracer_weekend_lib::Raytracer;
 use raytracer_weekend_saveload::hittable::HittableDescriptorList;
 use raytracer_weekend_saveload::World;
 use scenes::Scene;
+use std::path::{Path, PathBuf};
 
 const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
@@ -142,7 +142,10 @@ fn main() {
 
             run_render(world, render_args, &base_path)
         }
-        Command::RenderFile { render_args, scene_description } => {
+        Command::RenderFile {
+            render_args,
+            scene_description,
+        } => {
             let base_path = scene_description.parent().unwrap().to_path_buf();
             let world = match scene_description.extension().unwrap().to_str().unwrap() {
                 "json" => {
@@ -158,18 +161,12 @@ fn main() {
 
             run_render(world, render_args, &base_path)
         }
-        Command::ToJson {
-            scene,
-            output
-        } => {
+        Command::ToJson { scene, output } => {
             let world = scene.generate(16.0 / 9.0, &mut thread_rng());
             let json = serde_json::to_string_pretty(&world).unwrap();
             std::fs::write(output, json).unwrap();
         }
-        Command::ToYaml {
-            scene,
-            output
-        } => {
+        Command::ToYaml { scene, output } => {
             let world = scene.generate(16.0 / 9.0, &mut thread_rng());
             let yml = serde_yaml::to_string(&world).unwrap();
             std::fs::write(output, yml).unwrap();

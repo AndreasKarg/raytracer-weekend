@@ -1,12 +1,12 @@
+use crate::texture::{SolidColorDescriptor, TextureDescriptor};
 use derive_more::Constructor;
-use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
 use dyn_clone::{clone_trait_object, DynClone};
-use raytracer_weekend_lib::ActiveRng;
 use raytracer_weekend_lib::light_source::DiffuseLight;
 use raytracer_weekend_lib::material::{Dielectric, Lambertian, Material, Metal};
 use raytracer_weekend_lib::vec3::Color;
-use crate::texture::{SolidColorDescriptor, TextureDescriptor};
+use raytracer_weekend_lib::ActiveRng;
+use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 
 #[typetag::serde]
 pub trait MaterialDescriptor: Sync + Send + Debug + DynClone {

@@ -19,9 +19,10 @@ use {
     },
 };
 
+#[cfg(feature = "std")]
+use crate::image_texture::ImageTexture;
 use crate::{
     aabb::Aabb,
-    ActiveRng,
     bvh::BvhNode,
     hittable::{HitRecord, Hittable},
     light_source::DiffuseLight,
@@ -29,9 +30,8 @@ use crate::{
     ray::Ray,
     texture::{Point2d, SolidColor},
     vec3::{Point3, Vec3},
+    ActiveRng,
 };
-#[cfg(feature = "std")]
-use crate::image_texture::ImageTexture;
 
 #[derive(Debug, Clone)]
 pub struct Triangle {
@@ -62,7 +62,8 @@ impl Triangle {
             Point2d { u: 1.0, v: 0.0 },
             Point2d { u: 0.0, v: 1.0 },
         ];
-        let texture_uv = texture_uv.into_iter_fixed()
+        let texture_uv = texture_uv
+            .into_iter_fixed()
             .zip(default_uv)
             .map(|(param, default)| param.unwrap_or(default))
             .collect();
@@ -79,7 +80,7 @@ impl Triangle {
         Self::new(vertices, [None, None, None], [None, None, None], material)
     }
 
-    fn min_max(nums: impl Iterator<Item=f32>) -> (f32, f32) {
+    fn min_max(nums: impl Iterator<Item = f32>) -> (f32, f32) {
         let mut min_max = match nums.minmax() {
             MinMaxResult::NoElements => {
                 panic!()
@@ -176,7 +177,7 @@ fn parse_geometry<'a>(
     normals: &'a [Normal],
     texture_vertices: &'a [TVertex],
     materials: &Option<HashMap<String, Arc<dyn Material>>>,
-) -> impl Iterator<Item=Box<dyn Hittable>> + 'a {
+) -> impl Iterator<Item = Box<dyn Hittable>> + 'a {
     let material = if let Some(mat_name) = geometry.material_name.as_ref() {
         let mat_lib = materials.as_ref().unwrap();
         mat_lib[mat_name].clone()
@@ -317,8 +318,8 @@ fn parse_material(obj_material: &mtl::Material, mtl_path: &Path) -> Arc<dyn Mate
 impl Triangle {
     fn interpolate_barycentric<T>(u: f32, v: f32, interpolatee: &[T; 3]) -> T
     where
-        f32: Mul<T, Output=T>,
-        T: Add<Output=T> + Clone,
+        f32: Mul<T, Output = T>,
+        T: Add<Output = T> + Clone,
     {
         (1.0 - u - v) * interpolatee[0].clone()
             + u * interpolatee[1].clone()

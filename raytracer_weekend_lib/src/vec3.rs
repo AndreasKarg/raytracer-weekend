@@ -257,7 +257,7 @@ impl<T: Num + Copy + AddAssign> AddAssign for GenericVec3<T> {
 
 impl<T, U> Mul<U> for GenericVec3<T>
 where
-    T: Num + Copy + Mul<U, Output=T>,
+    T: Num + Copy + Mul<U, Output = T>,
     U: Num + Copy,
     <T as Mul<U>>::Output: Num + Copy,
 {
@@ -324,7 +324,7 @@ impl<T: DivAssign + Num + Copy> DivAssign<T> for GenericVec3<T> {
     }
 }
 
-impl<T: Neg<Output=T> + Num + Copy> Neg for GenericVec3<T> {
+impl<T: Neg<Output = T> + Num + Copy> Neg for GenericVec3<T> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -332,7 +332,7 @@ impl<T: Neg<Output=T> + Num + Copy> Neg for GenericVec3<T> {
     }
 }
 
-impl<T: BitAnd<U, Output=T> + Num + Copy, U: Copy> BitAnd<U> for GenericVec3<T> {
+impl<T: BitAnd<U, Output = T> + Num + Copy, U: Copy> BitAnd<U> for GenericVec3<T> {
     type Output = Self;
 
     fn bitand(self, rhs: U) -> Self::Output {

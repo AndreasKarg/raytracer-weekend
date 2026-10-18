@@ -8,8 +8,8 @@ use raytracer_weekend_lib::vec3::{Color, Point3, Vec3};
 
 use crate::hittable::HittableDescriptor;
 
-pub mod material;
 pub mod hittable;
+pub mod material;
 pub mod texture;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

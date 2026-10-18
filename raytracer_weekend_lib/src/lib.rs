@@ -48,10 +48,10 @@ pub struct Raytracer<'a> {
 }
 
 #[cfg(feature = "rayon")]
-pub trait RenderIterator = ParallelIterator<Item=Pixel>;
+pub trait RenderIterator = ParallelIterator<Item = Pixel>;
 
 #[cfg(not(feature = "rayon"))]
-pub trait RenderIterator = Iterator<Item=Pixel>;
+pub trait RenderIterator = Iterator<Item = Pixel>;
 
 impl<'a> Raytracer<'a> {
     pub fn render(&self) -> impl RenderIterator + '_ {

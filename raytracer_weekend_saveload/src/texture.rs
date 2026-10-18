@@ -5,11 +5,11 @@ use derive_more::Constructor;
 use dyn_clone::{clone_trait_object, DynClone};
 use serde::{Deserialize, Serialize};
 
-use raytracer_weekend_lib::ActiveRng;
 use raytracer_weekend_lib::image_texture::ImageTexture;
 use raytracer_weekend_lib::perlin::Perlin;
 use raytracer_weekend_lib::texture::{Noise, Texture, UVDebug};
 use raytracer_weekend_lib::vec3::Color;
+use raytracer_weekend_lib::ActiveRng;
 
 #[typetag::serde]
 pub trait TextureDescriptor: Sync + Send + Debug + DynClone {
