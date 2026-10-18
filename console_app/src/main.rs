@@ -61,7 +61,7 @@ fn main() {
         let frame_progress =
             ProgressBar::new(pixel_count).with_style(frame_progress_style);
 
-        let all_pixels: Vec<_> = raytracer.render().progress_with(frame_progress).collect();
+        let all_pixels: Vec<_> = raytracer.render(&mut rand::rng()).progress_with(frame_progress).collect();
 
         let mut image = RgbImage::new(image_width as u32, image_height as u32);
 
