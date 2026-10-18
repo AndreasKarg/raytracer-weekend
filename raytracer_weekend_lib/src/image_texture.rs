@@ -6,7 +6,7 @@ use core::{
     fmt::{Debug, Formatter},
 };
 
-use image::{io::Reader as ImageReader, DynamicImage, GenericImageView};
+use image::{DynamicImage, GenericImageView, io::Reader as ImageReader};
 
 use crate::{
     texture::{Point2d, Texture},

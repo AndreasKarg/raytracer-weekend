@@ -1,5 +1,5 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 
 members = [
     "console_app",
@@ -10,6 +10,9 @@ members = [
     "discovery_host_receiver_gui",
     "raytracer_weekend_saveload",
 ]
+
+[workspace.dependencies]
+rand = "0.10"
 
 [profile.release.package.raytracer_weekend_console]
 debug = true

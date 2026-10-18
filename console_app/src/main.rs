@@ -3,7 +3,6 @@ mod scenes;
 use clap::{Args, Parser, Subcommand};
 use image::{Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
-use rand::thread_rng;
 use rayon::prelude::*;
 use raytracer_weekend_lib::Raytracer;
 use raytracer_weekend_saveload::hittable::HittableDescriptorList;
@@ -67,12 +66,12 @@ fn run_render(world: World, args: RenderArgs, base_path: &Path) {
     let pixel_count = (image_width * image_height) as u64;
 
     let cameras = world.cameras;
-    let overall_progress = ProgressBar::new(cameras.len() as u64)
-        .with_style(ProgressStyle::default_bar().template(
-            "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}",
-        ));
+    let overall_progress_style = ProgressStyle::default_bar()
+        .template("[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}")
+        .unwrap();
+    let overall_progress = ProgressBar::new(cameras.len() as u64).with_style(overall_progress_style);
 
-    let geometry = world.geometry.to_hittables(&mut thread_rng(), base_path);
+    let geometry = world.geometry.to_hittables(&mut rand::rng(), base_path);
 
     for (frame_no, cam) in cameras.iter().progress_with(overall_progress).enumerate() {
         let cam = cam.to_camera();
@@ -85,13 +84,15 @@ fn run_render(world: World, args: RenderArgs, base_path: &Path) {
             samples_per_pixel,
         );
 
-        let frame_progress =
-            ProgressBar::new(pixel_count).with_style(ProgressStyle::default_bar().template(
-                "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec})",
-            ));
-        frame_progress.set_draw_delta(pixel_count / 100);
+        let frame_progress_style = ProgressStyle::default_bar()
+            .template("[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec})")
+            .unwrap();
+        let frame_progress = ProgressBar::new(pixel_count).with_style(frame_progress_style);
 
-        let all_pixels: Vec<_> = raytracer.render().progress_with(frame_progress).collect();
+        let all_pixels: Vec<_> = raytracer
+            .render(&mut rand::rng())
+            .progress_with(frame_progress)
+            .collect();
 
         let mut image = RgbImage::new(image_width, image_height);
 
@@ -135,7 +136,7 @@ fn main() {
 
             let world = scene.generate(
                 (render_args.width as f32) / (image_height as f32),
-                &mut thread_rng(),
+                &mut rand::rng(),
             );
 
             let base_path = std::env::current_dir().unwrap();
@@ -162,12 +163,12 @@ fn main() {
             run_render(world, render_args, &base_path)
         }
         Command::ToJson { scene, output } => {
-            let world = scene.generate(16.0 / 9.0, &mut thread_rng());
+            let world = scene.generate(16.0 / 9.0, &mut rand::rng());
             let json = serde_json::to_string_pretty(&world).unwrap();
             std::fs::write(output, json).unwrap();
         }
         Command::ToYaml { scene, output } => {
-            let world = scene.generate(16.0 / 9.0, &mut thread_rng());
+            let world = scene.generate(16.0 / 9.0, &mut rand::rng());
             let yml = serde_yaml::to_string(&world).unwrap();
             std::fs::write(output, yml).unwrap();
         }

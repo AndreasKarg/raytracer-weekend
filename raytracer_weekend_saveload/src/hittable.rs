@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 
 use derive_more::Constructor;
 use dyn_clone::{clone_trait_object, DynClone};
+use rand::rngs::ThreadRng;
 use serde::{Deserialize, Serialize};
 
 use raytracer_weekend_lib::bvh::BvhNode;
@@ -14,23 +15,22 @@ use raytracer_weekend_lib::hittable::volumes::ConstantMedium;
 use raytracer_weekend_lib::hittable::Hittable;
 use raytracer_weekend_lib::texture::Point2d;
 use raytracer_weekend_lib::vec3::{Point3, Vec3};
-use raytracer_weekend_lib::ActiveRng;
 
 use crate::material::MaterialDescriptor;
 use crate::texture::TextureDescriptor;
 
 #[typetag::serde]
 pub trait HittableDescriptor: Sync + Send + Debug + DynClone {
-    fn to_hittable(&self, rng: &mut ActiveRng, base_path: &Path) -> Box<dyn Hittable>;
+    fn to_hittable(&self, rng: &mut ThreadRng, base_path: &Path) -> Box<dyn Hittable<ThreadRng>>;
 }
 clone_trait_object!(HittableDescriptor);
 
 pub trait HittableDescriptorList {
-    fn to_hittables(&self, rng: &mut ActiveRng, base_path: &Path) -> Vec<Box<dyn Hittable>>;
+    fn to_hittables(&self, rng: &mut ThreadRng, base_path: &Path) -> Vec<Box<dyn Hittable<ThreadRng>>>;
 }
 
 impl HittableDescriptorList for Vec<Box<dyn HittableDescriptor>> {
-    fn to_hittables(&self, rng: &mut ActiveRng, base_path: &Path) -> Vec<Box<dyn Hittable>> {
+    fn to_hittables(&self, rng: &mut ThreadRng, base_path: &Path) -> Vec<Box<dyn Hittable<ThreadRng>>> {
         self.iter().map(|h| h.to_hittable(rng, base_path)).collect()
     }
 }
@@ -44,7 +44,7 @@ pub struct SphereDescriptor {
 
 #[typetag::serde(name = "Sphere")]
 impl HittableDescriptor for SphereDescriptor {
-    fn to_hittable(&self, rng: &mut ActiveRng, _: &Path) -> Box<dyn Hittable> {
+    fn to_hittable(&self, rng: &mut ThreadRng, _: &Path) -> Box<dyn Hittable<ThreadRng>> {
         Box::new(Sphere::new(
             self.center,
             self.radius,
@@ -65,7 +65,7 @@ pub struct MovingSphereDescriptor {
 
 #[typetag::serde(name = "MovingSphere")]
 impl HittableDescriptor for MovingSphereDescriptor {
-    fn to_hittable(&self, rng: &mut ActiveRng, _: &Path) -> Box<dyn Hittable> {
+    fn to_hittable(&self, rng: &mut ThreadRng, _: &Path) -> Box<dyn Hittable<ThreadRng>> {
         Box::new(
             raytracer_weekend_lib::hittable::spherical::MovingSphere::new(
                 self.center0,
@@ -86,7 +86,7 @@ pub struct WavefrontObjDescriptor {
 
 #[typetag::serde(name = "WavefrontObj")]
 impl HittableDescriptor for WavefrontObjDescriptor {
-    fn to_hittable(&self, rng: &mut ActiveRng, base_path: &Path) -> Box<dyn Hittable> {
+    fn to_hittable(&self, rng: &mut ThreadRng, base_path: &Path) -> Box<dyn Hittable<ThreadRng>> {
         let path = if self.path.is_relative() {
             base_path.join(&self.path)
         } else {
@@ -105,7 +105,7 @@ pub struct TranslationDescriptor {
 
 #[typetag::serde(name = "Translation")]
 impl HittableDescriptor for TranslationDescriptor {
-    fn to_hittable(&self, rng: &mut ActiveRng, base_path: &Path) -> Box<dyn Hittable> {
+    fn to_hittable(&self, rng: &mut ThreadRng, base_path: &Path) -> Box<dyn Hittable<ThreadRng>> {
         Box::new(Translation::new(
             self.inner.to_hittable(rng, base_path),
             self.offset,
@@ -125,7 +125,7 @@ pub struct XYRectangleDescriptor {
 
 #[typetag::serde(name = "XYRectangle")]
 impl HittableDescriptor for XYRectangleDescriptor {
-    fn to_hittable(&self, rng: &mut ActiveRng, _: &Path) -> Box<dyn Hittable> {
+    fn to_hittable(&self, rng: &mut ThreadRng, _: &Path) -> Box<dyn Hittable<ThreadRng>> {
         Box::new(XYRectangle::new(
             self.x0,
             self.x1,
@@ -149,7 +149,7 @@ pub struct XZRectangleDescriptor {
 
 #[typetag::serde(name = "XZRectangle")]
 impl HittableDescriptor for XZRectangleDescriptor {
-    fn to_hittable(&self, rng: &mut ActiveRng, _: &Path) -> Box<dyn Hittable> {
+    fn to_hittable(&self, rng: &mut ThreadRng, _: &Path) -> Box<dyn Hittable<ThreadRng>> {
         Box::new(XZRectangle::new(
             self.x0,
             self.x1,
@@ -173,7 +173,7 @@ pub struct YZRectangleDescriptor {
 
 #[typetag::serde(name = "YZRectangle")]
 impl HittableDescriptor for YZRectangleDescriptor {
-    fn to_hittable(&self, rng: &mut ActiveRng, _: &Path) -> Box<dyn Hittable> {
+    fn to_hittable(&self, rng: &mut ThreadRng, _: &Path) -> Box<dyn Hittable<ThreadRng>> {
         Box::new(YZRectangle::new(
             self.y0,
             self.y1,
@@ -194,7 +194,7 @@ pub struct CuboidDescriptor {
 
 #[typetag::serde(name = "Cuboid")]
 impl HittableDescriptor for CuboidDescriptor {
-    fn to_hittable(&self, rng: &mut ActiveRng, _: &Path) -> Box<dyn Hittable> {
+    fn to_hittable(&self, rng: &mut ThreadRng, _: &Path) -> Box<dyn Hittable<ThreadRng>> {
         Box::new(Cuboid::new(
             self.p0,
             self.p1,
@@ -212,7 +212,7 @@ pub struct ConstantMediumDescriptor {
 
 #[typetag::serde(name = "ConstantMedium")]
 impl HittableDescriptor for ConstantMediumDescriptor {
-    fn to_hittable(&self, rng: &mut ActiveRng, base_path: &Path) -> Box<dyn Hittable> {
+    fn to_hittable(&self, rng: &mut ThreadRng, base_path: &Path) -> Box<dyn Hittable<ThreadRng>> {
         Box::new(ConstantMedium::new(
             self.boundary.to_hittable(rng, base_path),
             self.density,
@@ -229,7 +229,7 @@ pub struct YRotationDescriptor {
 
 #[typetag::serde(name = "YRotation")]
 impl HittableDescriptor for YRotationDescriptor {
-    fn to_hittable(&self, rng: &mut ActiveRng, base_path: &Path) -> Box<dyn Hittable> {
+    fn to_hittable(&self, rng: &mut ThreadRng, base_path: &Path) -> Box<dyn Hittable<ThreadRng>> {
         Box::new(YRotation::new(
             self.inner.to_hittable(rng, base_path),
             self.angle_degrees,
@@ -246,7 +246,7 @@ pub struct BvhNodeDescriptor {
 
 #[typetag::serde(name = "BvhNode")]
 impl HittableDescriptor for BvhNodeDescriptor {
-    fn to_hittable(&self, rng: &mut ActiveRng, base_path: &Path) -> Box<dyn Hittable> {
+    fn to_hittable(&self, rng: &mut ThreadRng, base_path: &Path) -> Box<dyn Hittable<ThreadRng>> {
         Box::new(BvhNode::new(
             self.src_objects.to_hittables(rng, base_path),
             self.time0,
@@ -291,7 +291,7 @@ impl TriangleDescriptor {
 
 #[typetag::serde(name = "Triangle")]
 impl HittableDescriptor for TriangleDescriptor {
-    fn to_hittable(&self, rng: &mut ActiveRng, _: &Path) -> Box<dyn Hittable> {
+    fn to_hittable(&self, rng: &mut ThreadRng, _: &Path) -> Box<dyn Hittable<ThreadRng>> {
         Box::new(Triangle::new(
             self.vertices,
             self.normals,

@@ -1,8 +1,9 @@
-use derive_more::Constructor;
-use dyn_clone::{clone_trait_object, DynClone};
+use core::fmt::Debug;
+use derive_new::new;
+use dyn_clone::{DynClone, clone_trait_object};
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
-use rand::Rng;
+use rand::{Rng, RngExt};
 
 use super::{
     hittable::HitRecord,
@@ -12,7 +13,6 @@ use super::{
 use crate::{
     texture::{Point2d, SolidColor, Texture},
     vec3::Point3,
-    ActiveRng,
 };
 
 pub struct Scatter {
@@ -20,14 +20,14 @@ pub struct Scatter {
     pub scattered_ray: Ray,
 }
 
-pub trait Material: core::fmt::Debug + Sync + Send + DynClone {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter>;
+pub trait Material<R: Rng + ?Sized>: core::fmt::Debug + Sync + Send + DynClone {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<R>, rng: &mut R) -> Option<Scatter>;
     fn emitted(&self, uv: Point2d, p: &Point3) -> Color;
 }
 
-clone_trait_object!(Material);
+clone_trait_object!(<R: Rng + ?Sized> Material<R>);
 
-#[derive(Debug, Constructor, Clone)]
+#[derive(Debug, Clone, new)]
 pub struct Lambertian<T: Texture + Clone> {
     albedo: T,
 }
@@ -38,8 +38,8 @@ impl Lambertian<SolidColor> {
     }
 }
 
-impl<T: Texture + Clone> Material for Lambertian<T> {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
+impl<R: Rng + ?Sized, T: Texture + Clone> Material<R> for Lambertian<T> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<R>, rng: &mut R) -> Option<Scatter> {
         let mut scatter_direction = rec.normal + Vec3::random_unit_vector(rng);
 
         if scatter_direction.is_near_zero() {
@@ -74,8 +74,8 @@ impl Metal {
     }
 }
 
-impl Material for Metal {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
+impl<R: Rng + ?Sized> Material<R> for Metal {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<R>, rng: &mut R) -> Option<Scatter> {
         let reflected = r_in.direction().unit_vector().reflect(&rec.normal);
         let scattered_ray = Ray::new(
             rec.p,
@@ -99,7 +99,7 @@ impl Material for Metal {
     }
 }
 
-#[derive(Debug, Constructor, Clone)]
+#[derive(Debug, Clone, new)]
 pub struct Dielectric {
     ir: f32,
 }
@@ -112,8 +112,8 @@ impl Dielectric {
     }
 }
 
-impl Material for Dielectric {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
+impl<R: Rng + ?Sized> Material<R> for Dielectric {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<R>, rng: &mut R) -> Option<Scatter> {
         let ir = self.ir;
 
         let attenuation = Color::new(1.0, 1.0, 1.0);
@@ -126,7 +126,7 @@ impl Material for Dielectric {
         let cannot_refract = (refraction_ratio * sin_theta) > 1.0;
 
         let direction = if cannot_refract
-            || Self::reflectance(cos_theta, refraction_ratio) > rng.gen::<f32>()
+            || Self::reflectance(cos_theta, refraction_ratio) > rng.random::<f32>()
         {
             unit_direction.reflect(&rec.normal)
         } else {
@@ -146,13 +146,13 @@ impl Material for Dielectric {
     }
 }
 
-#[derive(Debug, Clone, Constructor)]
+#[derive(Debug, Clone, new)]
 pub struct Isotropic<T: Texture + Clone> {
     albedo: T,
 }
 
-impl<T: Texture + Clone> Material for Isotropic<T> {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut ActiveRng) -> Option<Scatter> {
+impl<R: Rng + ?Sized, T: Texture + Clone> Material<R> for Isotropic<T> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord<R>, rng: &mut R) -> Option<Scatter> {
         let attenuation = self.albedo.value(rec.texture_uv, &rec.p);
         let scattered_ray = Ray::new(rec.p, Vec3::random_in_unit_sphere(rng), r_in.time());
 

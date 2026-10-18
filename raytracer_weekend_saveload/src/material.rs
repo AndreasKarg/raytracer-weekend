@@ -4,13 +4,14 @@ use dyn_clone::{clone_trait_object, DynClone};
 use raytracer_weekend_lib::light_source::DiffuseLight;
 use raytracer_weekend_lib::material::{Dielectric, Lambertian, Material, Metal};
 use raytracer_weekend_lib::vec3::Color;
-use raytracer_weekend_lib::ActiveRng;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
+use std::sync::Arc;
+use rand::rngs::ThreadRng;
 
 #[typetag::serde]
 pub trait MaterialDescriptor: Sync + Send + Debug + DynClone {
-    fn to_material(&self, rng: &mut ActiveRng) -> Box<dyn Material>;
+    fn to_material(&self, rng: &mut ThreadRng) -> Arc<dyn Material<ThreadRng>>;
 }
 clone_trait_object!(MaterialDescriptor);
 
@@ -27,8 +28,8 @@ impl LambertianDescriptor {
 
 #[typetag::serde(name = "Lambertian")]
 impl MaterialDescriptor for LambertianDescriptor {
-    fn to_material(&self, rng: &mut ActiveRng) -> Box<dyn Material> {
-        Box::new(Lambertian::new(self.albedo.to_texture(rng)))
+    fn to_material(&self, rng: &mut ThreadRng) -> Arc<dyn Material<ThreadRng>> {
+        Arc::new(Lambertian::new(self.albedo.to_texture(rng)))
     }
 }
 
@@ -40,8 +41,8 @@ pub struct MetalDescriptor {
 
 #[typetag::serde(name = "Metal")]
 impl MaterialDescriptor for MetalDescriptor {
-    fn to_material(&self, _: &mut ActiveRng) -> Box<dyn Material> {
-        Box::new(Metal::new(self.albedo, self.fuzz))
+    fn to_material(&self, _: &mut ThreadRng) -> Arc<dyn Material<ThreadRng>> {
+        Arc::new(Metal::new(self.albedo, self.fuzz))
     }
 }
 
@@ -52,8 +53,8 @@ pub struct DielectricDescriptor {
 
 #[typetag::serde(name = "Dielectric")]
 impl MaterialDescriptor for DielectricDescriptor {
-    fn to_material(&self, _: &mut ActiveRng) -> Box<dyn Material> {
-        Box::new(Dielectric::new(self.ir))
+    fn to_material(&self, _: &mut ThreadRng) -> Arc<dyn Material<ThreadRng>> {
+        Arc::new(Dielectric::new(self.ir))
     }
 }
 
@@ -64,7 +65,7 @@ pub struct DiffuseLightDescriptor {
 
 #[typetag::serde(name = "DiffuseLight")]
 impl MaterialDescriptor for DiffuseLightDescriptor {
-    fn to_material(&self, rng: &mut ActiveRng) -> Box<dyn Material> {
-        Box::new(DiffuseLight::new(self.emit.to_texture(rng)))
+    fn to_material(&self, rng: &mut ThreadRng) -> Arc<dyn Material<ThreadRng>> {
+        Arc::new(DiffuseLight::new(self.emit.to_texture(rng)))
     }
 }

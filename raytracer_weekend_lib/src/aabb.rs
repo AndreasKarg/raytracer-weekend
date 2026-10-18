@@ -1,11 +1,9 @@
-//! An implementation of an Axis-Aligned Bounding Box (AABB)
-use {
-    super::{ray::Ray, vec3::Point3},
-    core::mem::swap,
-    derive_more::Constructor,
-};
+///! An implementation of an Axis-Aligned Bounding Box (AABB)
+use super::{ray::Ray, vec3::Point3};
+use core::mem::swap;
+use derive_new::new;
 
-#[derive(Constructor, Debug, Clone)]
+#[derive(Debug, Clone, new)]
 pub struct Aabb {
     minimum: Point3,
     maximum: Point3,

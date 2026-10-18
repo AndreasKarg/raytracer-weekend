@@ -1,6 +1,5 @@
 #![no_main]
 #![no_std]
-#![feature(alloc_error_handler)]
 
 use discovery_app as _; // global logger + panicking-behavior + memory layout
 
@@ -14,13 +13,11 @@ extern crate stm32l4xx_hal as hal;
 // #[macro_use(block)]
 // extern crate nb;
 
-use core::alloc::Layout;
 
 use alloc_cortex_m::CortexMHeap;
-use cortex_m::asm;
 use postcard::to_slice_cobs;
 // use postcard::to_slice_cobs;
-use raytracer_weekend_lib::{vec3::Color, Pixel};
+use raytracer_weekend_lib::{Pixel, vec3::Color};
 
 use crate::hal::{
     prelude::*,
@@ -72,7 +69,7 @@ fn main() -> ! {
         clocks,
         &mut rcc.apb1r1,
     );
-    let (mut tx, mut rx) = serial.split();
+    let (mut tx, _rx) = serial.split();
 
     let pixel = Pixel {
         row: 123,
@@ -104,7 +101,7 @@ fn main() -> ! {
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 
-#[alloc_error_handler]
-fn oom(_: Layout) -> ! {
-    defmt::panic!()
-}
+// #[alloc_error_handler]
+// fn oom(_: Layout) -> ! {
+//     defmt::panic!()
+// }

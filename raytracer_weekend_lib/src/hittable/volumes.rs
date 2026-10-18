@@ -1,8 +1,8 @@
-use core::fmt::Debug;
-
+use core::marker::PhantomData;
+use derive_where::derive_where;
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
-use rand::Rng;
+use rand::{Rng, RngExt};
 
 use crate::{
     aabb::Aabb,
@@ -11,17 +11,17 @@ use crate::{
     ray::Ray,
     texture::{Point2d, Texture},
     vec3::Vec3,
-    ActiveRng,
 };
 
-#[derive(Debug)]
-pub struct ConstantMedium<H: Hittable, T: Texture + Clone> {
+#[derive_where(Debug)]
+pub struct ConstantMedium<R: Rng + ?Sized, H: Hittable<R>, T: Texture + Clone> {
     boundary: H,
     phase_function: Isotropic<T>,
     neg_inv_density: f32,
+    _rng: PhantomData<fn() -> R>,
 }
 
-impl<H: Hittable, T: Texture + Clone> ConstantMedium<H, T> {
+impl<R: Rng + ?Sized, H: Hittable<R>, T: Texture + Clone> ConstantMedium<R, H, T> {
     pub fn new(boundary: H, density: f32, texture: T) -> Self {
         let neg_inv_density = -1.0 / density;
         let phase_function = Isotropic::new(texture);
@@ -30,12 +30,13 @@ impl<H: Hittable, T: Texture + Clone> ConstantMedium<H, T> {
             boundary,
             phase_function,
             neg_inv_density,
+            _rng: PhantomData,
         }
     }
 }
 
-impl<H: Hittable, T: Texture + Clone> Hittable for ConstantMedium<H, T> {
-    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut ActiveRng) -> Option<HitRecord> {
+impl<R: Rng + ?Sized, H: Hittable<R>, T: Texture + Clone> Hittable<R> for ConstantMedium<R, H, T> {
+    fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<'_, R>> {
         let rec1 = self
             .boundary
             .hit(r, f32::NEG_INFINITY, f32::INFINITY, rng)?;
@@ -55,7 +56,7 @@ impl<H: Hittable, T: Texture + Clone> Hittable for ConstantMedium<H, T> {
 
         let ray_length = r.direction().length();
         let distance_inside_boundary = (rec2_t - rec1_t) * ray_length;
-        let hit_distance = self.neg_inv_density * rng.gen::<f32>().log10();
+        let hit_distance = self.neg_inv_density * rng.random::<f32>().log10();
 
         if hit_distance > distance_inside_boundary {
             return None;

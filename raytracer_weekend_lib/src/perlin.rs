@@ -1,3 +1,4 @@
+use core::fmt::Debug;
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
 use rand::prelude::*;
@@ -12,7 +13,7 @@ pub struct Perlin {
 }
 
 impl Perlin {
-    pub fn new(rng: &mut impl Rng) -> Self {
+    pub fn new<R: Rng + ?Sized>(rng: &mut R) -> Self {
         let mut gradients = [Vec3::new(0.0, 0.0, 0.0); POINT_COUNT];
         for item in &mut gradients[..] {
             *item = Vec3::random_min_max(rng, -1.0..1.0).unit_vector();
@@ -28,7 +29,7 @@ impl Perlin {
         }
     }
 
-    fn generate_perm(rng: &mut impl Rng) -> [usize; POINT_COUNT] {
+    fn generate_perm<R: Rng + ?Sized>(rng: &mut R) -> [usize; POINT_COUNT] {
         let mut p = [0; POINT_COUNT];
 
         for (i, element) in p.iter_mut().enumerate() {
@@ -40,9 +41,9 @@ impl Perlin {
         p
     }
 
-    fn permute(p: &mut [usize; POINT_COUNT], n: usize, rng: &mut impl Rng) {
+    fn permute<R: Rng + ?Sized>(p: &mut [usize; POINT_COUNT], n: usize, rng: &mut R) {
         for i in (1..n).rev() {
-            let target = rng.gen_range(0..i);
+            let target = rng.random_range(0..i);
             p.swap(i, target);
         }
     }

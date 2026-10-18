@@ -2,8 +2,7 @@ use core::{
     fmt::Debug,
     ops::{Add, Mul},
 };
-
-use derive_more::Constructor;
+use derive_new::new;
 use dyn_clone::{clone_trait_object, DynClone};
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
@@ -52,7 +51,7 @@ impl Texture for Box<dyn Texture> {
     }
 }
 
-#[derive(Debug, Constructor, Clone)]
+#[derive(Debug, Clone, new)]
 pub struct SolidColor {
     color_value: Color,
 }
@@ -69,7 +68,7 @@ impl Texture for SolidColor {
     }
 }
 
-#[derive(Debug, Constructor, Clone)]
+#[derive(Debug, Clone, new)]
 pub struct Checker<E: Texture, O: Texture> {
     odd: O,
     even: E,
@@ -90,7 +89,7 @@ impl<E: Texture + Clone, O: Texture + Clone> Texture for Checker<E, O> {
     }
 }
 
-#[derive(Debug, Constructor, Clone)]
+#[derive(Debug, Clone, new)]
 pub struct Noise {
     noise: Perlin,
     scale: f32,
@@ -100,11 +99,11 @@ impl Texture for Noise {
     fn value(&self, _uv: Point2d, p: &Vec3) -> Color {
         Color::new(1.0, 1.0, 1.0)
             * 0.5
-            * (1.0 + (self.scale * p.z() + 10.0 * self.noise.turbulence(&(*p), 7)).sin())
+            * (1.0 + (self.scale * p.z() + 10.0 * self.noise.turbulence(p, 7)).sin())
     }
 }
 
-#[derive(Debug, Clone, Constructor)]
+#[derive(Debug, Clone, new)]
 pub struct UVDebug {}
 
 impl Texture for UVDebug {
