@@ -14,7 +14,7 @@ use crate::{
     vec3::{Point3, Vec3},
 };
 
-fn hit_sphere<'a, R: Rng + Debug + ?Sized>(
+fn hit_sphere<'a, R: Rng + ?Sized>(
     ray: &Ray,
     t_min: f32,
     t_max: f32,
@@ -103,7 +103,7 @@ impl<R: Rng + Debug + ?Sized> Hittable<R> for Sphere<R> {
 }
 
 #[derive(Debug, new)]
-pub struct MovingSphere<R: Rng + Debug + ?Sized> {
+pub struct MovingSphere<R: Rng + ?Sized> {
     center0: Point3,
     time0: f32,
     center1: Point3,

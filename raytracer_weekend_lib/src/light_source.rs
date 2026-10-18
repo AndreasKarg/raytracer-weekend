@@ -15,7 +15,7 @@ pub struct DiffuseLight<T: Texture> {
     emit: T,
 }
 
-impl<R: Rng + Debug + ?Sized, T: Texture> Material<R> for DiffuseLight<T> {
+impl<R: Rng + ?Sized, T: Texture> Material<R> for DiffuseLight<T> {
     fn scatter(&self, _r_in: &Ray, _rec: &HitRecord<R>, _rng: &mut R) -> Option<Scatter> {
         None
     }

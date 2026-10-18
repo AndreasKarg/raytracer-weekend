@@ -14,7 +14,7 @@ pub struct BvhNode<R: Rng + Debug + ?Sized> {
     bounding_box: Aabb,
 }
 
-impl<R: Rng + Debug + ?Sized> BvhNode<R> {
+impl<R: Rng + Debug + ?Sized + 'static> BvhNode<R> {
     pub fn new(
         mut src_objects: Vec<Box<dyn Hittable<R>>>,
         time0: f32,

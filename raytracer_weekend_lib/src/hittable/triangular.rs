@@ -12,7 +12,7 @@ use {
     std::fs,
     wavefront_obj::{
         mtl,
-        mtl::{Illumination, MtlSet},
+        mtl::{Illumination},
         obj,
         obj::{Geometry, Normal, Object, Primitive, TVertex, Vertex},
     },
@@ -33,19 +33,19 @@ use crate::bvh::BvhNode;
 use crate::material::Lambertian;
 
 #[derive(Debug, Clone)]
-pub struct Triangle<R: Rng + Debug + ?Sized> {
+pub struct Triangle<'a, R: Rng + Debug + ?Sized> {
     vertices: [Point3; 3],
     normals: [Vec3; 3],
     texture_uv: [Point2d; 3],
-    material: Arc<dyn Material<R>>,
+    material: Arc<dyn Material<R> + 'a>,
 }
 
-impl<R: Rng + Debug + ?Sized> Triangle<R> {
+impl<'a, R: Rng + Debug + ?Sized> Triangle<'a, R> {
     pub fn new(
         vertices: [Point3; 3],
         normals: [Option<Vec3>; 3],
         texture_uv: [Option<Point2d>; 3],
-        material: Arc<dyn Material<R>>,
+        material: Arc<dyn Material<R> + 'a>,
     ) -> Self {
         let vertex_a = vertices[0];
         let vertex_b = vertices[1];
@@ -96,7 +96,7 @@ impl<R: Rng + Debug + ?Sized> Triangle<R> {
     }
 }
 
-impl<R: Rng + Debug + ?Sized> Hittable<R> for Triangle<R> {
+impl<'a, R: Rng + Debug + ?Sized> Hittable<R> for Triangle<'a, R> {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
         let vertex_a = self.vertices[0];
         let vertex_b = self.vertices[1];
@@ -170,7 +170,7 @@ impl From<TVertex> for Point2d {
 }
 
 #[cfg(feature = "std")]
-fn parse_geometry<'a, R: 'a + Rng + Debug + ?Sized>(
+fn parse_geometry<'a, R: Rng + Debug + ?Sized + 'static>(
     geometry: &'a Geometry,
     vertices: &'a [Vertex],
     normals: &'a [Normal],
@@ -221,7 +221,7 @@ fn parse_geometry<'a, R: 'a + Rng + Debug + ?Sized>(
 }
 
 #[cfg(feature = "std")]
-fn parse_individual_object<R: Rng + Debug + ?Sized>(
+fn parse_individual_object<R: Rng + Debug + ?Sized + 'static>(
     object: &Object,
     materials: &Option<HashMap<String, Arc<dyn Material<R>>>>,
 ) -> Vec<Box<dyn Hittable<R>>> {
@@ -241,7 +241,7 @@ fn parse_individual_object<R: Rng + Debug + ?Sized>(
 }
 
 #[cfg(feature = "std")]
-pub fn load_wavefront_obj<R: Rng + Debug + ?Sized>(
+pub fn load_wavefront_obj<'a, R: Rng + Debug + ?Sized + 'static>(
     path: &str,
     rng: &mut R,
 ) -> Result<Box<dyn Hittable<R>>, Box<dyn std::error::Error>> {
@@ -314,7 +314,7 @@ fn parse_material<R: Rng + Debug + ?Sized>(obj_material: &mtl::Material, mtl_pat
     Arc::new(Lambertian::new(texture))
 }
 
-impl<R: Rng + Debug + ?Sized> Triangle<R> {
+impl<'a, R: Rng + Debug + ?Sized> Triangle<'a, R> {
     fn interpolate_barycentric<T>(u: f32, v: f32, interpolatee: &[T; 3]) -> T
     where
         f32: Mul<T, Output = T>,

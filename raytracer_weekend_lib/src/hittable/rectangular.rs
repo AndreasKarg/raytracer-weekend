@@ -1,8 +1,3 @@
-use alloc::borrow::Cow;
-use alloc::boxed::Box;
-use core::fmt::Debug;
-use derive_new::new;
-use rand::Rng;
 use crate::{
     aabb::Aabb,
     hittable::{HitRecord, Hittable},
@@ -11,15 +6,20 @@ use crate::{
     texture::Point2d,
     vec3::{Point3, Vec3},
 };
+use alloc::boxed::Box;
+use core::fmt::Debug;
+use derive_new::new;
+use rand::Rng;
+use std::sync::Arc;
 
 #[derive(Debug, new)]
-pub struct XYRectangle<R: Rng + Debug + ?Sized> {
+pub struct XYRectangle<R: Rng + Debug +?Sized> {
     x0: f32,
     x1: f32,
     y0: f32,
     y1: f32,
     k: f32,
-    material: Box<dyn Material<R>>,
+    material: Arc<dyn Material<R>>,
 }
 
 impl<R: Rng + Debug + ?Sized> Hittable<R> for XYRectangle<R> {
@@ -70,7 +70,7 @@ pub struct XZRectangle<R: Rng + Debug + ?Sized> {
     z0: f32,
     z1: f32,
     k: f32,
-    material: Box<dyn Material<R>>,
+    material: Arc<dyn Material<R>>,
 }
 
 impl<R: Rng + Debug + ?Sized> Hittable<R> for XZRectangle<R> {
@@ -121,7 +121,7 @@ pub struct YZRectangle<R: Rng + Debug + ?Sized> {
     z0: f32,
     z1: f32,
     k: f32,
-    material: Box<dyn Material<R>>,
+    material: Arc<dyn Material<R>>,
 }
 
 impl<R: Rng + Debug + ?Sized> Hittable<R> for YZRectangle<R> {
@@ -172,8 +172,8 @@ pub struct Cuboid<R: Rng + Debug + ?Sized> {
     sides: [Box<dyn Hittable<R>>; 6],
 }
 
-impl<R: Rng + Debug + ?Sized> Cuboid<R> {
-    pub fn new(p0: Point3, p1: Point3, material: Cow<dyn Material<R>>) -> Self {
+impl<R: Rng + Debug + ?Sized + 'static> Cuboid<R> {
+    pub fn new(p0: Point3, p1: Point3, material: Arc<dyn Material<R>>) -> Self {
         let sides: [Box<dyn Hittable<R>>; 6] = [
             Box::new(XYRectangle::new(
                 p0.x(),

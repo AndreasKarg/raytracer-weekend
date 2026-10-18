@@ -86,11 +86,11 @@ impl GenericVec3<f32> {
         *self / self.length()
     }
 
-    pub fn random<R: Rng + Debug + ?Sized>(rng: &mut R) -> Self {
+    pub fn random<R: Rng + ?Sized>(rng: &mut R) -> Self {
         Self::random_min_max(rng, 0.0..1.0)
     }
 
-    pub fn random_min_max<R: Rng + Debug + ?Sized>(rng: &mut R, range: Range<f32>) -> Self {
+    pub fn random_min_max<R: Rng + ?Sized>(rng: &mut R, range: Range<f32>) -> Self {
         Self::new(
             rng.random_range(range.clone()),
             rng.random_range(range.clone()),
@@ -98,7 +98,7 @@ impl GenericVec3<f32> {
         )
     }
 
-    pub fn random_in_unit_sphere<R: Rng + Debug + ?Sized>(rng: &mut R) -> Self {
+    pub fn random_in_unit_sphere<R: Rng + ?Sized>(rng: &mut R) -> Self {
         loop {
             let p = Self::random_min_max(rng, -1.0..1.0);
             if p.length_squared() < 1.0 {
@@ -107,11 +107,11 @@ impl GenericVec3<f32> {
         }
     }
 
-    pub fn random_unit_vector<R: Rng + Debug + ?Sized>(rng: &mut R) -> Self {
+    pub fn random_unit_vector<R: Rng + ?Sized>(rng: &mut R) -> Self {
         Self::random_in_unit_sphere(rng).unit_vector()
     }
 
-    pub fn random_in_hemisphere<R: Rng + Debug + ?Sized>(normal: &Vec3, rng: &mut R) -> Self {
+    pub fn random_in_hemisphere<R: Rng + ?Sized>(normal: &Vec3, rng: &mut R) -> Self {
         let in_unit_sphere = Self::random_in_unit_sphere(rng);
         if in_unit_sphere.dot(normal) > 0.0 {
             // In the same hemisphere as the normal
@@ -121,7 +121,7 @@ impl GenericVec3<f32> {
         }
     }
 
-    pub fn random_in_unit_disk(rng: &mut impl Rng) -> Self {
+    pub fn random_in_unit_disk<R: Rng + ?Sized>(rng: &mut R) -> Self {
         loop {
             let p = Self::new(rng.random_range(-1.0..1.0), rng.random_range(-1.0..1.0), 0.0);
             if p.length_squared() < 1.0 {

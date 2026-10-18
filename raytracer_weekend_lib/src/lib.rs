@@ -31,7 +31,7 @@ use vec3::Color;
 const MAX_DEPTH: usize = 50;
 
 #[derive(new)]
-pub struct Raytracer<'a, R: Rng + Debug + ?Sized> {
+pub struct Raytracer<'a, R: Rng + ?Sized> {
     world: &'a [Box<dyn Hittable<R>>],
     cam: &'a Camera,
     background: Color,
@@ -40,7 +40,7 @@ pub struct Raytracer<'a, R: Rng + Debug + ?Sized> {
     samples_per_pixel: u32,
 }
 
-impl<'a, R: Rng + Debug + ?Sized> Raytracer<'a, R> {
+impl<'a, R: Rng + ?Sized + 'static> Raytracer<'a, R> {
     pub fn render(&self, mut rng: &'a mut R) -> impl Iterator<Item = Pixel> + 'a {
         let pixel_range = self.pixel_range();
         pixel_range
@@ -50,7 +50,7 @@ impl<'a, R: Rng + Debug + ?Sized> Raytracer<'a, R> {
     }
 
     // #[cfg(feature = "std")]
-    // pub fn render_parallel<R: Rng + Debug + ?Sized>(&self, rng: R) -> impl ParallelIterator<Item = Pixel> + '_ {
+    // pub fn render_parallel<R: Rng + ?Sized>(&self, rng: R) -> impl ParallelIterator<Item = Pixel> + '_ {
     //     let pixel_range = self.pixel_range();
     //
     //     let pixel_range: Vec<_> = pixel_range.collect();

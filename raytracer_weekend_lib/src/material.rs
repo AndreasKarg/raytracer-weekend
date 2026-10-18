@@ -20,12 +20,12 @@ pub struct Scatter {
     pub scattered_ray: Ray,
 }
 
-pub trait Material<R: Rng + Debug + ?Sized>: core::fmt::Debug + Sync + Send + DynClone {
+pub trait Material<R: Rng + ?Sized>: core::fmt::Debug + Sync + Send + DynClone {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord<R>, rng: &mut R) -> Option<Scatter>;
     fn emitted(&self, uv: Point2d, p: &Point3) -> Color;
 }
 
-clone_trait_object!(<R: Rng + Debug + ?Sized> Material<R>);
+clone_trait_object!(<R: Rng + ?Sized> Material<R>);
 
 #[derive(Debug, Clone, new)]
 pub struct Lambertian<T: Texture> {
@@ -38,7 +38,7 @@ impl Lambertian<SolidColor> {
     }
 }
 
-impl<R: Rng + Debug + ?Sized, T: Texture> Material<R> for Lambertian<T> {
+impl<R: Rng + ?Sized, T: Texture> Material<R> for Lambertian<T> {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord<R>, rng: &mut R) -> Option<Scatter> {
         let mut scatter_direction = rec.normal + Vec3::random_unit_vector(rng);
 
@@ -74,7 +74,7 @@ impl Metal {
     }
 }
 
-impl<R: Rng + Debug + ?Sized> Material<R> for Metal {
+impl<R: Rng + ?Sized> Material<R> for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord<R>, rng: &mut R) -> Option<Scatter> {
         let reflected = r_in.direction().unit_vector().reflect(&rec.normal);
         let scattered_ray = Ray::new(
@@ -112,7 +112,7 @@ impl Dielectric {
     }
 }
 
-impl<R: Rng + Debug + ?Sized> Material<R> for Dielectric {
+impl<R: Rng + ?Sized> Material<R> for Dielectric {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord<R>, rng: &mut R) -> Option<Scatter> {
         let ir = self.ir;
 
@@ -151,7 +151,7 @@ pub struct Isotropic<T: Texture> {
     albedo: T,
 }
 
-impl<R: Rng + Debug + ?Sized, T: Texture> Material<R> for Isotropic<T> {
+impl<R: Rng + ?Sized, T: Texture> Material<R> for Isotropic<T> {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord<R>, rng: &mut R) -> Option<Scatter> {
         let attenuation = self.albedo.value(rec.texture_uv, &rec.p);
         let scattered_ray = Ray::new(rec.p, Vec3::random_in_unit_sphere(rng), r_in.time());

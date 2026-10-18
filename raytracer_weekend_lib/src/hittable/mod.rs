@@ -17,7 +17,7 @@ pub mod triangular;
 pub mod volumes;
 
 #[derive(Debug, new)]
-pub struct HitRecord<'a, R: Rng + Debug + ?Sized> {
+pub struct HitRecord<'a, R: Rng + ?Sized> {
     pub p: Point3,
     pub normal: Vec3,
     pub material: &'a (dyn Material<R> + 'a),
@@ -26,7 +26,7 @@ pub struct HitRecord<'a, R: Rng + Debug + ?Sized> {
     pub is_front_face: bool,
 }
 
-impl<'a, R: Rng + Debug + ?Sized> HitRecord<'a, R> {
+impl<'a, R: Rng + ?Sized> HitRecord<'a, R> {
     pub fn new_with_face_normal(
         p: Point3,
         t: f32,
@@ -46,12 +46,12 @@ impl<'a, R: Rng + Debug + ?Sized> HitRecord<'a, R> {
     }
 }
 
-pub trait Hittable<R: Rng + Debug + ?Sized>: Sync + Send + Debug {
+pub trait Hittable<R: Rng + ?Sized>: Debug + Sync + Send {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>>;
     fn bounding_box(&self, time0: f32, time1: f32) -> Option<Aabb>;
 }
 
-impl<R: Rng + Debug + ?Sized> Hittable<R> for [Box<dyn Hittable<R>>] {
+impl<R: Rng + ?Sized> Hittable<R> for [Box<dyn Hittable<R>>] {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
         let mut closest_so_far = t_max;
         let mut rec = None;
@@ -85,7 +85,7 @@ impl<R: Rng + Debug + ?Sized> Hittable<R> for [Box<dyn Hittable<R>>] {
     }
 }
 
-impl<R: Rng + Debug + ?Sized> Hittable<R> for Vec<Box<dyn Hittable<R>>> {
+impl<R: Rng + ?Sized> Hittable<R> for Vec<Box<dyn Hittable<R>>> {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
         self.as_slice().hit(r, t_min, t_max, rng)
     }
@@ -95,7 +95,7 @@ impl<R: Rng + Debug + ?Sized> Hittable<R> for Vec<Box<dyn Hittable<R>>> {
     }
 }
 
-impl<R: Rng + Debug + ?Sized> Hittable<R> for &[Box<dyn Hittable<R>>] {
+impl<R: Rng + ?Sized> Hittable<R> for &[Box<dyn Hittable<R>>] {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
         (*self).hit(r, t_min, t_max, rng)
     }
@@ -105,7 +105,7 @@ impl<R: Rng + Debug + ?Sized> Hittable<R> for &[Box<dyn Hittable<R>>] {
     }
 }
 
-impl<R: Rng + Debug + ?Sized> Hittable<R> for Box<dyn Hittable<R>> {
+impl<R: Rng + ?Sized> Hittable<R> for Box<dyn Hittable<R>> {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
         self.as_ref().hit(r, t_min, t_max, rng)
     }
