@@ -3,7 +3,6 @@ mod scenes;
 use clap::Parser;
 use image::{Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
-use rand::thread_rng;
 use rayon::prelude::*;
 use raytracer_weekend_lib::Raytracer;
 use scenes::Scene;
@@ -37,33 +36,35 @@ fn main() {
 
     let (world, cams, background) = opts.scene.generate(
         (image_width as f32) / (image_height as f32),
-        &mut thread_rng(),
+        &mut rand::rng(),
     );
 
-    let overall_progress = ProgressBar::new(cams.len() as u64)
-        .with_style(ProgressStyle::default_bar().template(
-            "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}",
-        ));
+    let overall_progress_style = ProgressStyle::default_bar()
+        .template("[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}")
+        .unwrap();
+    let overall_progress = ProgressBar::new(cams.len() as u64).with_style(overall_progress_style);
 
     for (frame_no, cam) in cams.iter().progress_with(overall_progress).enumerate() {
         let raytracer = Raytracer::new(
             &world,
-            &cam,
+            cam,
             background,
             image_width,
             image_height,
             samples_per_pixel,
         );
 
-        let frame_progress =
-            ProgressBar::new(pixel_count).with_style(ProgressStyle::default_bar().template(
-                "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec})",
-            ));
-        frame_progress.set_draw_delta(pixel_count / 100);
+        let frame_progress_style = ProgressStyle::default_bar()
+            .template("[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec})")
+            .unwrap();
+        let frame_progress = ProgressBar::new(pixel_count).with_style(frame_progress_style);
 
-        let all_pixels: Vec<_> = raytracer.render().progress_with(frame_progress).collect();
+        let all_pixels: Vec<_> = raytracer
+            .render(&mut rand::rng())
+            .progress_with(frame_progress)
+            .collect();
 
-        let mut image = RgbImage::new(image_width as u32, image_height as u32);
+        let mut image = RgbImage::new(image_width, image_height);
 
         image
             .pixels_mut()

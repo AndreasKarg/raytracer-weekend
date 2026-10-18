@@ -1,34 +1,27 @@
 #![no_main]
 #![no_std]
-#![feature(alloc_error_handler)]
 
 extern crate alloc;
 
-use alloc::{boxed::Box, vec, vec::Vec};
-use core::alloc::Layout;
+use alloc::{boxed::Box, sync::Arc, vec, vec::Vec};
 
 use alloc_cortex_m::CortexMHeap;
 use discovery_app as _;
-use heapless;
-use postcard::{to_vec, to_vec_cobs};
-use rand::{prelude::SmallRng, Rng, SeedableRng};
+use postcard::to_vec_cobs;
+use rand::{SeedableRng, prelude::SmallRng};
 use raytracer_weekend_lib::{
-    bvh::BvhNode,
+    ProgressMessage, Raytracer,
     camera::Camera,
     hittable::{
-        rectangular::{Cuboid, XYRectangle, XZRectangle, YZRectangle},
-        spherical::{MovingSphere, Sphere},
-        transformations::{Transformable, Translation, YRotation},
-        triangular::Triangle,
-        volumes::ConstantMedium,
         Hittable,
+        rectangular::{Cuboid, XYRectangle, XZRectangle, YZRectangle},
+        transformations::Transformable,
+        volumes::ConstantMedium,
     },
     light_source::DiffuseLight,
-    material::{Dielectric, Lambertian, Material, Metal},
-    perlin::Perlin,
-    texture::{Checker, Noise, SolidColor, UVDebug},
+    material::Lambertian,
+    texture::SolidColor,
     vec3::{Color, Point3, Vec3},
-    ProgressMessage, Raytracer,
 };
 use stm32l4xx_hal::{
     pac::USART2,
@@ -75,17 +68,17 @@ fn main() -> ! {
     let (world, cams, background) = cornell_box(aspect_ratio, &mut rng);
     defmt::info!("World created.");
 
-    for (frame_no, cam) in cams.iter().enumerate() {
+    for (_frame_no, cam) in cams.iter().enumerate() {
         let raytracer = Raytracer::new(
             &world,
-            &cam,
+            cam,
             background,
             image_width,
             image_height,
             samples_per_pixel,
         );
 
-        let all_pixels = raytracer.render();
+        let all_pixels = raytracer.render(&mut rng);
 
         for (idx, pixel) in all_pixels.enumerate() {
             /*if idx % 1 == 0*/
@@ -115,15 +108,15 @@ fn main() -> ! {
     discovery_app::exit()
 }
 
-type World = (Vec<Box<dyn Hittable>>, Vec<Camera>, Color);
+type World = (Vec<Box<dyn Hittable<SmallRng>>>, Vec<Camera>, Color);
 static DEFAULT_BACKGROUND: Color = Color::new_const(0.7, 0.8, 1.00);
 
-pub fn cornell_box(aspect_ratio: f32, rng: &mut SmallRng) -> World {
+pub fn cornell_box(aspect_ratio: f32, _rng: &mut SmallRng) -> World {
     // World
-    let red = Box::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
-    let white = Box::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));
-    let green = Box::new(Lambertian::new_solid_color(Color::new(0.12, 0.45, 0.15)));
-    let light = Box::new(DiffuseLight::new(SolidColor::new_rgb(7.0, 7.0, 7.0)));
+    let red = Arc::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
+    let white = Arc::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));
+    let green = Arc::new(Lambertian::new_solid_color(Color::new(0.12, 0.45, 0.15)));
+    let light = Arc::new(DiffuseLight::new(SolidColor::new_rgb(7.0, 7.0, 7.0)));
 
     let box1 = Cuboid::new(
         Point3::new(0.0, 0.0, 0.0),
@@ -144,7 +137,7 @@ pub fn cornell_box(aspect_ratio: f32, rng: &mut SmallRng) -> World {
     let box1 = ConstantMedium::new(box1, 0.005, SolidColor::new_rgb(0.0, 0.0, 0.0));
     let box2 = ConstantMedium::new(box2, 0.005, SolidColor::new_rgb(1.0, 1.0, 1.0));
 
-    let world: Vec<Box<dyn Hittable>> = vec![
+    let world: Vec<Box<dyn Hittable<SmallRng>>> = vec![
         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
         Box::new(XZRectangle::new(113.0, 443.0, 127.0, 432.0, 554.0, light)),
@@ -222,8 +215,3 @@ fn setup_usart2() -> (Tx<USART2>, Rx<USART2>) {
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
-
-#[alloc_error_handler]
-fn my_example_handler(layout: core::alloc::Layout) -> ! {
-    panic!("memory allocation of {} bytes failed", layout.size())
-}

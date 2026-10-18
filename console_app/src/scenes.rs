@@ -6,12 +6,12 @@ use raytracer_weekend_lib::{
     bvh::BvhNode,
     camera::Camera,
     hittable::{
+        Hittable,
         rectangular::{Cuboid, XYRectangle, XZRectangle, YZRectangle},
         spherical::{MovingSphere, Sphere},
         transformations::{Transformable, Translation, YRotation},
-        triangular::{load_wavefront_obj, Triangle},
+        triangular::{Triangle, load_wavefront_obj},
         volumes::ConstantMedium,
-        Hittable,
     },
     image_texture::ImageTexture,
     light_source::DiffuseLight,
@@ -71,7 +71,7 @@ pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     let glass = Dielectric::new(1.5);
     let metal = Metal::new(Color::new(0.7, 0.6, 0.5), 0.0);
 
-    let mut world: Vec<Box<dyn Hittable>> = vec![
+    let mut world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![
         Box::new(Sphere::new(
             Point3::new(0.0, -1000.0, 0.0),
             1000.0,
@@ -104,27 +104,31 @@ pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
             let a = a as f32;
             let b = b as f32;
 
-            let center = Point3::new(a + 0.9 * rng.gen::<f32>(), 0.2, b + 0.9 * rng.gen::<f32>());
+            let center = Point3::new(
+                a + 0.9 * rng.random::<f32>(),
+                0.2,
+                b + 0.9 * rng.random::<f32>(),
+            );
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() <= 0.9 {
                 continue;
             }
 
-            let sphere_material: Box<dyn Material>;
+            
 
-            let choose_mat: f64 = rng.gen();
-            if choose_mat < 0.8 {
+            let choose_mat: f64 = rng.random();
+            let sphere_material: Box<dyn Material<ThreadRng>> = if choose_mat < 0.8 {
                 let albedo = Color::random(rng) * Color::random(rng);
-                sphere_material = Box::new(Lambertian::new_solid_color(albedo));
+                Box::new(Lambertian::new_solid_color(albedo))
             } else if choose_mat < 0.95 {
                 let albedo = Color::random_min_max(rng, 0.5..1.0);
-                let fuzz = rng.gen_range(0.0..0.5);
-                sphere_material = Box::new(Metal::new(albedo, fuzz));
+                let fuzz = rng.random_range(0.0..0.5);
+                Box::new(Metal::new(albedo, fuzz))
             } else {
-                sphere_material = Box::new(Dielectric::new(1.5));
-            }
+                Box::new(Dielectric::new(1.5))
+            };
 
-            let center2 = center + Vec3::new(0.0, rng.gen_range(0.0..0.5), 0.0);
+            let center2 = center + Vec3::new(0.0, rng.random_range(0.0..0.5), 0.0);
 
             let sphere = Box::new(MovingSphere::new(
                 center,
@@ -170,7 +174,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     );
     let material_ground = Lambertian::new(checker);
 
-    let world: Vec<Box<dyn Hittable>> = vec![
+    let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![
         Box::new(Sphere::new(
             Point3::new(0.0, -10.0, 0.0),
             10.0,
@@ -213,7 +217,7 @@ pub fn two_perlin_spheres(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     let perlin_material = Noise::new(Perlin::new(rng), 4.0);
     let material_ground = Lambertian::new(perlin_material);
 
-    let world: Vec<Box<dyn Hittable>> = vec![
+    let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![
         Box::new(Sphere::new(
             Point3::new(0.0, -1000.0, 0.0),
             1000.0,
@@ -256,7 +260,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     let earth_texture = ImageTexture::open("models/earthmap.jpg").unwrap();
     let earth_surface = Lambertian::new(earth_texture);
 
-    let world: Vec<Box<dyn Hittable>> = vec![Box::new(Sphere::new(
+    let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![Box::new(Sphere::new(
         Point3::new(0.0, 0.0, 0.0),
         2.0,
         Box::new(earth_surface),
@@ -296,7 +300,7 @@ pub fn simple_light(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     let perlin_material = Noise::new(Perlin::new(rng), 4.0);
     let material_ground = Lambertian::new(perlin_material);
 
-    let world: Vec<Box<dyn Hittable>> = vec![
+    let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![
         Box::new(Sphere::new(
             Point3::new(0.0, -1000.0, 0.0),
             1000.0,
@@ -313,7 +317,7 @@ pub fn simple_light(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
             1.0,
             3.0,
             -2.0,
-            Box::new(earth_surface.clone()),
+            Arc::new(earth_surface.clone()),
         )),
         Box::new(Sphere::new(
             Point3::new(0.0, 6.0, 0.0),
@@ -349,10 +353,10 @@ pub fn simple_light(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 
 pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
-    let red = Box::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
-    let white = Box::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));
-    let green = Box::new(Lambertian::new_solid_color(Color::new(0.12, 0.45, 0.15)));
-    let light = Box::new(DiffuseLight::new(SolidColor::new_rgb(15.0, 15.0, 15.0)));
+    let red = Arc::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
+    let white = Arc::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));
+    let green = Arc::new(Lambertian::new_solid_color(Color::new(0.12, 0.45, 0.15)));
+    let light = Arc::new(DiffuseLight::new(SolidColor::new_rgb(15.0, 15.0, 15.0)));
 
     let box1 = Cuboid::new(
         Point3::new(0.0, 0.0, 0.0),
@@ -370,7 +374,7 @@ pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     .rotate_y(-18.0)
     .translate(Vec3::new(130.0, 0.0, 65.0));
 
-    let world: Vec<Box<dyn Hittable>> = vec![
+    let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![
         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
         Box::new(XZRectangle::new(213.0, 343.0, 227.0, 332.0, 554.0, light)),
@@ -415,10 +419,10 @@ pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 
 pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
-    let red = Box::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
-    let white = Box::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));
-    let green = Box::new(Lambertian::new_solid_color(Color::new(0.12, 0.45, 0.15)));
-    let light = Box::new(DiffuseLight::new(SolidColor::new_rgb(7.0, 7.0, 7.0)));
+    let red = Arc::new(Lambertian::new_solid_color(Color::new(0.65, 0.05, 0.05)));
+    let white = Arc::new(Lambertian::new_solid_color(Color::new(0.73, 0.73, 0.73)));
+    let green = Arc::new(Lambertian::new_solid_color(Color::new(0.12, 0.45, 0.15)));
+    let light = Arc::new(DiffuseLight::new(SolidColor::new_rgb(7.0, 7.0, 7.0)));
 
     let box1 = Cuboid::new(
         Point3::new(0.0, 0.0, 0.0),
@@ -439,7 +443,7 @@ pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     let box1 = ConstantMedium::new(box1, 0.005, SolidColor::new_rgb(0.0, 0.0, 0.0));
     let box2 = ConstantMedium::new(box2, 0.005, SolidColor::new_rgb(1.0, 1.0, 1.0));
 
-    let world: Vec<Box<dyn Hittable>> = vec![
+    let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![
         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 555.0, green)),
         Box::new(YZRectangle::new(0.0, 555.0, 0.0, 555.0, 0.0, red)),
         Box::new(XZRectangle::new(113.0, 443.0, 127.0, 432.0, 554.0, light)),
@@ -483,8 +487,8 @@ pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 }
 
 pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
-    let mut boxes1: Vec<Box<dyn Hittable>> = Vec::new();
-    let ground = Box::new(Lambertian::new_solid_color(Color::new(0.48, 0.83, 0.53)));
+    let mut boxes1: Vec<Box<dyn Hittable<ThreadRng>>> = Vec::new();
+    let ground = Arc::new(Lambertian::new_solid_color(Color::new(0.48, 0.83, 0.53)));
 
     let boxes_per_side = 20;
     for i in 0..boxes_per_side {
@@ -497,7 +501,7 @@ pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
             let z0 = -1000.0 + j * w;
             let y0 = 0.0;
             let x1 = x0 + w;
-            let y1 = rng.gen_range(1.0..101.0);
+            let y1 = rng.random_range(1.0..101.0);
             let z1 = z0 + w;
 
             boxes1.push(Box::new(Cuboid::new(
@@ -508,11 +512,11 @@ pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         }
     }
 
-    let mut objects: Vec<Box<dyn Hittable>> = Vec::new();
+    let mut objects: Vec<Box<dyn Hittable<ThreadRng>>> = Vec::new();
 
     objects.push(Box::new(BvhNode::new(boxes1, 0.0, 1.0, rng)));
 
-    let light = Box::new(DiffuseLight::new(SolidColor::new_rgb(7.0, 7.0, 7.0)));
+    let light = Arc::new(DiffuseLight::new(SolidColor::new_rgb(7.0, 7.0, 7.0)));
     objects.push(Box::new(XZRectangle::new(
         123.0, 423.0, 147.0, 412.0, 554.0, light,
     )));
@@ -578,7 +582,7 @@ pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         Box::new(Lambertian::new(pertext)),
     )));
 
-    let mut boxes2: Vec<Box<dyn Hittable>> = Vec::new();
+    let mut boxes2: Vec<Box<dyn Hittable<ThreadRng>>> = Vec::new();
     let white = Box::new(Lambertian::new(SolidColor::new_rgb(0.73, 0.73, 0.73)));
     let ns = 1000;
     for _ in 0..ns {
@@ -622,7 +626,7 @@ pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 pub fn animated_book2_final(
     aspect_ratio: f32,
     rng: &mut ThreadRng,
-) -> (Vec<Box<dyn Hittable>>, Vec<Camera>, Color) {
+) -> (Vec<Box<dyn Hittable<ThreadRng>>>, Vec<Camera>, Color) {
     let (world, _, background) = book2_final_scene(aspect_ratio, rng);
 
     // Camera
@@ -661,7 +665,8 @@ pub fn animated_book2_final(
         })
         .collect();
 
-    let world: Vec<Box<dyn Hittable>> = vec![Box::new(BvhNode::new(world, 0.0, 1.0, rng))];
+    let world: Vec<Box<dyn Hittable<ThreadRng>>> =
+        vec![Box::new(BvhNode::new(world, 0.0, 1.0, rng))];
 
     (world, cameras, background)
 }
@@ -675,7 +680,7 @@ pub fn simple_triangle(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     );
     let material_ground = Lambertian::new(checker);
 
-    let world: Vec<Box<dyn Hittable>> = vec![
+    let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![
         Box::new(Sphere::new(
             Point3::new(0.0, -10.0, 0.0),
             10.0,
@@ -726,9 +731,10 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     let material_ground = Lambertian::new(checker);
 
     let cow = load_wavefront_obj("models/cow-nonormals.obj", rng).unwrap();
-    let cow = Box::new(Translation::new(cow, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable>;
+    let cow =
+        Box::new(Translation::new(cow, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable<ThreadRng>>;
 
-    let world: Vec<Box<dyn Hittable>> = vec![
+    let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![
         Box::new(Sphere::new(
             Point3::new(0.0, -10.6, 0.0),
             10.0,
@@ -740,7 +746,7 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
             1.0,
             7.0,
             5.0,
-            Box::new(DiffuseLight::new(SolidColor::new_rgb(1.4, 1.3, 1.3))),
+            Arc::new(DiffuseLight::new(SolidColor::new_rgb(1.4, 1.3, 1.3))),
         )),
         cow,
     ];
@@ -773,17 +779,17 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 pub fn wavefront_suspension_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     // World
     let suspension = load_wavefront_obj("models/Normals_Try3.obj", rng).unwrap();
-    let suspension =
-        Box::new(Translation::new(suspension, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable>;
+    let suspension = Box::new(Translation::new(suspension, Vec3::new(0.0, 2.5, 0.0)))
+        as Box<dyn Hittable<ThreadRng>>;
 
-    let world: Vec<Box<dyn Hittable>> = vec![
+    let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![
         Box::new(XYRectangle::new(
             -5.0,
             5.0,
             -7.0,
             7.0,
             1.0,
-            Box::new(DiffuseLight::new(SolidColor::new_rgb(1.2, 1.0, 1.0))),
+            Arc::new(DiffuseLight::new(SolidColor::new_rgb(1.2, 1.0, 1.0))),
         )),
         suspension,
     ];
@@ -820,14 +826,14 @@ pub fn textured_monument(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         Vec3::new(0.0, 0.0, -19.0),
     ));
 
-    let world: Vec<Box<dyn Hittable>> = vec![
+    let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![
         Box::new(XYRectangle::new(
             -15.0,
             15.0,
             -17.0,
             17.0,
             33.0,
-            Box::new(DiffuseLight::new(SolidColor::new_rgb(1.2, 1.0, 1.0))),
+            Arc::new(DiffuseLight::new(SolidColor::new_rgb(1.2, 1.0, 1.0))),
         )),
         monument,
     ];
@@ -857,6 +863,6 @@ pub fn textured_monument(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     (world, vec![cam], Color::new_const(0.085, 0.1, 0.125))
 }
 
-type World = (Vec<Box<dyn Hittable>>, Vec<Camera>, Color);
+type World = (Vec<Box<dyn Hittable<ThreadRng>>>, Vec<Camera>, Color);
 
 static DEFAULT_BACKGROUND: Color = Color::new_const(0.7, 0.8, 1.00);

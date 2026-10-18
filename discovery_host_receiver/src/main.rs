@@ -1,9 +1,7 @@
-#![feature(let_else)]
-
 use std::{io::Read, time::Duration};
 
 use image::Rgb;
-use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
+use indicatif::{ProgressBar, ProgressStyle};
 use postcard::from_bytes_cobs;
 use raytracer_weekend_lib::{Pixel, ProgressMessage};
 use serialport::ClearBuffer;

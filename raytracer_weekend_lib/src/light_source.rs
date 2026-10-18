@@ -1,4 +1,6 @@
-use derive_more::Constructor;
+use core::fmt::Debug;
+use derive_new::new;
+use rand::Rng;
 
 use crate::{
     hittable::HitRecord,
@@ -6,16 +8,15 @@ use crate::{
     ray::Ray,
     texture::{Point2d, Texture},
     vec3::{Color, Point3},
-    ActiveRng,
 };
 
-#[derive(Constructor, Debug, Clone)]
+#[derive(Debug, Clone, new)]
 pub struct DiffuseLight<T: Texture> {
     emit: T,
 }
 
-impl<T: Texture> Material for DiffuseLight<T> {
-    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _rng: &mut ActiveRng) -> Option<Scatter> {
+impl<R: Rng + ?Sized, T: Texture> Material<R> for DiffuseLight<T> {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord<R>, _rng: &mut R) -> Option<Scatter> {
         None
     }
 
