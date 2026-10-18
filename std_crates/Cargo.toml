@@ -3,9 +3,6 @@ resolver = "3"
 
 members = [
     "console_app",
-    "raytracer_weekend_lib",
-    "discovery_app",
-    "discovery_app/testsuite",
     "discovery_host_receiver",
     "discovery_host_receiver_gui",
     "raytracer_weekend_saveload",
@@ -13,6 +10,4 @@ members = [
 
 [workspace.dependencies]
 rand = "0.10"
-
-[profile.release.package.raytracer_weekend_console]
-debug = true
+raytracer_weekend_lib = { path = "../raytracer_weekend_lib" }

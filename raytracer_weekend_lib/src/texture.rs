@@ -45,7 +45,7 @@ pub trait Texture: Debug + Send + Sync + DynClone {
 
 clone_trait_object!(Texture);
 
-impl Texture for Box<dyn Texture> {
+impl Texture for alloc::boxed::Box<dyn Texture> {
     fn value(&self, uv: Point2d, p: &Vec3) -> Color {
         self.as_ref().value(uv, p)
     }

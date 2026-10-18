@@ -1,0 +1,13 @@
+[workspace]
+resolver = "3"
+
+members = [
+    "discovery_app",
+]
+
+[workspace.dependencies]
+rand = "0.10"
+raytracer_weekend_lib = { path = "../raytracer_weekend_lib" }
+
+[profile.release.package.raytracer_weekend_console]
+debug = true

@@ -6,9 +6,8 @@ use crate::{
     texture::Point2d,
     vec3::{Point3, Vec3},
 };
-use alloc::boxed::Box;
+use alloc::sync::Arc;
 use core::f32::consts::PI;
-use std::sync::Arc;
 use derive_new::new;
 use derive_where::derive_where;
 #[cfg(feature = "no_std")]

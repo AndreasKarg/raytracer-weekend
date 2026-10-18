@@ -1,0 +1,5 @@
+/target
+*.orig
+/publish
+.idea
+*.ppm

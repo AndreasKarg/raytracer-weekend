@@ -12,7 +12,7 @@ image = "0.25"
 indicatif = { version = "0.18", features = ["rayon"] }
 rand = { workspace = true }
 rayon = "1.12.0"
-raytracer_weekend_lib = { path = "../raytracer_weekend_lib" }
+raytracer_weekend_lib = { workspace = true }
 raytracer_weekend_saveload = { path = "../raytracer_weekend_saveload" }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_yaml = "0.9.34"
