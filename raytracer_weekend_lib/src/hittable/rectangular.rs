@@ -10,7 +10,7 @@ use alloc::boxed::Box;
 use core::fmt::Debug;
 use derive_new::new;
 use rand::Rng;
-use std::sync::Arc;
+use alloc::sync::Arc;
 use derive_where::derive_where;
 
 #[derive(new)]
