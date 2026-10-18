@@ -1,7 +1,7 @@
 use std::{cell::Cell, io::Read, time::Duration};
 
 use dioxus::{
-    core::exports::futures_channel::mpsc::{unbounded, UnboundedReceiver},
+    core::exports::futures_channel::mpsc::{UnboundedReceiver, unbounded},
     prelude::*,
 };
 use image::Rgb;

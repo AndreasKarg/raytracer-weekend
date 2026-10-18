@@ -1,11 +1,3 @@
-use alloc::boxed::Box;
-use core::f32::consts::PI;
-use core::fmt::Debug;
-use derive_new::new;
-use derive_where::derive_where;
-#[cfg(feature = "no_std")]
-use micromath::F32Ext;
-use rand::Rng;
 use crate::{
     aabb::Aabb,
     hittable::{HitRecord, Hittable},
@@ -14,6 +6,14 @@ use crate::{
     texture::Point2d,
     vec3::{Point3, Vec3},
 };
+use alloc::boxed::Box;
+use core::f32::consts::PI;
+use core::fmt::Debug;
+use derive_new::new;
+use derive_where::derive_where;
+#[cfg(feature = "no_std")]
+use micromath::F32Ext;
+use rand::Rng;
 
 fn hit_sphere<'a, R: Rng + ?Sized>(
     ray: &Ray,

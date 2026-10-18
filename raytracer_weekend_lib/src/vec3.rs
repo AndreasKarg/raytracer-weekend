@@ -123,7 +123,11 @@ impl GenericVec3<f32> {
 
     pub fn random_in_unit_disk<R: Rng + ?Sized>(rng: &mut R) -> Self {
         loop {
-            let p = Self::new(rng.random_range(-1.0..1.0), rng.random_range(-1.0..1.0), 0.0);
+            let p = Self::new(
+                rng.random_range(-1.0..1.0),
+                rng.random_range(-1.0..1.0),
+                0.0,
+            );
             if p.length_squared() < 1.0 {
                 return p;
             }

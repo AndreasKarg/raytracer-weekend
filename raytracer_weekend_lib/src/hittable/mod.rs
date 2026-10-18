@@ -1,7 +1,3 @@
-use alloc::{boxed::Box, vec::Vec};
-use core::fmt::Debug;
-use derive_new::new;
-use rand::{Rng, RngExt};
 use super::{
     aabb::Aabb,
     material::Material,
@@ -9,6 +5,10 @@ use super::{
     texture::Point2d,
     vec3::{Point3, Vec3},
 };
+use alloc::{boxed::Box, vec::Vec};
+use core::fmt::Debug;
+use derive_new::new;
+use rand::{Rng, RngExt};
 
 pub mod rectangular;
 pub mod spherical;

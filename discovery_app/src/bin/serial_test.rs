@@ -19,7 +19,7 @@ use alloc_cortex_m::CortexMHeap;
 use cortex_m::asm;
 use postcard::to_slice_cobs;
 // use postcard::to_slice_cobs;
-use raytracer_weekend_lib::{vec3::Color, Pixel};
+use raytracer_weekend_lib::{Pixel, vec3::Color};
 
 use crate::hal::{
     prelude::*,

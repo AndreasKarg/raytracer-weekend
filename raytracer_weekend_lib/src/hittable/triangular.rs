@@ -13,14 +13,16 @@ use {
     std::fs,
     wavefront_obj::{
         mtl,
-        mtl::{Illumination},
+        mtl::Illumination,
         obj,
         obj::{Geometry, Normal, Object, Primitive, TVertex, Vertex},
     },
 };
 
+use crate::bvh::BvhNode;
 #[cfg(feature = "std")]
 use crate::image_texture::ImageTexture;
+use crate::material::Lambertian;
 use crate::{
     aabb::Aabb,
     hittable::{HitRecord, Hittable},
@@ -30,8 +32,6 @@ use crate::{
     texture::{Point2d, SolidColor},
     vec3::{Point3, Vec3},
 };
-use crate::bvh::BvhNode;
-use crate::material::Lambertian;
 
 #[derive_where(Debug, Clone)]
 pub struct Triangle<'a, R: Rng + ?Sized> {
@@ -300,7 +300,10 @@ fn load_wavefront_mtl<R: Rng + ?Sized>(
 }
 
 #[cfg(feature = "std")]
-fn parse_material<R: Rng + ?Sized>(obj_material: &mtl::Material, mtl_path: &str) -> Arc<dyn Material<R>> {
+fn parse_material<R: Rng + ?Sized>(
+    obj_material: &mtl::Material,
+    mtl_path: &str,
+) -> Arc<dyn Material<R>> {
     if obj_material.illumination != Illumination::AmbientDiffuse {
         panic!()
     }

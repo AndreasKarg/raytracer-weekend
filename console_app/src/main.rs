@@ -39,11 +39,10 @@ fn main() {
         &mut rand::rng(),
     );
 
-    let overall_progress_style = ProgressStyle::default_bar().template(
-        "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}",
-    ).unwrap();
-    let overall_progress = ProgressBar::new(cams.len() as u64)
-        .with_style(overall_progress_style);
+    let overall_progress_style = ProgressStyle::default_bar()
+        .template("[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}")
+        .unwrap();
+    let overall_progress = ProgressBar::new(cams.len() as u64).with_style(overall_progress_style);
 
     for (frame_no, cam) in cams.iter().progress_with(overall_progress).enumerate() {
         let raytracer = Raytracer::new(
@@ -55,13 +54,15 @@ fn main() {
             samples_per_pixel,
         );
 
-        let frame_progress_style = ProgressStyle::default_bar().template(
-            "[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec})",
-        ).unwrap();
-        let frame_progress =
-            ProgressBar::new(pixel_count).with_style(frame_progress_style);
+        let frame_progress_style = ProgressStyle::default_bar()
+            .template("[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec})")
+            .unwrap();
+        let frame_progress = ProgressBar::new(pixel_count).with_style(frame_progress_style);
 
-        let all_pixels: Vec<_> = raytracer.render(&mut rand::rng()).progress_with(frame_progress).collect();
+        let all_pixels: Vec<_> = raytracer
+            .render(&mut rand::rng())
+            .progress_with(frame_progress)
+            .collect();
 
         let mut image = RgbImage::new(image_width as u32, image_height as u32);
 

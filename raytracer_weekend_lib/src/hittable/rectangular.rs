@@ -7,11 +7,11 @@ use crate::{
     vec3::{Point3, Vec3},
 };
 use alloc::boxed::Box;
+use alloc::sync::Arc;
 use core::fmt::Debug;
 use derive_new::new;
-use rand::Rng;
-use alloc::sync::Arc;
 use derive_where::derive_where;
+use rand::Rng;
 
 #[derive(new)]
 #[derive_where(Debug, Clone)]

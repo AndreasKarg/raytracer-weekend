@@ -1,17 +1,16 @@
-use std::fmt::Debug;
-use std::sync::Arc;
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use rand::prelude::*;
-use rayon::{prelude::*, ThreadPoolBuilder};
+use rayon::{ThreadPoolBuilder, prelude::*};
 use raytracer_weekend_lib::{
+    Raytracer,
     bvh::BvhNode,
     camera::Camera,
     hittable::{
+        Hittable,
         rectangular::{Cuboid, XZRectangle},
         spherical::{MovingSphere, Sphere},
         transformations::{Translation, YRotation},
         volumes::ConstantMedium,
-        Hittable,
     },
     image_texture::ImageTexture,
     light_source::DiffuseLight,
@@ -19,8 +18,9 @@ use raytracer_weekend_lib::{
     perlin::Perlin,
     texture::{Noise, SolidColor},
     vec3::{Color, Point3, Vec3},
-    Raytracer,
 };
+use std::fmt::Debug;
+use std::sync::Arc;
 
 pub fn book2_final_scene<R: Rng + ?Sized + 'static>(
     aspect_ratio: f32,

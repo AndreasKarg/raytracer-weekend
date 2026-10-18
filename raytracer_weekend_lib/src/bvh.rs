@@ -1,8 +1,8 @@
+use super::{aabb::Aabb, hittable::Hittable};
+use crate::{hittable::HitRecord, ray::Ray};
 use alloc::{boxed::Box, vec::Vec};
 use core::{cmp::Ordering, fmt::Debug};
 use derive_where::derive_where;
-use super::{aabb::Aabb, hittable::Hittable};
-use crate::{hittable::HitRecord, ray::Ray};
 use rand::{Rng, RngExt};
 
 ///! An implementation of a Boundary Volume Hierarchy thingamajig.

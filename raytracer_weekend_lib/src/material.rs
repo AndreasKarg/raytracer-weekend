@@ -1,6 +1,6 @@
 use core::fmt::Debug;
 use derive_new::new;
-use dyn_clone::{clone_trait_object, DynClone};
+use dyn_clone::{DynClone, clone_trait_object};
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
 use rand::{Rng, RngExt};

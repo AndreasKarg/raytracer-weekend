@@ -15,8 +15,8 @@ pub mod texture;
 pub mod vec3;
 
 use alloc::boxed::Box;
-use core::fmt::Debug;
 use camera::Camera;
+use core::fmt::Debug;
 use derive_new::new;
 use hittable::Hittable;
 use itertools::iproduct;
@@ -46,7 +46,6 @@ impl<'a, R: Rng + ?Sized + 'static> Raytracer<'a, R> {
         pixel_range
             .into_iter()
             .map(move |(j, i)| self.sample_pixel(j, i, &mut rng))
-
     }
 
     // #[cfg(feature = "std")]

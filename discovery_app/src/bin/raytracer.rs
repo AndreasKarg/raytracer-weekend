@@ -10,24 +10,24 @@ use alloc_cortex_m::CortexMHeap;
 use discovery_app as _;
 use heapless;
 use postcard::{to_vec, to_vec_cobs};
-use rand::{prelude::SmallRng, Rng, SeedableRng};
+use rand::{Rng, SeedableRng, prelude::SmallRng};
 use raytracer_weekend_lib::{
+    ProgressMessage, Raytracer,
     bvh::BvhNode,
     camera::Camera,
     hittable::{
+        Hittable,
         rectangular::{Cuboid, XYRectangle, XZRectangle, YZRectangle},
         spherical::{MovingSphere, Sphere},
         transformations::{Transformable, Translation, YRotation},
         triangular::Triangle,
         volumes::ConstantMedium,
-        Hittable,
     },
     light_source::DiffuseLight,
     material::{Dielectric, Lambertian, Material, Metal},
     perlin::Perlin,
     texture::{Checker, Noise, SolidColor, UVDebug},
     vec3::{Color, Point3, Vec3},
-    ProgressMessage, Raytracer,
 };
 use stm32l4xx_hal::{
     pac::USART2,

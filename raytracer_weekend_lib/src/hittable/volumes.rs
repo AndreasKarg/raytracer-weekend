@@ -31,7 +31,7 @@ impl<R: Rng + ?Sized, H: Hittable<R>, T: Texture> ConstantMedium<R, H, T> {
             boundary,
             phase_function,
             neg_inv_density,
-            _rng: PhantomData
+            _rng: PhantomData,
         }
     }
 }

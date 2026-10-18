@@ -6,12 +6,12 @@ use raytracer_weekend_lib::{
     bvh::BvhNode,
     camera::Camera,
     hittable::{
+        Hittable,
         rectangular::{Cuboid, XYRectangle, XZRectangle, YZRectangle},
         spherical::{MovingSphere, Sphere},
         transformations::{Transformable, Translation, YRotation},
-        triangular::{load_wavefront_obj, Triangle},
+        triangular::{Triangle, load_wavefront_obj},
         volumes::ConstantMedium,
-        Hittable,
     },
     image_texture::ImageTexture,
     light_source::DiffuseLight,
@@ -104,7 +104,11 @@ pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
             let a = a as f32;
             let b = b as f32;
 
-            let center = Point3::new(a + 0.9 * rng.random::<f32>(), 0.2, b + 0.9 * rng.random::<f32>());
+            let center = Point3::new(
+                a + 0.9 * rng.random::<f32>(),
+                0.2,
+                b + 0.9 * rng.random::<f32>(),
+            );
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() <= 0.9 {
                 continue;
@@ -661,7 +665,8 @@ pub fn animated_book2_final(
         })
         .collect();
 
-    let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![Box::new(BvhNode::new(world, 0.0, 1.0, rng))];
+    let world: Vec<Box<dyn Hittable<ThreadRng>>> =
+        vec![Box::new(BvhNode::new(world, 0.0, 1.0, rng))];
 
     (world, cameras, background)
 }
@@ -726,7 +731,8 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     let material_ground = Lambertian::new(checker);
 
     let cow = load_wavefront_obj("models/cow-nonormals.obj", rng).unwrap();
-    let cow = Box::new(Translation::new(cow, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable<ThreadRng>>;
+    let cow =
+        Box::new(Translation::new(cow, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable<ThreadRng>>;
 
     let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![
         Box::new(Sphere::new(
@@ -773,8 +779,8 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
 pub fn wavefront_suspension_obj(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     // World
     let suspension = load_wavefront_obj("models/Normals_Try3.obj", rng).unwrap();
-    let suspension =
-        Box::new(Translation::new(suspension, Vec3::new(0.0, 2.5, 0.0))) as Box<dyn Hittable<ThreadRng>>;
+    let suspension = Box::new(Translation::new(suspension, Vec3::new(0.0, 2.5, 0.0)))
+        as Box<dyn Hittable<ThreadRng>>;
 
     let world: Vec<Box<dyn Hittable<ThreadRng>>> = vec![
         Box::new(XYRectangle::new(
