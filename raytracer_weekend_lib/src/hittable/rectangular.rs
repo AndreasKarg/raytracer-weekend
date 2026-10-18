@@ -11,9 +11,11 @@ use core::fmt::Debug;
 use derive_new::new;
 use rand::Rng;
 use std::sync::Arc;
+use derive_where::derive_where;
 
-#[derive(Debug, new)]
-pub struct XYRectangle<R: Rng + Debug +?Sized> {
+#[derive(new)]
+#[derive_where(Debug, Clone)]
+pub struct XYRectangle<R: Rng + ?Sized> {
     x0: f32,
     x1: f32,
     y0: f32,
@@ -22,7 +24,7 @@ pub struct XYRectangle<R: Rng + Debug +?Sized> {
     material: Arc<dyn Material<R>>,
 }
 
-impl<R: Rng + Debug + ?Sized> Hittable<R> for XYRectangle<R> {
+impl<R: Rng + ?Sized> Hittable<R> for XYRectangle<R> {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
         let x0 = self.x0;
         let y0 = self.y0;
@@ -63,8 +65,9 @@ impl<R: Rng + Debug + ?Sized> Hittable<R> for XYRectangle<R> {
     }
 }
 
-#[derive(Debug, new)]
-pub struct XZRectangle<R: Rng + Debug + ?Sized> {
+#[derive(new)]
+#[derive_where(Debug, Clone)]
+pub struct XZRectangle<R: Rng + ?Sized> {
     x0: f32,
     x1: f32,
     z0: f32,
@@ -73,7 +76,7 @@ pub struct XZRectangle<R: Rng + Debug + ?Sized> {
     material: Arc<dyn Material<R>>,
 }
 
-impl<R: Rng + Debug + ?Sized> Hittable<R> for XZRectangle<R> {
+impl<R: Rng + ?Sized> Hittable<R> for XZRectangle<R> {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
         let x0 = self.x0;
         let z0 = self.z0;
@@ -114,8 +117,9 @@ impl<R: Rng + Debug + ?Sized> Hittable<R> for XZRectangle<R> {
     }
 }
 
-#[derive(Debug, new)]
-pub struct YZRectangle<R: Rng + Debug + ?Sized> {
+#[derive(new)]
+#[derive_where(Debug, Clone)]
+pub struct YZRectangle<R: Rng + ?Sized> {
     y0: f32,
     y1: f32,
     z0: f32,
@@ -124,7 +128,7 @@ pub struct YZRectangle<R: Rng + Debug + ?Sized> {
     material: Arc<dyn Material<R>>,
 }
 
-impl<R: Rng + Debug + ?Sized> Hittable<R> for YZRectangle<R> {
+impl<R: Rng + ?Sized> Hittable<R> for YZRectangle<R> {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
         let y0 = self.y0;
         let z0 = self.z0;
@@ -165,14 +169,14 @@ impl<R: Rng + Debug + ?Sized> Hittable<R> for YZRectangle<R> {
     }
 }
 
-#[derive(Debug)]
-pub struct Cuboid<R: Rng + Debug + ?Sized> {
+#[derive_where(Debug)]
+pub struct Cuboid<R: Rng + ?Sized> {
     box_min: Point3,
     box_max: Point3,
     sides: [Box<dyn Hittable<R>>; 6],
 }
 
-impl<R: Rng + Debug + ?Sized + 'static> Cuboid<R> {
+impl<R: Rng + ?Sized + 'static> Cuboid<R> {
     pub fn new(p0: Point3, p1: Point3, material: Arc<dyn Material<R>>) -> Self {
         let sides: [Box<dyn Hittable<R>>; 6] = [
             Box::new(XYRectangle::new(
@@ -233,7 +237,7 @@ impl<R: Rng + Debug + ?Sized + 'static> Cuboid<R> {
     }
 }
 
-impl<R: Rng + Debug + ?Sized> Hittable<R> for Cuboid<R> {
+impl<R: Rng + ?Sized> Hittable<R> for Cuboid<R> {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
         self.sides.hit(r, t_min, t_max, rng)
     }

@@ -1,5 +1,6 @@
 use core::fmt::Debug;
 use core::marker::PhantomData;
+use derive_where::derive_where;
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
 use rand::{Rng, RngExt};
@@ -13,7 +14,7 @@ use crate::{
     vec3::Vec3,
 };
 
-#[derive(Debug)]
+#[derive_where(Debug)]
 pub struct ConstantMedium<R: Rng + ?Sized, H: Hittable<R>, T: Texture> {
     boundary: H,
     phase_function: Isotropic<T>,
@@ -35,7 +36,7 @@ impl<R: Rng + ?Sized, H: Hittable<R>, T: Texture> ConstantMedium<R, H, T> {
     }
 }
 
-impl<R: Rng + Debug + ?Sized, H: Hittable<R>, T: Texture> Hittable<R> for ConstantMedium<R, H, T> {
+impl<R: Rng + ?Sized, H: Hittable<R>, T: Texture> Hittable<R> for ConstantMedium<R, H, T> {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
         let rec1 = self
             .boundary

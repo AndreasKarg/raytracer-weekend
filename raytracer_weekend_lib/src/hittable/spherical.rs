@@ -2,6 +2,7 @@ use alloc::boxed::Box;
 use core::f32::consts::PI;
 use core::fmt::Debug;
 use derive_new::new;
+use derive_where::derive_where;
 #[cfg(feature = "no_std")]
 use micromath::F32Ext;
 use rand::Rng;
@@ -75,14 +76,15 @@ fn get_sphere_uv(p: &Point3) -> Point2d {
     Point2d { u, v }
 }
 
-#[derive(Debug, Clone, new)]
-pub struct Sphere<R: Rng + Debug + ?Sized> {
+#[derive(new)]
+#[derive_where(Debug, Clone)]
+pub struct Sphere<R: Rng + ?Sized> {
     center: Point3,
     radius: f32,
     material: Box<dyn Material<R>>,
 }
 
-impl<R: Rng + Debug + ?Sized> Hittable<R> for Sphere<R> {
+impl<R: Rng + ?Sized> Hittable<R> for Sphere<R> {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
         hit_sphere(
             ray,
@@ -102,7 +104,8 @@ impl<R: Rng + Debug + ?Sized> Hittable<R> for Sphere<R> {
     }
 }
 
-#[derive(Debug, new)]
+#[derive(new)]
+#[derive_where(Debug, Clone)]
 pub struct MovingSphere<R: Rng + ?Sized> {
     center0: Point3,
     time0: f32,
@@ -112,7 +115,7 @@ pub struct MovingSphere<R: Rng + ?Sized> {
     material: Box<dyn Material<R>>,
 }
 
-impl<R: Rng + Debug + ?Sized> MovingSphere<R> {
+impl<R: Rng + ?Sized> MovingSphere<R> {
     fn center_at_time(&self, time: f32) -> Point3 {
         let center0 = self.center0;
         let time0 = self.time0;
@@ -122,7 +125,7 @@ impl<R: Rng + Debug + ?Sized> MovingSphere<R> {
     }
 }
 
-impl<R: Rng + Debug + ?Sized> Hittable<R> for MovingSphere<R> {
+impl<R: Rng + ?Sized> Hittable<R> for MovingSphere<R> {
     fn hit(&self, ray: &Ray, t_min: f32, t_max: f32, _rng: &mut R) -> Option<HitRecord<R>> {
         let center_at_time = self.center_at_time(ray.time());
 

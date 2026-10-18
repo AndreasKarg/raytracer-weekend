@@ -41,7 +41,7 @@ pub struct Raytracer<'a, R: Rng + ?Sized> {
 }
 
 impl<'a, R: Rng + ?Sized + 'static> Raytracer<'a, R> {
-    pub fn render(&self, mut rng: &'a mut R) -> impl Iterator<Item = Pixel> + 'a {
+    pub fn render(&'a self, mut rng: &'a mut R) -> impl Iterator<Item = Pixel> + 'a {
         let pixel_range = self.pixel_range();
         pixel_range
             .into_iter()

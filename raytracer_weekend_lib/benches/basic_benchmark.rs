@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+use std::sync::Arc;
 use criterion::{criterion_group, criterion_main, Criterion};
 use rand::prelude::*;
 use rayon::{prelude::*, ThreadPoolBuilder};
@@ -20,12 +22,12 @@ use raytracer_weekend_lib::{
     Raytracer,
 };
 
-pub fn book2_final_scene(
+pub fn book2_final_scene<R: Rng + ?Sized + 'static>(
     aspect_ratio: f32,
-    rng: &mut impl Rng,
-) -> (Vec<Box<dyn Hittable>>, Camera, Color) {
-    let mut boxes1: Vec<Box<dyn Hittable>> = Vec::new();
-    let ground = Box::new(Lambertian::new_solid_color(Color::new(0.48, 0.83, 0.53)));
+    rng: &mut R,
+) -> (Vec<Box<dyn Hittable<R>>>, Camera, Color) {
+    let mut boxes1: Vec<Box<dyn Hittable<R>>> = Vec::new();
+    let ground = Arc::new(Lambertian::new_solid_color(Color::new(0.48, 0.83, 0.53)));
 
     let boxes_per_side = 20;
     for i in 0..boxes_per_side {
@@ -49,11 +51,11 @@ pub fn book2_final_scene(
         }
     }
 
-    let mut objects: Vec<Box<dyn Hittable>> = Vec::new();
+    let mut objects: Vec<Box<dyn Hittable<R>>> = Vec::new();
 
     objects.push(Box::new(BvhNode::new(boxes1, 0.0, 1.0, rng)));
 
-    let light = Box::new(DiffuseLight::new(SolidColor::new_rgb(7.0, 7.0, 7.0)));
+    let light = Arc::new(DiffuseLight::new(SolidColor::new_rgb(7.0, 7.0, 7.0)));
     objects.push(Box::new(XZRectangle::new(
         123.0, 423.0, 147.0, 412.0, 554.0, light,
     )));
@@ -117,7 +119,7 @@ pub fn book2_final_scene(
         Box::new(Lambertian::new(pertext)),
     )));
 
-    let mut boxes2: Vec<Box<dyn Hittable>> = Vec::new();
+    let mut boxes2: Vec<Box<dyn Hittable<R>>> = Vec::new();
     let white = Box::new(Lambertian::new(SolidColor::new_rgb(0.73, 0.73, 0.73)));
     let ns = 1000;
     for _ in 0..ns {
@@ -169,7 +171,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("book2_final_scene", |b| {
         b.iter(|| {
             let raytracer = Raytracer::new(&world, &cam, background, 40, 22, 100);
-            raytracer.render().for_each(drop);
+            raytracer.render(&mut rng).for_each(drop);
         })
     });
 }

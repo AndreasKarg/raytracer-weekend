@@ -1,20 +1,20 @@
 use alloc::{boxed::Box, vec::Vec};
 use core::{cmp::Ordering, fmt::Debug};
-
+use derive_where::derive_where;
 use super::{aabb::Aabb, hittable::Hittable};
 use crate::{hittable::HitRecord, ray::Ray};
 use rand::{Rng, RngExt};
 
 ///! An implementation of a Boundary Volume Hierarchy thingamajig.
 
-#[derive(Debug)]
-pub struct BvhNode<R: Rng + Debug + ?Sized> {
+#[derive_where(Debug)]
+pub struct BvhNode<R: Rng + ?Sized> {
     left: Box<dyn Hittable<R>>,
     right: Option<Box<dyn Hittable<R>>>,
     bounding_box: Aabb,
 }
 
-impl<R: Rng + Debug + ?Sized + 'static> BvhNode<R> {
+impl<R: Rng + ?Sized + 'static> BvhNode<R> {
     pub fn new(
         mut src_objects: Vec<Box<dyn Hittable<R>>>,
         time0: f32,
@@ -96,7 +96,7 @@ impl<R: Rng + Debug + ?Sized + 'static> BvhNode<R> {
     }
 }
 
-impl<R: Rng + Debug + ?Sized> Hittable<R> for BvhNode<R> {
+impl<R: Rng + ?Sized> Hittable<R> for BvhNode<R> {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32, rng: &mut R) -> Option<HitRecord<R>> {
         if !self.bounding_box.hit(r, t_min, t_max) {
             return None;
