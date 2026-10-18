@@ -2822,7 +2822,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "raytracer_weekend_console"
+name = "raytracer_weekend_cli"
 version = "0.1.0"
 dependencies = [
  "clap",

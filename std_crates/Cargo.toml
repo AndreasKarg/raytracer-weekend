@@ -2,7 +2,7 @@
 resolver = "3"
 
 members = [
-    "console_app",
+    "raytracer_weekend_cli",
     "discovery_host_receiver",
     "discovery_host_receiver_gui",
     "raytracer_weekend_saveload",

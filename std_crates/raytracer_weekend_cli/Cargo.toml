@@ -1,5 +1,5 @@
 [package]
-name = "raytracer_weekend_console"
+name = "raytracer_weekend_cli"
 version = "0.1.0"
 authors = ["Andreas Karg <clonkman.alternative@gmail.com>"]
 edition = "2024"
