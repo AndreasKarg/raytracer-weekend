@@ -65,6 +65,9 @@ fn run_render(world: World, args: RenderArgs, base_path: &Path) {
 
     let pixel_count = (image_width * image_height) as u64;
 
+    let out_dir = base_path.join("render/");
+    std::fs::create_dir_all(&out_dir).unwrap();
+
     let cameras = world.cameras;
     let overall_progress_style = ProgressStyle::default_bar()
         .template("[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}")
@@ -120,8 +123,9 @@ fn run_render(world: World, args: RenderArgs, base_path: &Path) {
                 }
             });
 
+        let frame_out_path = out_dir.join(format!("image_{:04}.png", frame_no));
         image
-            .save(&format!("render/image_{:04}.png", frame_no))
+            .save(&frame_out_path)
             .unwrap();
     }
 }

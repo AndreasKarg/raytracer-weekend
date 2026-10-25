@@ -2,3 +2,5 @@
 *.orig
 /publish
 .idea
+
+**/render/

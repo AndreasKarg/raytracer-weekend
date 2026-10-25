@@ -22,8 +22,6 @@ use hittable::Hittable;
 use itertools::iproduct;
 use rand::{Rng, RngExt};
 use ray::Ray;
-#[cfg(feature = "rayon")]
-use rayon::prelude::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use vec3::Color;
