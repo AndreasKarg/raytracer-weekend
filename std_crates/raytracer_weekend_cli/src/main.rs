@@ -3,31 +3,32 @@ mod scenes;
 use crate::scenes::{GENERATORS, SceneGenerator};
 use clap::builder::PossibleValue;
 use clap::{Args, Parser, Subcommand};
+use eros::{ErrorUnion, Result};
 use image::{Rgb, RgbImage};
-use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
+use indicatif::{
+    MultiProgress, ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle,
+};
+use rand::prelude::ThreadRng;
 use rayon::prelude::*;
 use raytracer_weekend_lib::Raytracer;
-use raytracer_weekend_saveload::{CameraDescriptor, World};
-use raytracer_weekend_saveload::hittable::HittableDescriptorList;
-use std::path::{Path, PathBuf};
-use std::sync::LazyLock;
-use eros::{ErrorUnion, Result};
-use rand::prelude::ThreadRng;
 use raytracer_weekend_lib::camera::Camera;
 use raytracer_weekend_lib::hittable::Hittable;
+use raytracer_weekend_saveload::hittable::HittableDescriptorList;
+use raytracer_weekend_saveload::{CameraDescriptor, World};
+use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
 const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
 
-pub static GENERATOR_NAMES: LazyLock<Vec<PossibleValue>> =
-    LazyLock::new(|| {
-        let all_option = [PossibleValue::new("all").help("Run all available scenes")];
-        let generator_names = GENERATORS.keys().map(|k| PossibleValue::new(*k));
+pub static GENERATOR_NAMES: LazyLock<Vec<PossibleValue>> = LazyLock::new(|| {
+    let all_option = [PossibleValue::new("all").help("Run all available scenes")];
+    let generator_names = GENERATORS.keys().map(|k| PossibleValue::new(*k));
 
-        let possible_values = all_option.into_iter().chain(generator_names);
+    let possible_values = all_option.into_iter().chain(generator_names);
 
-        possible_values.collect()
-    });
+    possible_values.collect()
+});
 
 /// My raytracer, based on the book series on the interwebs.
 #[derive(Parser)]
@@ -73,7 +74,12 @@ struct RenderArgs {
     samples_per_pixel: u32,
 }
 
-fn run_render(world: World, args: RenderArgs, base_path: &Path) -> Result<()> {
+fn run_render(
+    world: World,
+    args: RenderArgs,
+    base_path: &Path,
+    multi_progress: &MultiProgress,
+) -> Result<()> {
     let image_width = args.width;
     let aspect_ratio = args.aspect_ratio;
     let image_height = (image_width as f64 / aspect_ratio).round() as u32;
@@ -89,19 +95,48 @@ fn run_render(world: World, args: RenderArgs, base_path: &Path) -> Result<()> {
     let overall_progress_style = ProgressStyle::default_bar()
         .template(&format!("[{scene_title} | {{elapsed_precise}} / {{eta_precise}}] {{wide_bar}} {{pos:>7}}/{{len:7}} ({{per_sec}}"))
         .unwrap();
-    let overall_progress =
-        ProgressBar::new(cameras.len() as u64).with_style(overall_progress_style);
+    let overall_progress = multi_progress
+        .add(ProgressBar::new(cameras.len() as u64).with_style(overall_progress_style));
 
     let geometry = world.geometry.to_hittables(&mut rand::rng(), base_path)?;
 
-    let render_result: Result<_> = cameras.par_iter().progress_with(overall_progress).enumerate().map(|(frame_no, cam)| -> Result<()> {
-        render_single_frame(&world, image_width, image_height, samples_per_pixel, pixel_count, &out_dir, scene_title, &geometry, &frame_no, cam)
-    }).collect();
+    let render_result: Result<_> = cameras
+        .par_iter()
+        .progress_with(overall_progress)
+        .enumerate()
+        .map(|(frame_no, cam)| -> Result<()> {
+            render_single_frame(
+                &world,
+                image_width,
+                image_height,
+                samples_per_pixel,
+                pixel_count,
+                &out_dir,
+                scene_title,
+                &geometry,
+                &frame_no,
+                cam,
+                multi_progress,
+            )
+        })
+        .collect();
 
     render_result
 }
 
-fn render_single_frame(world: &World, image_width: u32, image_height: u32, samples_per_pixel: u32, pixel_count: u64, out_dir: &Path, scene_title: &str, geometry: &Vec<Box<dyn Hittable<ThreadRng>>>, frame_no: &usize, cam: &Camera) -> Result<()> {
+fn render_single_frame(
+    world: &World,
+    image_width: u32,
+    image_height: u32,
+    samples_per_pixel: u32,
+    pixel_count: u64,
+    out_dir: &Path,
+    scene_title: &str,
+    geometry: &Vec<Box<dyn Hittable<ThreadRng>>>,
+    frame_no: &usize,
+    cam: &Camera,
+    multi_progress: &MultiProgress,
+) -> Result<()> {
     let raytracer = Raytracer::new(
         &geometry,
         &cam,
@@ -114,7 +149,8 @@ fn render_single_frame(world: &World, image_width: u32, image_height: u32, sampl
     let frame_progress_style = ProgressStyle::default_bar()
         .template(&format!("[{scene_title}:{frame_no} | {{elapsed_precise}} / {{eta_precise}}] {{wide_bar}} {{pos:>7}}/{{len:7}} ({{per_sec}})"))
         .unwrap();
-    let frame_progress = ProgressBar::new(pixel_count).with_style(frame_progress_style);
+    let frame_progress =
+        multi_progress.add(ProgressBar::new(pixel_count).with_style(frame_progress_style));
 
     let all_pixels: Vec<_> = raytracer
         .render(&mut rand::rng())
@@ -156,8 +192,9 @@ fn render_single_frame(world: &World, image_width: u32, image_height: u32, sampl
 fn main() -> Result<()> {
     let args: MainArgs = MainArgs::parse();
     match args.command {
-        Command::RenderCompiled {
-            render_args, scene} => execute_render_compiled_command(render_args, &scene),
+        Command::RenderCompiled { render_args, scene } => {
+            execute_render_compiled_command(render_args, &scene)
+        }
         Command::RenderFile {
             render_args,
             scene_description,
@@ -188,16 +225,21 @@ fn execute_render_compiled_command(render_args: RenderArgs, scene: &String) -> R
 
     let scenes = get_render_schedule(&scene);
 
-    let render_results: Result<()> = scenes.par_iter().map(|scene_generator| {
-        let world = scene_generator(
-            (render_args.width as f32) / (image_height as f32),
-            &mut rand::rng(),
-        )?;
+    let multi_progress = MultiProgress::new();
 
-        let base_path = std::env::current_dir().unwrap();
+    let render_results: Result<()> = scenes
+        .par_iter()
+        .map(|scene_generator| {
+            let world = scene_generator(
+                (render_args.width as f32) / (image_height as f32),
+                &mut rand::rng(),
+            )?;
 
-        run_render(world, render_args, &base_path)
-    }).collect();
+            let base_path = std::env::current_dir().unwrap();
+
+            run_render(world, render_args, &base_path, &multi_progress)
+        })
+        .collect();
 
     render_results
 }
@@ -216,14 +258,14 @@ fn execute_render_file_command(render_args: RenderArgs, scene_description: PathB
         _ => panic!("Unknown file type"),
     };
 
-    run_render(world, render_args, &base_path)
+    let multi_progress = MultiProgress::new();
+
+    run_render(world, render_args, &base_path, &multi_progress)
 }
 
 fn get_render_schedule(scene_arg: &str) -> Vec<&'static SceneGenerator> {
     match scene_arg {
-        "all" => {
-            GENERATORS.values().collect()
-        },
-        other => vec![GENERATORS.get(other).unwrap()]
+        "all" => GENERATORS.values().collect(),
+        other => vec![GENERATORS.get(other).unwrap()],
     }
 }
