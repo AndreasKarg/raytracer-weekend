@@ -18,9 +18,9 @@ use raytracer_weekend_saveload::texture::{
 use raytracer_weekend_saveload::{CameraDescriptor, World};
 use std::iter::Iterator;
 use std::path::PathBuf;
-use std::sync::LazyLock;
+use eros::Result;
 
-pub type SceneGenerator = fn(aspect_ratio: f32, rng: &mut ThreadRng) -> World;
+pub type SceneGenerator = fn(aspect_ratio: f32, rng: &mut ThreadRng) -> Result<World>;
 
 pub const GENERATORS: phf::OrderedMap<&'static str, SceneGenerator> = phf_ordered_map! {
     "jumpy_balls"=> jumpy_balls,
@@ -37,7 +37,7 @@ pub const GENERATORS: phf::OrderedMap<&'static str, SceneGenerator> = phf_ordere
     "textured_monument"=> textured_monument,
 };
 
-pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
+pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> Result<World> {
     let checker = Box::new(CheckerDescriptor::new(
         SolidColorDescriptor::new_rgb(0.2, 0.3, 0.1),
         SolidColorDescriptor::new_rgb(0.9, 0.9, 0.9),
@@ -137,15 +137,15 @@ pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         1.0,
     );
 
-    World {
+    Ok(World {
         title: Some("jumpy_balls".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: DEFAULT_BACKGROUND,
-    }
+    })
 }
 
-pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> Result<World> {
     // World
     let checker = Box::new(CheckerDescriptor::new(
         SolidColorDescriptor::new_rgb(0.2, 0.3, 0.1),
@@ -189,15 +189,15 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    World {
+    Ok(World {
         title: Some("two_spheres".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: DEFAULT_BACKGROUND,
-    }
+    })
 }
 
-pub fn two_perlin_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+pub fn two_perlin_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> Result<World> {
     // World
     let perlin_material = Box::new(NoiseDescriptor::new(4.0));
     let material_ground = LambertianDescriptor::new(perlin_material);
@@ -237,15 +237,15 @@ pub fn two_perlin_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    World {
+    Ok(World {
         title: Some("two_perlin_spheres".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: DEFAULT_BACKGROUND,
-    }
+    })
 }
 
-pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> Result<World> {
     // World
     let earth_texture = Box::new(ImageTextureDescriptor::new(PathBuf::from(
         "../models/earthmap.jpg",
@@ -280,15 +280,15 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    World {
+    Ok(World {
         title: Some("earth".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: DEFAULT_BACKGROUND,
-    }
+    })
 }
 
-pub fn simple_light(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+pub fn simple_light(aspect_ratio: f32, _rng: &mut ThreadRng) -> Result<World> {
     // World
     let earth_texture = Box::new(ImageTextureDescriptor::new(PathBuf::from(
         "../models/earthmap.jpg",
@@ -347,15 +347,15 @@ pub fn simple_light(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    World {
+    Ok(World {
         title: Some("simple_light".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: Color::new(0.0, 0.0, 0.0),
-    }
+    })
 }
 
-pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> Result<World> {
     // World
     let red = Box::new(LambertianDescriptor::new_solid_color(Color::new(
         0.65, 0.05, 0.05,
@@ -439,15 +439,15 @@ pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    World {
+    Ok(World {
         title: Some("cornell_box".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: Color::new(0.0, 0.0, 0.0),
-    }
+    })
 }
 
-pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> Result<World> {
     // World
     let red = Box::new(LambertianDescriptor::new_solid_color(Color::new(
         0.65, 0.05, 0.05,
@@ -542,15 +542,15 @@ pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    World {
+    Ok(World {
         title: Some("smokey_cornell_box".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: Color::new(0.0, 0.0, 0.0),
-    }
+    })
 }
 
-pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
+pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> Result<World> {
     let mut boxes1: Vec<Box<dyn HittableDescriptor>> = Vec::new();
     let ground = Box::new(LambertianDescriptor::new_solid_color(Color::new(
         0.48, 0.83, 0.53,
@@ -695,16 +695,16 @@ pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    World {
+    Ok(World {
         title: Some("book2_final".to_string()),
         geometry: objects,
         cameras: vec![cam],
         background: Color::new(0.0, 0.0, 0.0),
-    }
+    })
 }
 
-pub fn animated_book2_final(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
-    let base_scene = book2_final_scene(aspect_ratio, rng);
+pub fn animated_book2_final(aspect_ratio: f32, rng: &mut ThreadRng) -> Result<World> {
+    let base_scene = book2_final_scene(aspect_ratio, rng)?;
 
     // Camera
     let look_at = Point3::new(278.0, 278.0, 278.0);
@@ -747,15 +747,15 @@ pub fn animated_book2_final(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
         1.0,
     ))];
 
-    World {
+    Ok(World {
         title: Some("animated_book2_final".to_string()),
         geometry: world,
         cameras,
         background: base_scene.background,
-    }
+    })
 }
 
-pub fn simple_triangle(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+pub fn simple_triangle(aspect_ratio: f32, _rng: &mut ThreadRng) -> Result<World> {
     // World
     let checker = Box::new(CheckerDescriptor::new(
         SolidColorDescriptor::new_rgb(0.2, 0.3, 0.1),
@@ -804,15 +804,15 @@ pub fn simple_triangle(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    World {
+    Ok(World {
         title: Some("simple_triangle".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: DEFAULT_BACKGROUND,
-    }
+    })
 }
 
-pub fn wavefront_cow_obj(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+pub fn wavefront_cow_obj(aspect_ratio: f32, _rng: &mut ThreadRng) -> Result<World> {
     // World
     let checker = Box::new(CheckerDescriptor::new(
         SolidColorDescriptor::new_rgb(0.2, 0.3, 0.1),
@@ -868,15 +868,15 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    World {
+    Ok(World {
         title: Some("wavefront_cow_obj".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: Color::new_const(0.085, 0.1, 0.125),
-    }
+    })
 }
 
-pub fn textured_monument(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
+pub fn textured_monument(aspect_ratio: f32, _rng: &mut ThreadRng) -> Result<World> {
     // World
     let monument = Box::new(TranslationDescriptor::new(
         Box::new(WavefrontObjDescriptor::new(PathBuf::from(
@@ -921,12 +921,12 @@ pub fn textured_monument(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
         time1,
     );
 
-    World {
+    Ok(World {
         title: Some("textured_monument".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: Color::new_const(0.085, 0.1, 0.125),
-    }
+    })
 }
 
 static DEFAULT_BACKGROUND: Color = Color::new_const(0.7, 0.8, 1.00);

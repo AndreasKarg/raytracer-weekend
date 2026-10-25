@@ -245,7 +245,7 @@ fn parse_individual_object<R: Rng + ?Sized + 'static>(
 pub fn load_wavefront_obj<'a, R: Rng + ?Sized + 'static>(
     path: &Path,
     rng: &mut R,
-) -> Result<Box<dyn Hittable<R>>, Box<dyn std::error::Error>> {
+) -> eros::Result<Box<dyn Hittable<R>>> {
     let obj_file = fs::read_to_string(path)?;
     let object_set = obj::parse(obj_file)?;
     let materials = object_set
@@ -281,7 +281,7 @@ fn path_to_file_in_same_folder(path: &Path, filename: &str) -> String {
 #[cfg(feature = "std")]
 fn load_wavefront_mtl<R: Rng + ?Sized>(
     path: String,
-) -> Result<HashMap<String, Arc<dyn Material<R>>>, Box<dyn std::error::Error>> {
+) -> eros::Result<HashMap<String, Arc<dyn Material<R>>>> {
     let mtl_file = fs::read_to_string(path.clone())?;
     let material_set = mtl::parse(mtl_file)?;
 

@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use derive_more::Constructor;
 use dyn_clone::{clone_trait_object, DynClone};
+use eros::{Context, Result};
 use rand::rngs::ThreadRng;
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +14,7 @@ use raytracer_weekend_lib::vec3::Color;
 
 #[typetag::serde]
 pub trait TextureDescriptor: Sync + Send + Debug + DynClone {
-    fn to_texture(&self, rng: &mut ThreadRng) -> Box<dyn Texture>;
+    fn to_texture(&self, rng: &mut ThreadRng) -> Result<Box<dyn Texture>>;
 }
 clone_trait_object!(TextureDescriptor);
 
@@ -30,8 +31,10 @@ impl SolidColorDescriptor {
 
 #[typetag::serde(name = "SolidColor")]
 impl TextureDescriptor for SolidColorDescriptor {
-    fn to_texture(&self, _: &mut ThreadRng) -> Box<dyn Texture> {
-        Box::new(raytracer_weekend_lib::texture::SolidColor::new(self.color))
+    fn to_texture(&self, _: &mut ThreadRng) -> Result<Box<dyn Texture>> {
+        Ok(Box::new(raytracer_weekend_lib::texture::SolidColor::new(
+            self.color,
+        )))
     }
 }
 
@@ -44,12 +47,12 @@ pub struct CheckerDescriptor {
 
 #[typetag::serde(name = "Checker")]
 impl TextureDescriptor for CheckerDescriptor {
-    fn to_texture(&self, rng: &mut ThreadRng) -> Box<dyn Texture> {
-        Box::new(raytracer_weekend_lib::texture::Checker::new(
-            self.even.to_texture(rng),
-            self.odd.to_texture(rng),
+    fn to_texture(&self, rng: &mut ThreadRng) -> Result<Box<dyn Texture>> {
+        Ok(Box::new(raytracer_weekend_lib::texture::Checker::new(
+            self.even.to_texture(rng)?,
+            self.odd.to_texture(rng)?,
             self.frequency,
-        ))
+        )))
     }
 }
 
@@ -60,8 +63,13 @@ pub struct ImageTextureDescriptor {
 
 #[typetag::serde(name = "ImageTexture")]
 impl TextureDescriptor for ImageTextureDescriptor {
-    fn to_texture(&self, _: &mut ThreadRng) -> Box<dyn Texture> {
-        Box::new(ImageTexture::open(self.path.to_str().unwrap()).unwrap())
+    fn to_texture(&self, _: &mut ThreadRng) -> Result<Box<dyn Texture>> {
+        Ok(Box::new(ImageTexture::open(
+            self.path
+                .to_str()
+                .with_context(|| format!("Invalid path: {}", self.path.to_string_lossy()))?,
+        )?
+        ))
     }
 }
 
@@ -72,8 +80,8 @@ pub struct NoiseDescriptor {
 
 #[typetag::serde(name = "Noise")]
 impl TextureDescriptor for NoiseDescriptor {
-    fn to_texture(&self, rng: &mut ThreadRng) -> Box<dyn Texture> {
-        Box::new(Noise::new(Perlin::new(rng), self.scale))
+    fn to_texture(&self, rng: &mut ThreadRng) -> Result<Box<dyn Texture>> {
+        Ok(Box::new(Noise::new(Perlin::new(rng), self.scale)))
     }
 }
 
@@ -82,7 +90,7 @@ pub struct UVDebugDescriptor {}
 
 #[typetag::serde(name = "UVDebug")]
 impl TextureDescriptor for UVDebugDescriptor {
-    fn to_texture(&self, _: &mut ThreadRng) -> Box<dyn Texture> {
-        Box::new(UVDebug {})
+    fn to_texture(&self, _: &mut ThreadRng) -> Result<Box<dyn Texture>> {
+        Ok(Box::new(UVDebug {}))
     }
 }

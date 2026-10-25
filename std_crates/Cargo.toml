@@ -11,3 +11,4 @@ members = [
 [workspace.dependencies]
 rand = "0.10"
 raytracer_weekend_lib = { path = "../raytracer_weekend_lib" }
+eros = { version = "0.8.1", features = ["location"] }

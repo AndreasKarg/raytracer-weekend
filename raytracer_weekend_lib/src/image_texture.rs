@@ -1,12 +1,12 @@
-#![cfg(feature = "image")]
+#![cfg(all(feature = "image", feature = "eros"))]
 
 use alloc::string::String;
 use core::{
     any::type_name,
     fmt::{Debug, Formatter},
 };
-
-use image::{DynamicImage, GenericImageView, io::Reader as ImageReader};
+use image::{DynamicImage, GenericImageView, ImageReader};
+use eros::Result;
 
 use crate::{
     texture::{Point2d, Texture},
@@ -20,7 +20,7 @@ pub struct ImageTexture {
 }
 
 impl ImageTexture {
-    pub fn open(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn open(path: &str) -> Result<Self> {
         let image = ImageReader::open(path)?.decode()?;
 
         Ok(Self {

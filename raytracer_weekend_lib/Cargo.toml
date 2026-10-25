@@ -18,10 +18,11 @@ serde = { version = "1.0.204", optional = true, default-features = false, featur
 iter_fixed = "0.4.0"
 derive-new = "0.7.0"
 derive-where = "1.7.0"
+eros = { version = "0.8.1", features = ["location"], optional = true }
 
 [features]
 default = ["std"]
-std = ["wavefront_obj", "image", "itertools/default", "num-traits/default"]
+std = ["wavefront_obj", "eros", "image", "itertools/default", "num-traits/default"]
 no_std = ["micromath"]
 
 [dev-dependencies]
