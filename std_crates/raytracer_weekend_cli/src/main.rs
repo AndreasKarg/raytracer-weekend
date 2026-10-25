@@ -152,8 +152,9 @@ fn render_single_frame(
     let frame_progress =
         multi_progress.add(ProgressBar::new(pixel_count).with_style(frame_progress_style));
 
-    let all_pixels: Vec<_> = raytracer
-        .render(&mut rand::rng())
+    let render_schedule: Vec<_> = raytracer.render(&mut rand::rng()).collect();
+
+    let all_pixels: Vec<_> = render_schedule.par_iter()
         .progress_with(frame_progress)
         .collect();
 
