@@ -1,17 +1,31 @@
 mod scenes;
 
+use std::iter::once;
+use crate::scenes::{SceneGenerator, GENERATORS};
 use clap::{Args, Parser, Subcommand};
 use image::{Rgb, RgbImage};
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator, ProgressStyle};
 use rayon::prelude::*;
 use raytracer_weekend_lib::Raytracer;
-use raytracer_weekend_saveload::hittable::HittableDescriptorList;
 use raytracer_weekend_saveload::World;
-use scenes::Scene;
+use raytracer_weekend_saveload::hittable::HittableDescriptorList;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
+use clap::builder::{PossibleValue, ValueParser};
+use phf::set::Iter;
 
 const CRATE_VERSION: &str = env!("CARGO_PKG_VERSION");
 const CRATE_AUTHOR: &str = env!("CARGO_PKG_AUTHORS");
+
+pub static GENERATOR_NAMES: LazyLock<Vec<PossibleValue>> =
+    LazyLock::new(|| {
+        let all_option = [PossibleValue::new("all").help("Run all available scenes")];
+        let generator_names = GENERATORS.keys().map(|k| PossibleValue::new(*k));
+
+        let possible_values = all_option.into_iter().chain(generator_names);
+
+        possible_values.collect()
+    });
 
 /// My raytracer, based on the book series on the interwebs.
 #[derive(Parser)]
@@ -24,8 +38,8 @@ struct MainArgs {
 #[derive(Debug, Subcommand)]
 enum Command {
     RenderCompiled {
-        #[command(subcommand)]
-        scene: Scene,
+        #[arg(value_parser = GENERATOR_NAMES.clone())]
+        scene: String,
         #[command(flatten)]
         render_args: RenderArgs,
     },
@@ -35,23 +49,23 @@ enum Command {
         scene_description: PathBuf,
     },
     ToJson {
-        #[command(subcommand)]
-        scene: Scene,
+        #[arg(value_parser = GENERATOR_NAMES.clone())]
+        scene: String,
         output: PathBuf,
     },
     #[clap(alias = "to-yml")]
     ToYaml {
-        #[command(subcommand)]
-        scene: Scene,
+        #[arg(value_parser = GENERATOR_NAMES.clone())]
+        scene: String,
         output: PathBuf,
     },
 }
 
-#[derive(Debug, Clone, Args)]
+#[derive(Debug, Copy, Clone, Args)]
 struct RenderArgs {
     #[clap(long, short, default_value = "400")]
     width: u32,
-    #[clap(long, short, default_value = "1.7777778")]
+    #[clap(long, short = 'r', default_value = "1.7777778")]
     aspect_ratio: f64,
     #[clap(long, short, default_value = "100")]
     samples_per_pixel: u32,
@@ -67,12 +81,14 @@ fn run_render(world: World, args: RenderArgs, base_path: &Path) {
 
     let out_dir = base_path.join("render/");
     std::fs::create_dir_all(&out_dir).unwrap();
+    let filename_base = world.title.unwrap_or("image".to_string());
 
     let cameras = world.cameras;
     let overall_progress_style = ProgressStyle::default_bar()
         .template("[{elapsed_precise} / {eta_precise}] {wide_bar} {pos:>7}/{len:7} ({per_sec}")
         .unwrap();
-    let overall_progress = ProgressBar::new(cameras.len() as u64).with_style(overall_progress_style);
+    let overall_progress =
+        ProgressBar::new(cameras.len() as u64).with_style(overall_progress_style);
 
     let geometry = world.geometry.to_hittables(&mut rand::rng(), base_path);
 
@@ -123,29 +139,32 @@ fn run_render(world: World, args: RenderArgs, base_path: &Path) {
                 }
             });
 
-        let frame_out_path = out_dir.join(format!("image_{:04}.png", frame_no));
-        image
-            .save(&frame_out_path)
-            .unwrap();
+        let frame_out_path = out_dir.join(format!("{}_{:04}.png", filename_base, frame_no));
+        image.save(&frame_out_path).unwrap();
     }
 }
 
 fn main() {
     let args: MainArgs = MainArgs::parse();
     match args.command {
-        Command::RenderCompiled { render_args, scene } => {
+        Command::RenderCompiled {
+            render_args, scene} => {
             let image_width = render_args.width;
             let aspect_ratio = render_args.aspect_ratio;
             let image_height = (image_width as f64 / aspect_ratio).round() as u32;
 
-            let world = scene.generate(
-                (render_args.width as f32) / (image_height as f32),
-                &mut rand::rng(),
-            );
+            let scenes = get_render_schedule(&scene);
 
-            let base_path = std::env::current_dir().unwrap();
+            for scene_generator in scenes {
+                let world = scene_generator(
+                    (render_args.width as f32) / (image_height as f32),
+                    &mut rand::rng(),
+                );
 
-            run_render(world, render_args, &base_path)
+                let base_path = std::env::current_dir().unwrap();
+
+                run_render(world, render_args, &base_path)
+            }
         }
         Command::RenderFile {
             render_args,
@@ -167,14 +186,27 @@ fn main() {
             run_render(world, render_args, &base_path)
         }
         Command::ToJson { scene, output } => {
-            let world = scene.generate(16.0 / 9.0, &mut rand::rng());
+            let scene_generator = GENERATORS.get(&scene).unwrap();
+
+            let world = scene_generator(16.0 / 9.0, &mut rand::rng());
             let json = serde_json::to_string_pretty(&world).unwrap();
             std::fs::write(output, json).unwrap();
         }
         Command::ToYaml { scene, output } => {
-            let world = scene.generate(16.0 / 9.0, &mut rand::rng());
+            let scene_generator = GENERATORS.get(&scene).unwrap();
+
+            let world = scene_generator(16.0 / 9.0, &mut rand::rng());
             let yml = serde_yaml::to_string(&world).unwrap();
             std::fs::write(output, yml).unwrap();
         }
+    }
+}
+
+fn get_render_schedule(scene_arg: &str) -> Box<dyn Iterator<Item = &'static SceneGenerator>> {
+    match scene_arg {
+        "all" => {
+            Box::new(GENERATORS.values())
+        },
+        other => Box::new(once(GENERATORS.get(other).unwrap()))
     }
 }

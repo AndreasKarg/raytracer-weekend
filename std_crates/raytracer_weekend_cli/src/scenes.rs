@@ -1,4 +1,4 @@
-use clap::Subcommand;
+use phf::phf_ordered_map;
 use rand::prelude::*;
 use raytracer_weekend_lib::vec3::{Color, Point3, Vec3};
 use raytracer_weekend_saveload::hittable::{
@@ -16,44 +16,26 @@ use raytracer_weekend_saveload::texture::{
     UVDebugDescriptor,
 };
 use raytracer_weekend_saveload::{CameraDescriptor, World};
+use std::iter::Iterator;
 use std::path::PathBuf;
+use std::sync::LazyLock;
 
-#[derive(Debug, Clone, Subcommand)]
-pub enum Scene {
-    JumpyBalls,
-    TwoSpheres,
-    TwoPerlinSpheres,
-    Earth,
-    SimpleLight,
-    CornellBox,
-    SmokeyCornellBox,
-    Book2Final,
-    AnimatedBook2Final,
-    SimpleTriangle,
-    WavefrontCowObj,
-    TexturedMonument,
-}
+pub type SceneGenerator = fn(aspect_ratio: f32, rng: &mut ThreadRng) -> World;
 
-impl Scene {
-    pub fn generate(&self, aspect_ratio: f32, rng: &mut ThreadRng) -> World {
-        let generator = match self {
-            Scene::JumpyBalls => jumpy_balls,
-            Scene::TwoSpheres => two_spheres,
-            Scene::TwoPerlinSpheres => two_perlin_spheres,
-            Scene::Earth => earth,
-            Scene::SimpleLight => simple_light,
-            Scene::CornellBox => cornell_box,
-            Scene::SmokeyCornellBox => smokey_cornell_box,
-            Scene::Book2Final => book2_final_scene,
-            Scene::AnimatedBook2Final => animated_book2_final,
-            Scene::SimpleTriangle => simple_triangle,
-            Scene::WavefrontCowObj => wavefront_cow_obj,
-            Scene::TexturedMonument => textured_monument,
-        };
-
-        generator(aspect_ratio, rng)
-    }
-}
+pub const GENERATORS: phf::OrderedMap<&'static str, SceneGenerator> = phf_ordered_map! {
+    "jumpy_balls"=> jumpy_balls,
+    "two_spheres"=> two_spheres,
+    "two_perlin_spheres"=> two_perlin_spheres,
+    "earth"=> earth,
+    "simple_light"=> simple_light,
+    "cornell_box"=> cornell_box,
+    "smokey_cornell_box"=> smokey_cornell_box,
+    "book2_final_scene"=> book2_final_scene,
+    "animated_book2_final"=> animated_book2_final,
+    "simple_triangle"=> simple_triangle,
+    "wavefront_cow_obj"=> wavefront_cow_obj,
+    "textured_monument"=> textured_monument,
+};
 
 pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     let checker = Box::new(CheckerDescriptor::new(
@@ -156,6 +138,7 @@ pub fn jumpy_balls(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     );
 
     World {
+        title: Some("jumpy_balls".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: DEFAULT_BACKGROUND,
@@ -207,6 +190,7 @@ pub fn two_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     );
 
     World {
+        title: Some("two_spheres".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: DEFAULT_BACKGROUND,
@@ -254,6 +238,7 @@ pub fn two_perlin_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     );
 
     World {
+        title: Some("two_perlin_spheres".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: DEFAULT_BACKGROUND,
@@ -263,7 +248,7 @@ pub fn two_perlin_spheres(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
     let earth_texture = Box::new(ImageTextureDescriptor::new(PathBuf::from(
-        "models/earthmap.jpg",
+        "../models/earthmap.jpg",
     )));
     let earth_surface = LambertianDescriptor::new(earth_texture);
 
@@ -296,6 +281,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     );
 
     World {
+        title: Some("earth".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: DEFAULT_BACKGROUND,
@@ -305,7 +291,7 @@ pub fn earth(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
 pub fn simple_light(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
     let earth_texture = Box::new(ImageTextureDescriptor::new(PathBuf::from(
-        "models/earthmap.jpg",
+        "../models/earthmap.jpg",
     )));
     let earth_surface = DiffuseLightDescriptor::new(earth_texture);
     // let earth_surface = DiffuseLightDescriptor::new(SolidColorDescriptor::new_rgb(4.0, 4.0, 4.0));
@@ -362,6 +348,7 @@ pub fn simple_light(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     );
 
     World {
+        title: Some("simple_light".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: Color::new(0.0, 0.0, 0.0),
@@ -453,6 +440,7 @@ pub fn cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     );
 
     World {
+        title: Some("cornell_box".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: Color::new(0.0, 0.0, 0.0),
@@ -555,6 +543,7 @@ pub fn smokey_cornell_box(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     );
 
     World {
+        title: Some("smokey_cornell_box".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: Color::new(0.0, 0.0, 0.0),
@@ -649,7 +638,7 @@ pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     )));
 
     let emat = Box::new(LambertianDescriptor::new(Box::new(
-        ImageTextureDescriptor::new(PathBuf::from("models/earthmap.jpg")),
+        ImageTextureDescriptor::new(PathBuf::from("../models/earthmap.jpg")),
     )));
     objects.push(Box::new(SphereDescriptor::new(
         Point3::new(400.0, 200.0, 400.0),
@@ -707,6 +696,7 @@ pub fn book2_final_scene(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     );
 
     World {
+        title: Some("book2_final".to_string()),
         geometry: objects,
         cameras: vec![cam],
         background: Color::new(0.0, 0.0, 0.0),
@@ -758,6 +748,7 @@ pub fn animated_book2_final(aspect_ratio: f32, rng: &mut ThreadRng) -> World {
     ))];
 
     World {
+        title: Some("animated_book2_final".to_string()),
         geometry: world,
         cameras,
         background: base_scene.background,
@@ -814,6 +805,7 @@ pub fn simple_triangle(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     );
 
     World {
+        title: Some("simple_triangle".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: DEFAULT_BACKGROUND,
@@ -830,7 +822,7 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     let material_ground = LambertianDescriptor::new(checker);
 
     let cow = Box::new(WavefrontObjDescriptor::new(PathBuf::from(
-        "models/cow-nonormals.obj",
+        "../models/cow-nonormals.obj",
     )));
     let cow = Box::new(TranslationDescriptor::new(cow, Vec3::new(0.0, 2.5, 0.0)))
         as Box<dyn HittableDescriptor>;
@@ -877,6 +869,7 @@ pub fn wavefront_cow_obj(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     );
 
     World {
+        title: Some("wavefront_cow_obj".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: Color::new_const(0.085, 0.1, 0.125),
@@ -887,7 +880,7 @@ pub fn textured_monument(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     // World
     let monument = Box::new(TranslationDescriptor::new(
         Box::new(WavefrontObjDescriptor::new(PathBuf::from(
-            "models/monument_downscaled_polygon_reduced.obj",
+            "../models/monument_downscaled_polygon_reduced.obj",
         ))),
         Vec3::new(0.0, 0.0, -19.0),
     ));
@@ -929,6 +922,7 @@ pub fn textured_monument(aspect_ratio: f32, _rng: &mut ThreadRng) -> World {
     );
 
     World {
+        title: Some("textured_monument".to_string()),
         geometry: world,
         cameras: vec![cam],
         background: Color::new_const(0.085, 0.1, 0.125),

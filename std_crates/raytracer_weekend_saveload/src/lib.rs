@@ -14,6 +14,7 @@ pub mod texture;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct World {
+    pub title: Option<String>,
     pub geometry: Vec<Box<dyn HittableDescriptor>>,
     pub cameras: Vec<CameraDescriptor>,
     pub background: Color,
